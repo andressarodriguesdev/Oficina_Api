@@ -1,0 +1,11 @@
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Domain\bin\Debug\net10.0\OficinaMecanica.Domain.deps.json
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Domain\bin\Debug\net10.0\OficinaMecanica.Domain.dll
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Domain\bin\Debug\net10.0\OficinaMecanica.Domain.pdb
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Domain\obj\Debug\net10.0\OficinaMecanica.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Domain\obj\Debug\net10.0\OficinaMecanica.Domain.AssemblyInfoInputs.cache
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Domain\obj\Debug\net10.0\OficinaMecanica.Domain.AssemblyInfo.cs
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Domain\obj\Debug\net10.0\OficinaMecanica.Domain.csproj.CoreCompileInputs.cache
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Domain\obj\Debug\net10.0\OficinaMecanica.Domain.dll
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Domain\obj\Debug\net10.0\refint\OficinaMecanica.Domain.dll
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Domain\obj\Debug\net10.0\OficinaMecanica.Domain.pdb
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Domain\obj\Debug\net10.0\ref\OficinaMecanica.Domain.dll

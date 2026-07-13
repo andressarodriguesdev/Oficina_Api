@@ -1,0 +1,17 @@
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Application\bin\Debug\net10.0\OficinaMecanica.Application.deps.json
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Application\bin\Debug\net10.0\OficinaMecanica.Application.dll
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Application\bin\Debug\net10.0\OficinaMecanica.Application.pdb
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Application\bin\Debug\net10.0\OficinaMecanica.Domain.dll
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Application\bin\Debug\net10.0\OficinaMecanica.Infrastructure.dll
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Application\bin\Debug\net10.0\OficinaMecanica.Domain.pdb
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Application\bin\Debug\net10.0\OficinaMecanica.Infrastructure.pdb
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Application\obj\Debug\net10.0\OficinaMecanica.Application.csproj.AssemblyReference.cache
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Application\obj\Debug\net10.0\OficinaMecanica.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Application\obj\Debug\net10.0\OficinaMecanica.Application.AssemblyInfoInputs.cache
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Application\obj\Debug\net10.0\OficinaMecanica.Application.AssemblyInfo.cs
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Application\obj\Debug\net10.0\OficinaMecanica.Application.csproj.CoreCompileInputs.cache
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Application\obj\Debug\net10.0\OficinaM.8AA8A0B9.Up2Date
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Application\obj\Debug\net10.0\OficinaMecanica.Application.dll
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Application\obj\Debug\net10.0\refint\OficinaMecanica.Application.dll
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Application\obj\Debug\net10.0\OficinaMecanica.Application.pdb
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Application\obj\Debug\net10.0\ref\OficinaMecanica.Application.dll

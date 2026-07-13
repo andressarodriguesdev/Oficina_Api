@@ -1,0 +1,17 @@
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Infrastructure\bin\Debug\net10.0\OficinaMecanica.Infrastructure.deps.json
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Infrastructure\bin\Debug\net10.0\OficinaMecanica.Infrastructure.runtimeconfig.json
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Infrastructure\bin\Debug\net10.0\OficinaMecanica.Infrastructure.dll
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Infrastructure\bin\Debug\net10.0\OficinaMecanica.Infrastructure.pdb
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Infrastructure\bin\Debug\net10.0\OficinaMecanica.Domain.dll
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Infrastructure\bin\Debug\net10.0\OficinaMecanica.Domain.pdb
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Infrastructure\obj\Debug\net10.0\OficinaMecanica.Infrastructure.csproj.AssemblyReference.cache
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Infrastructure\obj\Debug\net10.0\OficinaMecanica.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Infrastructure\obj\Debug\net10.0\OficinaMecanica.Infrastructure.AssemblyInfoInputs.cache
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Infrastructure\obj\Debug\net10.0\OficinaMecanica.Infrastructure.AssemblyInfo.cs
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Infrastructure\obj\Debug\net10.0\OficinaMecanica.Infrastructure.csproj.CoreCompileInputs.cache
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Infrastructure\obj\Debug\net10.0\OficinaM.F86F8E41.Up2Date
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Infrastructure\obj\Debug\net10.0\OficinaMecanica.Infrastructure.dll
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Infrastructure\obj\Debug\net10.0\refint\OficinaMecanica.Infrastructure.dll
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Infrastructure\obj\Debug\net10.0\OficinaMecanica.Infrastructure.pdb
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Infrastructure\obj\Debug\net10.0\OficinaMecanica.Infrastructure.genruntimeconfig.cache
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Infrastructure\obj\Debug\net10.0\ref\OficinaMecanica.Infrastructure.dll
