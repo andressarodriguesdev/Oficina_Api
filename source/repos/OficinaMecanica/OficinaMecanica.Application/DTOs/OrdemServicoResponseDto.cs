@@ -1,5 +1,5 @@
 ﻿using System;
-
+using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Domain.Enums;
 
 namespace OficinaMecanica.Application.DTOs;
@@ -34,4 +34,5 @@ public class OrdemServicoResponseDto
 
     public string? MotivoReabertura { get; set; }
 
+  
 }

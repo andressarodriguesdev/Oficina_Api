@@ -35,14 +35,11 @@ public class OrdemServicoRepository
     public async Task<List<OrdemServico>> ListarAsync()
 
     {
-
         return await _context.OrdensServico
-
-        .Include(o => o.Cliente)
-
-        .Include(o => o.Veiculo)
-
-        .ToListAsync();
+            .Include(o => o.Cliente)
+                .ThenInclude(c => c.Oficina)
+            .Include(o => o.Veiculo)
+            .ToListAsync();
 
     }
 
@@ -51,12 +48,10 @@ public class OrdemServicoRepository
     {
 
         return await _context.OrdensServico
-
-        .Include(o => o.Cliente)
-
-        .Include(o => o.Veiculo)
-
-        .FirstOrDefaultAsync(o => o.Id == id);
+     .Include(o => o.Cliente)
+         .ThenInclude(c => c.Oficina)
+     .Include(o => o.Veiculo)
+     .FirstOrDefaultAsync(o => o.Id == id);
 
     }
 

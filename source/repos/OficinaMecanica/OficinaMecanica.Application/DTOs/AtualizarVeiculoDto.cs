@@ -14,4 +14,6 @@ public class AtualizarVeiculoDto
 
     public string Modelo { get; set; } = string.Empty;
 
+    public string Ano { get; set; } = string.Empty;
+
 }

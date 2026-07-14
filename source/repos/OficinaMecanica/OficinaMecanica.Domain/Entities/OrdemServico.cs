@@ -34,6 +34,10 @@ public class OrdemServico
 
     public string? MotivoReabertura { get; private set; }
 
+    public Guid OficinaId { get; private set; }
+
+    public Oficina Oficina { get; private set; } = null!;
+
 
     // Usado pelo Entity Framework
     private OrdemServico()
@@ -41,25 +45,30 @@ public class OrdemServico
     }
 
 
-    public OrdemServico(
-        Guid clienteId,
-        Guid veiculoId,
-        string descricao,
-        decimal valor)
+    public OrdemServico
+        (
+        Guid oficinaId, 
+        Guid clienteId, 
+        Guid veiculoId, 
+        string descricao, 
+        decimal valor
+        )
     {
         Id = Guid.NewGuid();
 
+        OficinaId = oficinaId;
         ClienteId = clienteId;
         VeiculoId = veiculoId;
-
         Descricao = descricao;
         Valor = valor;
+        
 
         Status = StatusOrdemServico.Aberta;
 
         DataCriacao = DateTime.UtcNow;
     }
 
+    public ICollection<HistoricoOrdemServico> Historicos { get; private set; } = new List<HistoricoOrdemServico>();
 
     public void EnviarParaAprovacao()
     {
@@ -136,4 +145,6 @@ public class OrdemServico
 
         DataReabertura = DateTime.UtcNow;
     }
+
+
 }

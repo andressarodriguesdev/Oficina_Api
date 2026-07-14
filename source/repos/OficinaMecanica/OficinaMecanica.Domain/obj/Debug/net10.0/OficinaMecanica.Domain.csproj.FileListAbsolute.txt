@@ -9,3 +9,4 @@ C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Domain\obj\Debug\n
 C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Domain\obj\Debug\net10.0\refint\OficinaMecanica.Domain.dll
 C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Domain\obj\Debug\net10.0\OficinaMecanica.Domain.pdb
 C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Domain\obj\Debug\net10.0\ref\OficinaMecanica.Domain.dll
+C:\Users\Gustavo\source\repos\OficinaMecanica\OficinaMecanica.Domain\obj\Debug\net10.0\OficinaMecanica.Domain.sourcelink.json

@@ -130,6 +130,70 @@
         }
       }
     },
+    "/api/Oficina": {
+      "post": {
+        "tags": [
+          "Oficina"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CriarOficinaDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CriarOficinaDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CriarOficinaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Oficina"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Oficina/{id}": {
+      "get": {
+        "tags": [
+          "Oficina"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/OrdemServico": {
       "post": {
         "tags": [
@@ -370,6 +434,52 @@
         }
       }
     },
+    "/api/OrdemServico/{id}/historico": {
+      "get": {
+        "tags": [
+          "OrdemServico"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/OrdemServico/{id}/pdf": {
+      "get": {
+        "tags": [
+          "OrdemServico"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Veiculo": {
       "post": {
         "tags": [
@@ -526,6 +636,10 @@
           "modelo": {
             "type": "string",
             "nullable": true
+          },
+          "ano": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -548,6 +662,32 @@
             "nullable": true
           },
           "telefone": {
+            "type": "string",
+            "nullable": true
+          },
+          "oficinaId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CriarOficinaDto": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string",
+            "nullable": true
+          },
+          "telefone": {
+            "type": "string",
+            "nullable": true
+          },
+          "endereco": {
+            "type": "string",
+            "nullable": true
+          },
+          "logotipo": {
             "type": "string",
             "nullable": true
           }
@@ -591,6 +731,10 @@
             "type": "string",
             "nullable": true
           },
+          "ano": {
+            "type": "string",
+            "nullable": true
+          },
           "clienteId": {
             "type": "string",
             "format": "uuid"
@@ -613,6 +757,9 @@
   "tags": [
     {
       "name": "Cliente"
+    },
+    {
+      "name": "Oficina"
     },
     {
       "name": "OrdemServico"

@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Itens de Solução/">
+    <File Path="README.md" />
+  </Folder>
   <Project Path="OficinaMecanica.Api/OficinaMecanica.Api.csproj" />
   <Project Path="OficinaMecanica.Application/OficinaMecanica.Application.csproj" />
   <Project Path="OficinaMecanica.Domain/OficinaMecanica.Domain.csproj" />

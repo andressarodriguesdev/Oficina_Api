@@ -2,6 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using OficinaMecanica.Application.Services;
 using OficinaMecanica.Infrastructure.Data;
 using OficinaMecanica.Infrastructure.Repositories;
+using OficinaMecanica.Infrastructure.Services;
+using QuestPDF.Infrastructure;
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +31,10 @@ builder.Services.AddScoped<VeiculoRepository>();
 builder.Services.AddScoped<VeiculoAppService>();
 builder.Services.AddScoped<OrdemServicoRepository>();
 builder.Services.AddScoped<OrdemServicoAppService>();
-
+builder.Services.AddScoped<HistoricoOrdemServicoRepository>();
+builder.Services.AddScoped<OficinaRepository>();
+builder.Services.AddScoped<OficinaAppService>();
+builder.Services.AddScoped<OrdemServicoPdfService>();
 var app = builder.Build();
 
 

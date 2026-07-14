@@ -79,6 +79,48 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "OficinaMecanica.Api.Controllers.OficinaController",
+    "Method": "Criar",
+    "RelativePath": "api/Oficina",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "OficinaMecanica.Application.DTOs.CriarOficinaDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OficinaMecanica.Api.Controllers.OficinaController",
+    "Method": "Listar",
+    "RelativePath": "api/Oficina",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OficinaMecanica.Api.Controllers.OficinaController",
+    "Method": "ObterPorId",
+    "RelativePath": "api/Oficina/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "OficinaMecanica.Api.Controllers.OrdemServicoController",
     "Method": "Criar",
     "RelativePath": "api/OrdemServico",
@@ -178,6 +220,38 @@
     "Method": "EnviarParaAprovacao",
     "RelativePath": "api/OrdemServico/{id}/enviar-aprovacao",
     "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OficinaMecanica.Api.Controllers.OrdemServicoController",
+    "Method": "Historico",
+    "RelativePath": "api/OrdemServico/{id}/historico",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OficinaMecanica.Api.Controllers.OrdemServicoController",
+    "Method": "GerarPdf",
+    "RelativePath": "api/OrdemServico/{id}/pdf",
+    "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [

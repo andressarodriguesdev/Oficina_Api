@@ -16,6 +16,10 @@ public class VeiculoResponseDto
 
     public string Modelo { get; set; } = string.Empty;
 
+    public string Ano { get; set; } = string.Empty;
+
     public Guid ClienteId { get; set; }
+
+    public Guid OficinaId { get; set; }
 
 }

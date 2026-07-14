@@ -1,260 +1,190 @@
 ﻿using System.Linq;
 using OficinaMecanica.Application.DTOs;
-
 using OficinaMecanica.Domain.Entities;
-
+using OficinaMecanica.Domain.Enums;
 using OficinaMecanica.Infrastructure.Repositories;
 
 namespace OficinaMecanica.Application.Services;
 
 public class OrdemServicoAppService
-
 {
-
     private readonly OrdemServicoRepository _repository;
-
     private readonly ClienteRepository _clienteRepository;
-
     private readonly VeiculoRepository _veiculoRepository;
+    private readonly HistoricoOrdemServicoRepository _historicoRepository;
+
 
     public OrdemServicoAppService(
-
-    OrdemServicoRepository repository,
-
-    ClienteRepository clienteRepository,
-
-    VeiculoRepository veiculoRepository)
-
+        OrdemServicoRepository repository,
+        ClienteRepository clienteRepository,
+        VeiculoRepository veiculoRepository,
+        HistoricoOrdemServicoRepository historicoRepository)
     {
-
         _repository = repository;
-
         _clienteRepository = clienteRepository;
-
         _veiculoRepository = veiculoRepository;
-
+        _historicoRepository = historicoRepository;
     }
 
+
     public async Task<OrdemServicoResponseDto> CriarAsync(CriarOrdemServicoDto dto)
-
     {
-
         var cliente = await _clienteRepository.ObterPorIdAsync(dto.ClienteId);
 
         if (cliente == null)
-
             throw new Exception("Cliente não encontrado.");
+
 
         var veiculo = await _veiculoRepository.ObterPorIdAsync(dto.VeiculoId);
 
         if (veiculo == null)
-
             throw new Exception("Veículo não encontrado.");
 
-        if (veiculo.ClienteId != dto.ClienteId)
 
+        if (veiculo.ClienteId != dto.ClienteId)
             throw new Exception("O veículo não pertence ao cliente informado.");
 
+
         var ordemServico = new OrdemServico(
+            cliente.OficinaId,
+            dto.ClienteId,
+            dto.VeiculoId,
+            dto.Descricao,
+            dto.Valor
+        );
 
-        dto.ClienteId,
-
-        dto.VeiculoId,
-
-        dto.Descricao,
-
-        dto.Valor);
 
         var ordemCriada = await _repository.AdicionarAsync(ordemServico);
 
-        return new OrdemServicoResponseDto
-        {
-            Id = ordemCriada.Id,
-            ClienteId = ordemCriada.ClienteId,
-            VeiculoId = ordemCriada.VeiculoId,
-            Descricao = ordemCriada.Descricao,
-            Valor = ordemCriada.Valor,
-            Status = ordemCriada.Status,
-            DataCriacao = ordemCriada.DataCriacao,
-            DataEnvioAprovacao = ordemCriada.DataEnvioAprovacao,
-            DataConclusao = ordemCriada.DataConclusao,
 
-            DataCancelamento = ordemCriada.DataCancelamento,
-            MotivoCancelamento = ordemCriada.MotivoCancelamento,
-
-            DataReabertura = ordemCriada.DataReabertura,
-            MotivoReabertura = ordemCriada.MotivoReabertura
-        };
-
+        return MapearResponse(ordemCriada);
     }
+
+
 
     public async Task<OrdemServicoResponseDto?> ObterPorIdAsync(Guid id)
-
     {
-
         var ordem = await _repository.ObterPorIdAsync(id);
 
         if (ordem == null)
-
             return null;
 
-        return new OrdemServicoResponseDto
 
-        {
-
-            Id = ordem.Id,
-
-            ClienteId = ordem.ClienteId,
-
-            VeiculoId = ordem.VeiculoId,
-
-            Descricao = ordem.Descricao,
-
-            Valor = ordem.Valor,
-
-            Status = ordem.Status,
-
-            DataCriacao = ordem.DataCriacao,
-
-            DataEnvioAprovacao = ordem.DataEnvioAprovacao,
-
-            DataConclusao = ordem.DataConclusao,
-
-            DataCancelamento = ordem.DataCancelamento,
-
-            MotivoCancelamento = ordem.MotivoCancelamento,
-
-            DataReabertura = ordem.DataReabertura,
-
-            MotivoReabertura = ordem.MotivoReabertura
-
-        };
-
+        return MapearResponse(ordem);
     }
+
+
+
+    // NOVO MÉTODO PARA PDF
+    public async Task<OrdemServico?> ObterEntidadePorIdAsync(Guid id)
+    {
+        return await _repository.ObterPorIdAsync(id);
+    }
+
+
 
     public async Task<List<OrdemServicoResponseDto>> ListarAsync()
-
     {
-
         var ordens = await _repository.ListarAsync();
 
-        return ordens.Select(ordem => new OrdemServicoResponseDto
-
-        {
-
-            Id = ordem.Id,
-
-            ClienteId = ordem.ClienteId,
-
-            VeiculoId = ordem.VeiculoId,
-
-            Descricao = ordem.Descricao,
-
-            Valor = ordem.Valor,
-
-            Status = ordem.Status,
-
-            DataCriacao = ordem.DataCriacao,
-
-            DataEnvioAprovacao = ordem.DataEnvioAprovacao,
-
-            DataConclusao = ordem.DataConclusao,
-
-            DataCancelamento = ordem.DataCancelamento,
-
-            MotivoCancelamento = ordem.MotivoCancelamento,
-
-            DataReabertura = ordem.DataReabertura,
-
-            MotivoReabertura = ordem.MotivoReabertura
-
-        }).ToList();
-
+        return ordens
+            .Select(MapearResponse)
+            .ToList();
     }
 
+
+
     public async Task EnviarParaAprovacaoAsync(Guid id)
-
     {
-
         var ordem = await _repository.ObterPorIdAsync(id);
 
         if (ordem == null)
-
             throw new Exception("Ordem de serviço não encontrada.");
+
+        var statusAnterior = ordem.Status;
 
         ordem.EnviarParaAprovacao();
 
         await _repository.AtualizarAsync(ordem);
 
+        await RegistrarHistoricoAsync(ordem, statusAnterior);
     }
 
 
+
     public async Task AprovarAsync(Guid id)
-
     {
-
         var ordem = await _repository.ObterPorIdAsync(id);
 
         if (ordem == null)
-
             throw new Exception("Ordem de serviço não encontrada.");
+
+        var statusAnterior = ordem.Status;
 
         ordem.Aprovar();
 
         await _repository.AtualizarAsync(ordem);
 
+        await RegistrarHistoricoAsync(ordem, statusAnterior);
     }
 
 
+
     public async Task RecusarAsync(Guid id)
-
     {
-
         var ordem = await _repository.ObterPorIdAsync(id);
 
         if (ordem == null)
-
             throw new Exception("Ordem de serviço não encontrada.");
+
+        var statusAnterior = ordem.Status;
 
         ordem.Recusar();
 
         await _repository.AtualizarAsync(ordem);
 
+        await RegistrarHistoricoAsync(ordem, statusAnterior);
     }
 
 
+
     public async Task ConcluirAsync(Guid id)
-
     {
-
         var ordem = await _repository.ObterPorIdAsync(id);
 
         if (ordem == null)
-
             throw new Exception("Ordem de serviço não encontrada.");
+
+        var statusAnterior = ordem.Status;
 
         ordem.Concluir();
 
         await _repository.AtualizarAsync(ordem);
 
+        await RegistrarHistoricoAsync(ordem, statusAnterior);
     }
 
 
+
     public async Task CancelarAsync(Guid id, string motivo)
-
     {
-
         var ordem = await _repository.ObterPorIdAsync(id);
 
         if (ordem == null)
-
             throw new Exception("Ordem de serviço não encontrada.");
+
+        var statusAnterior = ordem.Status;
 
         ordem.Cancelar(motivo);
 
         await _repository.AtualizarAsync(ordem);
 
+        await RegistrarHistoricoAsync(
+            ordem,
+            statusAnterior,
+            motivo);
     }
+
 
 
     public async Task ReabrirAsync(Guid id, string motivo)
@@ -264,9 +194,73 @@ public class OrdemServicoAppService
         if (ordem == null)
             throw new Exception("Ordem de serviço não encontrada.");
 
+        var statusAnterior = ordem.Status;
+
         ordem.Reabrir(motivo);
 
         await _repository.AtualizarAsync(ordem);
+
+        await RegistrarHistoricoAsync(
+            ordem,
+            statusAnterior,
+            motivo);
     }
 
+
+
+    public async Task<List<HistoricoOrdemServicoResponseDto>> ObterHistoricoAsync(Guid ordemServicoId)
+    {
+        var historicos = await _historicoRepository.ObterPorOrdemServicoIdAsync(ordemServicoId);
+
+        return historicos
+            .Select(h => new HistoricoOrdemServicoResponseDto
+            {
+                Id = h.Id,
+                OrdemServicoId = h.OrdemServicoId,
+                StatusAnterior = h.StatusAnterior,
+                NovoStatus = h.NovoStatus,
+                Observacao = h.Observacao,
+                DataAlteracao = h.DataAlteracao
+            })
+            .ToList();
+    }
+
+
+
+    private async Task RegistrarHistoricoAsync(
+        OrdemServico ordem,
+        StatusOrdemServico statusAnterior,
+        string? observacao = null)
+    {
+        var historico = new HistoricoOrdemServico(
+            ordem.Id,
+            statusAnterior,
+            ordem.Status,
+            observacao
+        );
+
+        await _historicoRepository.AdicionarAsync(historico);
+    }
+
+
+
+    private static OrdemServicoResponseDto MapearResponse(OrdemServico ordem)
+    {
+        return new OrdemServicoResponseDto
+        {
+            Id = ordem.Id,
+            ClienteId = ordem.ClienteId,
+            VeiculoId = ordem.VeiculoId,
+            Descricao = ordem.Descricao,
+            Valor = ordem.Valor,
+            Status = ordem.Status,
+            DataCriacao = ordem.DataCriacao,
+            DataEnvioAprovacao = ordem.DataEnvioAprovacao,
+            DataConclusao = ordem.DataConclusao,
+            DataCancelamento = ordem.DataCancelamento,
+            MotivoCancelamento = ordem.MotivoCancelamento,
+            DataReabertura = ordem.DataReabertura,
+            MotivoReabertura = ordem.MotivoReabertura
+        };
+    }
 }
