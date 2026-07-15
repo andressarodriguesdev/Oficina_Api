@@ -12,6 +12,8 @@ public class CriarOrdemServicoDto
 
     public string Descricao { get; set; } = string.Empty;
 
-    public decimal Valor { get; set; }
+    public decimal ValorMaoObra { get; set; }
+
+    public List<OrdemServicoItemDto> Itens { get; set; } = new();
 
 }

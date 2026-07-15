@@ -27,10 +27,9 @@ public class ClienteRepository
     public async Task<List<Cliente>> ListarAsync()
     {
         return await _context.Clientes
-           
+            .Include(c => c.Veiculos)
             .ToListAsync();
     }
-
 
     public async Task<Cliente?> ObterPorIdAsync(Guid id)
     {

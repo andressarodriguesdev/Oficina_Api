@@ -9,9 +9,20 @@ QuestPDF.Settings.License = LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 // Serviços
 builder.Services.AddControllers();
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -35,7 +46,9 @@ builder.Services.AddScoped<HistoricoOrdemServicoRepository>();
 builder.Services.AddScoped<OficinaRepository>();
 builder.Services.AddScoped<OficinaAppService>();
 builder.Services.AddScoped<OrdemServicoPdfService>();
+builder.Services.AddScoped<WhatsAppService>();
 var app = builder.Build();
+
 
 
 // Pipeline
@@ -46,9 +59,22 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
+app.UseCors("Frontend");
 app.MapControllers();
-
 app.Run();
+
+builder.Services.AddCors(options =>
+
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        policy
+        .WithOrigins("http://localhost:5173"
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod();
+
+    });
+
+});

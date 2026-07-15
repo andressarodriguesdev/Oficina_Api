@@ -2,7 +2,7 @@
   {
     "ContainingType": "OficinaMecanica.Api.Controllers.ClienteController",
     "Method": "Criar",
-    "RelativePath": "api/Cliente",
+    "RelativePath": "api/clientes",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -18,7 +18,7 @@
   {
     "ContainingType": "OficinaMecanica.Api.Controllers.ClienteController",
     "Method": "Listar",
-    "RelativePath": "api/Cliente",
+    "RelativePath": "api/clientes",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -28,7 +28,7 @@
   {
     "ContainingType": "OficinaMecanica.Api.Controllers.ClienteController",
     "Method": "ObterPorId",
-    "RelativePath": "api/Cliente/{id}",
+    "RelativePath": "api/clientes/{id}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -44,7 +44,7 @@
   {
     "ContainingType": "OficinaMecanica.Api.Controllers.ClienteController",
     "Method": "Atualizar",
-    "RelativePath": "api/Cliente/{id}",
+    "RelativePath": "api/clientes/{id}",
     "HttpMethod": "PUT",
     "IsController": true,
     "Order": 0,
@@ -65,7 +65,7 @@
   {
     "ContainingType": "OficinaMecanica.Api.Controllers.ClienteController",
     "Method": "Remover",
-    "RelativePath": "api/Cliente/{id}",
+    "RelativePath": "api/clientes/{id}",
     "HttpMethod": "DELETE",
     "IsController": true,
     "Order": 0,
@@ -123,7 +123,7 @@
   {
     "ContainingType": "OficinaMecanica.Api.Controllers.OrdemServicoController",
     "Method": "Criar",
-    "RelativePath": "api/OrdemServico",
+    "RelativePath": "api/ordens-servico",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -139,7 +139,7 @@
   {
     "ContainingType": "OficinaMecanica.Api.Controllers.OrdemServicoController",
     "Method": "Listar",
-    "RelativePath": "api/OrdemServico",
+    "RelativePath": "api/ordens-servico",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -149,7 +149,7 @@
   {
     "ContainingType": "OficinaMecanica.Api.Controllers.OrdemServicoController",
     "Method": "ObterPorId",
-    "RelativePath": "api/OrdemServico/{id}",
+    "RelativePath": "api/ordens-servico/{id}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -165,7 +165,7 @@
   {
     "ContainingType": "OficinaMecanica.Api.Controllers.OrdemServicoController",
     "Method": "Aprovar",
-    "RelativePath": "api/OrdemServico/{id}/aprovar",
+    "RelativePath": "api/ordens-servico/{id}/aprovar",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -181,7 +181,7 @@
   {
     "ContainingType": "OficinaMecanica.Api.Controllers.OrdemServicoController",
     "Method": "Cancelar",
-    "RelativePath": "api/OrdemServico/{id}/cancelar",
+    "RelativePath": "api/ordens-servico/{id}/cancelar",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -202,7 +202,7 @@
   {
     "ContainingType": "OficinaMecanica.Api.Controllers.OrdemServicoController",
     "Method": "Concluir",
-    "RelativePath": "api/OrdemServico/{id}/concluir",
+    "RelativePath": "api/ordens-servico/{id}/concluir",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -218,7 +218,7 @@
   {
     "ContainingType": "OficinaMecanica.Api.Controllers.OrdemServicoController",
     "Method": "EnviarParaAprovacao",
-    "RelativePath": "api/OrdemServico/{id}/enviar-aprovacao",
+    "RelativePath": "api/ordens-servico/{id}/enviar-aprovacao",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -234,7 +234,7 @@
   {
     "ContainingType": "OficinaMecanica.Api.Controllers.OrdemServicoController",
     "Method": "Historico",
-    "RelativePath": "api/OrdemServico/{id}/historico",
+    "RelativePath": "api/ordens-servico/{id}/historico",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -249,8 +249,29 @@
   },
   {
     "ContainingType": "OficinaMecanica.Api.Controllers.OrdemServicoController",
+    "Method": "AdicionarItem",
+    "RelativePath": "api/ordens-servico/{id}/itens",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "OficinaMecanica.Application.DTOs.OrdemServicoItemDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OficinaMecanica.Api.Controllers.OrdemServicoController",
     "Method": "GerarPdf",
-    "RelativePath": "api/OrdemServico/{id}/pdf",
+    "RelativePath": "api/ordens-servico/{id}/pdf",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -266,7 +287,7 @@
   {
     "ContainingType": "OficinaMecanica.Api.Controllers.OrdemServicoController",
     "Method": "Reabrir",
-    "RelativePath": "api/OrdemServico/{id}/reabrir",
+    "RelativePath": "api/ordens-servico/{id}/reabrir",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -287,8 +308,24 @@
   {
     "ContainingType": "OficinaMecanica.Api.Controllers.OrdemServicoController",
     "Method": "Recusar",
-    "RelativePath": "api/OrdemServico/{id}/recusar",
+    "RelativePath": "api/ordens-servico/{id}/recusar",
     "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OficinaMecanica.Api.Controllers.OrdemServicoController",
+    "Method": "GerarLinkWhatsApp",
+    "RelativePath": "api/ordens-servico/{id}/whatsapp",
+    "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [

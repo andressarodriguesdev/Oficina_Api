@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    border-color: theme('colors.graphite.700');
+  }
+  body {
+    @apply bg-graphite-950 text-graphite-100 font-sans antialiased;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-graphite-900;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-graphite-700 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-graphite-600;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-graphite-850 rounded-xl border border-graphite-700 shadow-card transition-all duration-200;
+  }
+  .card-hover:hover {
+    @apply shadow-card-hover border-graphite-600 -translate-y-0.5;
+  }
+  .input-field {
+    @apply w-full bg-graphite-800 border border-graphite-700 rounded-lg px-3.5 py-2.5 text-graphite-100 placeholder-graphite-400
+      focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500/30 transition-colors duration-150;
+  }
+  .nav-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-graphite-300 hover:bg-graphite-800 hover:text-graphite-100
+      transition-colors duration-150 cursor-pointer;
+  }
+  .nav-link-active {
+    @apply bg-accent-500/10 text-accent-400 border border-accent-500/20;
+  }
+}

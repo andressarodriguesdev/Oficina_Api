@@ -7,43 +7,47 @@ using OficinaMecanica.Infrastructure.Services;
 namespace OficinaMecanica.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/ordens-servico")]
 public class OrdemServicoController : ControllerBase
 {
     private readonly OrdemServicoAppService _service;
     private readonly OrdemServicoPdfService _pdfService;
+    private readonly WhatsAppService _whatsAppService;
 
 
     public OrdemServicoController(
         OrdemServicoAppService service,
-        OrdemServicoPdfService pdfService)
+        OrdemServicoPdfService pdfService,
+        WhatsAppService whatsAppService)
     {
         _service = service;
         _pdfService = pdfService;
+        _whatsAppService = whatsAppService;
     }
 
 
     [HttpPost]
     public async Task<IActionResult> Criar(CriarOrdemServicoDto dto)
     {
-        var ordemServico = await _service.CriarAsync(dto);
+        var ordem = await _service.CriarAsync(dto);
 
         return CreatedAtAction(
             nameof(ObterPorId),
-            new { id = ordemServico.Id },
-            ordemServico);
+            new { id = ordem.Id },
+            ordem
+        );
     }
 
 
     [HttpGet("{id}")]
     public async Task<IActionResult> ObterPorId(Guid id)
     {
-        var ordemServico = await _service.ObterPorIdAsync(id);
+        var ordem = await _service.ObterPorIdAsync(id);
 
-        if (ordemServico == null)
+        if (ordem == null)
             return NotFound();
 
-        return Ok(ordemServico);
+        return Ok(ordem);
     }
 
 
@@ -122,21 +126,56 @@ public class OrdemServicoController : ControllerBase
         return Ok(historico);
     }
 
+
     [HttpGet("{id}/pdf")]
     public async Task<IActionResult> GerarPdf(Guid id)
     {
-        var ordemServico = await _service.ObterEntidadePorIdAsync(id);
+        var ordem = await _service.ObterEntidadePorIdAsync(id);
 
-        if (ordemServico == null)
+        if (ordem == null)
             return NotFound();
 
 
-        var pdf = _pdfService.GerarPdf(ordemServico);
+        var pdf = _pdfService.GerarPdf(ordem);
 
 
         return File(
             pdf,
             "application/pdf",
-            $"ordem-servico-{id}.pdf");
+            $"ordem-servico-{id}.pdf"
+        );
+    }
+
+
+    [HttpPost("{id}/itens")]
+    public async Task<IActionResult> AdicionarItem(
+        Guid id,
+        OrdemServicoItemDto dto)
+    {
+        await _service.AdicionarItemAsync(id, dto);
+
+        return Ok(new
+        {
+            mensagem = "Item adicionado com sucesso"
+        });
+    }
+
+
+    [HttpGet("{id}/whatsapp")]
+    public async Task<IActionResult> GerarLinkWhatsApp(Guid id)
+    {
+        var ordem = await _service.ObterEntidadePorIdAsync(id);
+
+        if (ordem == null)
+            return NotFound();
+
+
+        var link = _whatsAppService.GerarLinkAprovacao(ordem);
+
+
+        return Ok(new
+        {
+            link
+        });
     }
 }

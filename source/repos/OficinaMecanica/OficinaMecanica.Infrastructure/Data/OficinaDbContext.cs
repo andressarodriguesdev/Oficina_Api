@@ -14,6 +14,8 @@ public class OficinaDbContext : DbContext
     public DbSet<OrdemServico> OrdensServico { get; set; }
     public DbSet<HistoricoOrdemServico> HistoricosOrdemServico { get; set; }
 
+    public DbSet<OrdemServicoItem> OrdemServicoItens { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         base.OnModelCreating(modelBuilder);
         
@@ -59,17 +61,23 @@ public class OficinaDbContext : DbContext
             .WithOne(os => os.Veiculo)
             .HasForeignKey(os => os.VeiculoId) 
             .OnDelete(DeleteBehavior.Restrict);
-        
+
         // Valor monetário
-        modelBuilder.Entity<OrdemServico>() 
-            .Property(x => x.Valor) 
-            .HasPrecision(18, 2);
-        
+        modelBuilder.Entity<OrdemServico>()
+        .Property(x => x.ValorMaoObra)
+        .HasPrecision(18, 2);
+
         // HistoricoOrdemServico -> OrdemServico
         modelBuilder.Entity<OrdemServico>()
             .HasMany(o => o.Historicos) 
             .WithOne(h => h.OrdemServico)
             .HasForeignKey(h => h.OrdemServicoId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // OrdemServicoItem -> OrdemServico
+        modelBuilder.Entity<OrdemServico>()
+            .HasMany(o => o.Itens)
+            .WithOne(i => i.OrdemServico)
+            .HasForeignKey(i => i.OrdemServicoId);
     }
 }

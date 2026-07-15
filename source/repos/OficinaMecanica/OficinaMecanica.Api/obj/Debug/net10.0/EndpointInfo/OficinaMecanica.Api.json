@@ -5,7 +5,7 @@
     "version": "1.0"
   },
   "paths": {
-    "/api/Cliente": {
+    "/api/clientes": {
       "post": {
         "tags": [
           "Cliente"
@@ -46,7 +46,7 @@
         }
       }
     },
-    "/api/Cliente/{id}": {
+    "/api/clientes/{id}": {
       "get": {
         "tags": [
           "Cliente"
@@ -194,7 +194,7 @@
         }
       }
     },
-    "/api/OrdemServico": {
+    "/api/ordens-servico": {
       "post": {
         "tags": [
           "OrdemServico"
@@ -235,7 +235,7 @@
         }
       }
     },
-    "/api/OrdemServico/{id}": {
+    "/api/ordens-servico/{id}": {
       "get": {
         "tags": [
           "OrdemServico"
@@ -258,7 +258,7 @@
         }
       }
     },
-    "/api/OrdemServico/{id}/enviar-aprovacao": {
+    "/api/ordens-servico/{id}/enviar-aprovacao": {
       "post": {
         "tags": [
           "OrdemServico"
@@ -281,7 +281,7 @@
         }
       }
     },
-    "/api/OrdemServico/{id}/aprovar": {
+    "/api/ordens-servico/{id}/aprovar": {
       "post": {
         "tags": [
           "OrdemServico"
@@ -304,7 +304,7 @@
         }
       }
     },
-    "/api/OrdemServico/{id}/recusar": {
+    "/api/ordens-servico/{id}/recusar": {
       "post": {
         "tags": [
           "OrdemServico"
@@ -327,7 +327,7 @@
         }
       }
     },
-    "/api/OrdemServico/{id}/concluir": {
+    "/api/ordens-servico/{id}/concluir": {
       "post": {
         "tags": [
           "OrdemServico"
@@ -350,7 +350,7 @@
         }
       }
     },
-    "/api/OrdemServico/{id}/cancelar": {
+    "/api/ordens-servico/{id}/cancelar": {
       "post": {
         "tags": [
           "OrdemServico"
@@ -392,7 +392,7 @@
         }
       }
     },
-    "/api/OrdemServico/{id}/reabrir": {
+    "/api/ordens-servico/{id}/reabrir": {
       "post": {
         "tags": [
           "OrdemServico"
@@ -434,7 +434,7 @@
         }
       }
     },
-    "/api/OrdemServico/{id}/historico": {
+    "/api/ordens-servico/{id}/historico": {
       "get": {
         "tags": [
           "OrdemServico"
@@ -457,7 +457,72 @@
         }
       }
     },
-    "/api/OrdemServico/{id}/pdf": {
+    "/api/ordens-servico/{id}/pdf": {
+      "get": {
+        "tags": [
+          "OrdemServico"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/ordens-servico/{id}/itens": {
+      "post": {
+        "tags": [
+          "OrdemServico"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrdemServicoItemDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrdemServicoItemDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrdemServicoItemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/ordens-servico/{id}/whatsapp": {
       "get": {
         "tags": [
           "OrdemServico"
@@ -618,6 +683,10 @@
           "telefone": {
             "type": "string",
             "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -665,9 +734,13 @@
             "type": "string",
             "nullable": true
           },
-          "oficinaId": {
+          "email": {
             "type": "string",
-            "format": "uuid"
+            "nullable": true
+          },
+          "quantidadeVeiculos": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -709,9 +782,16 @@
             "type": "string",
             "nullable": true
           },
-          "valor": {
+          "valorMaoObra": {
             "type": "number",
             "format": "double"
+          },
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrdemServicoItemDto"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -738,6 +818,24 @@
           "clienteId": {
             "type": "string",
             "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OrdemServicoItemDto": {
+        "type": "object",
+        "properties": {
+          "descricao": {
+            "type": "string",
+            "nullable": true
+          },
+          "quantidade": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "valorUnitario": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false

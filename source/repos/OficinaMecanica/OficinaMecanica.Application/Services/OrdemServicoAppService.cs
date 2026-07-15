@@ -50,12 +50,23 @@ public class OrdemServicoAppService
             dto.ClienteId,
             dto.VeiculoId,
             dto.Descricao,
-            dto.Valor
+            dto.ValorMaoObra
         );
 
 
-        var ordemCriada = await _repository.AdicionarAsync(ordemServico);
+        foreach (var itemDto in dto.Itens)
+        {
+            var item = new OrdemServicoItem(
+                itemDto.Descricao,
+                itemDto.Quantidade,
+                itemDto.ValorUnitario
+            );
 
+            ordemServico.AdicionarItem(item);
+        }
+
+
+        var ordemCriada = await _repository.AdicionarAsync(ordemServico);
 
         return MapearResponse(ordemCriada);
     }
@@ -75,7 +86,7 @@ public class OrdemServicoAppService
 
 
 
-    // NOVO MÉTODO PARA PDF
+    // Usado por PDF e serviços internos que precisam da entidade completa
     public async Task<OrdemServico?> ObterEntidadePorIdAsync(Guid id)
     {
         return await _repository.ObterPorIdAsync(id);
@@ -91,15 +102,13 @@ public class OrdemServicoAppService
             .Select(MapearResponse)
             .ToList();
     }
-
-
-
     public async Task EnviarParaAprovacaoAsync(Guid id)
     {
         var ordem = await _repository.ObterPorIdAsync(id);
 
         if (ordem == null)
             throw new Exception("Ordem de serviço não encontrada.");
+
 
         var statusAnterior = ordem.Status;
 
@@ -119,6 +128,7 @@ public class OrdemServicoAppService
         if (ordem == null)
             throw new Exception("Ordem de serviço não encontrada.");
 
+
         var statusAnterior = ordem.Status;
 
         ordem.Aprovar();
@@ -136,6 +146,7 @@ public class OrdemServicoAppService
 
         if (ordem == null)
             throw new Exception("Ordem de serviço não encontrada.");
+
 
         var statusAnterior = ordem.Status;
 
@@ -155,6 +166,7 @@ public class OrdemServicoAppService
         if (ordem == null)
             throw new Exception("Ordem de serviço não encontrada.");
 
+
         var statusAnterior = ordem.Status;
 
         ordem.Concluir();
@@ -173,6 +185,7 @@ public class OrdemServicoAppService
         if (ordem == null)
             throw new Exception("Ordem de serviço não encontrada.");
 
+
         var statusAnterior = ordem.Status;
 
         ordem.Cancelar(motivo);
@@ -182,7 +195,8 @@ public class OrdemServicoAppService
         await RegistrarHistoricoAsync(
             ordem,
             statusAnterior,
-            motivo);
+            motivo
+        );
     }
 
 
@@ -194,6 +208,7 @@ public class OrdemServicoAppService
         if (ordem == null)
             throw new Exception("Ordem de serviço não encontrada.");
 
+
         var statusAnterior = ordem.Status;
 
         ordem.Reabrir(motivo);
@@ -203,24 +218,33 @@ public class OrdemServicoAppService
         await RegistrarHistoricoAsync(
             ordem,
             statusAnterior,
-            motivo);
+            motivo
+        );
     }
 
 
 
     public async Task<List<HistoricoOrdemServicoResponseDto>> ObterHistoricoAsync(Guid ordemServicoId)
     {
-        var historicos = await _historicoRepository.ObterPorOrdemServicoIdAsync(ordemServicoId);
+        var historicos = await _historicoRepository
+            .ObterPorOrdemServicoIdAsync(ordemServicoId);
+
 
         return historicos
             .Select(h => new HistoricoOrdemServicoResponseDto
             {
                 Id = h.Id,
+
                 OrdemServicoId = h.OrdemServicoId,
+
                 StatusAnterior = h.StatusAnterior,
+
                 NovoStatus = h.NovoStatus,
+
                 Observacao = h.Observacao,
+
                 DataAlteracao = h.DataAlteracao
+
             })
             .ToList();
     }
@@ -239,6 +263,7 @@ public class OrdemServicoAppService
             observacao
         );
 
+
         await _historicoRepository.AdicionarAsync(historico);
     }
 
@@ -249,18 +274,80 @@ public class OrdemServicoAppService
         return new OrdemServicoResponseDto
         {
             Id = ordem.Id,
+
             ClienteId = ordem.ClienteId,
+
             VeiculoId = ordem.VeiculoId,
+
             Descricao = ordem.Descricao,
-            Valor = ordem.Valor,
+
+
+            // Valor informado pelo mecânico
+            ValorMaoObra = ordem.ValorMaoObra,
+
+
+            // Mão de obra + itens
+            ValorTotal = ordem.ValorTotal,
+
+
             Status = ordem.Status,
+
             DataCriacao = ordem.DataCriacao,
-            DataEnvioAprovacao = ordem.DataEnvioAprovacao,
-            DataConclusao = ordem.DataConclusao,
-            DataCancelamento = ordem.DataCancelamento,
-            MotivoCancelamento = ordem.MotivoCancelamento,
-            DataReabertura = ordem.DataReabertura,
-            MotivoReabertura = ordem.MotivoReabertura
+
+
+            Itens = ordem.Itens
+                .Select(i => new OrdemServicoItemDto
+                {
+                    Descricao = i.Descricao,
+
+                    Quantidade = i.Quantidade,
+
+                    ValorUnitario = i.ValorUnitario
+
+                })
+                .ToList(),
+
+
+            Historicos = ordem.Historicos
+                .Select(h => new HistoricoOrdemServicoResponseDto
+                {
+                    Id = h.Id,
+
+                    OrdemServicoId = h.OrdemServicoId,
+
+                    StatusAnterior = h.StatusAnterior,
+
+                    NovoStatus = h.NovoStatus,
+
+                    Observacao = h.Observacao,
+
+                    DataAlteracao = h.DataAlteracao
+
+                })
+                .ToList()
         };
+    }
+
+
+
+    public async Task AdicionarItemAsync(Guid ordemId, OrdemServicoItemDto dto)
+    {
+        var ordem = await _repository.ObterPorIdAsync(ordemId);
+
+        if (ordem == null)
+            throw new Exception("Ordem não encontrada.");
+
+
+        var item = new OrdemServicoItem(
+            dto.Descricao,
+            dto.Quantidade,
+            dto.ValorUnitario
+        );
+
+
+        ordem.AdicionarItem(item);
+
+
+        await _repository.AtualizarAsync(ordem);
     }
 }

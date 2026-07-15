@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace OficinaMecanica.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class PrimeiraMigracion : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -33,6 +33,7 @@ namespace OficinaMecanica.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Nome = table.Column<string>(type: "text", nullable: false),
                     Telefone = table.Column<string>(type: "text", nullable: false),
+                    Email = table.Column<string>(type: "text", nullable: false),
                     OficinaId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -54,6 +55,7 @@ namespace OficinaMecanica.Infrastructure.Migrations
                     Placa = table.Column<string>(type: "text", nullable: false),
                     Marca = table.Column<string>(type: "text", nullable: false),
                     Modelo = table.Column<string>(type: "text", nullable: false),
+                    Ano = table.Column<string>(type: "text", nullable: false),
                     ClienteId = table.Column<Guid>(type: "uuid", nullable: false),
                     OficinaId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -82,7 +84,7 @@ namespace OficinaMecanica.Infrastructure.Migrations
                     ClienteId = table.Column<Guid>(type: "uuid", nullable: false),
                     VeiculoId = table.Column<Guid>(type: "uuid", nullable: false),
                     Descricao = table.Column<string>(type: "text", nullable: false),
-                    Valor = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    ValorMaoObra = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
                     DataCriacao = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     DataEnvioAprovacao = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -138,6 +140,27 @@ namespace OficinaMecanica.Infrastructure.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "OrdemServicoItens",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    OrdemServicoId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Descricao = table.Column<string>(type: "text", nullable: false),
+                    Quantidade = table.Column<int>(type: "integer", nullable: false),
+                    ValorUnitario = table.Column<decimal>(type: "numeric", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrdemServicoItens", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrdemServicoItens_OrdensServico_OrdemServicoId",
+                        column: x => x.OrdemServicoId,
+                        principalTable: "OrdensServico",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Clientes_OficinaId",
                 table: "Clientes",
@@ -146,6 +169,11 @@ namespace OficinaMecanica.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_HistoricosOrdemServico_OrdemServicoId",
                 table: "HistoricosOrdemServico",
+                column: "OrdemServicoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrdemServicoItens_OrdemServicoId",
+                table: "OrdemServicoItens",
                 column: "OrdemServicoId");
 
             migrationBuilder.CreateIndex(
@@ -179,6 +207,9 @@ namespace OficinaMecanica.Infrastructure.Migrations
         {
             migrationBuilder.DropTable(
                 name: "HistoricosOrdemServico");
+
+            migrationBuilder.DropTable(
+                name: "OrdemServicoItens");
 
             migrationBuilder.DropTable(
                 name: "OrdensServico");

@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Linq;
 using OficinaMecanica.Domain.Enums;
-
 
 namespace OficinaMecanica.Domain.Entities;
 
@@ -16,7 +16,19 @@ public class OrdemServico
 
     public string Descricao { get; private set; } = null!;
 
-    public decimal Valor { get; private set; }
+
+    // Valor da mão de obra informado pelo mecânico
+    // Valor cobrado pela mão de obra
+    public decimal ValorMaoObra { get; private set; }
+
+
+    // Peças e materiais utilizados na manutenção
+    public List<OrdemServicoItem> Itens { get; private set; } = new();
+
+
+    // Valor total da OS = mão de obra + peças
+    public decimal ValorTotal => ValorMaoObra + Itens.Sum(i => i.ValorTotal);
+
 
     public StatusOrdemServico Status { get; private set; }
 
@@ -34,41 +46,46 @@ public class OrdemServico
 
     public string? MotivoReabertura { get; private set; }
 
+
     public Guid OficinaId { get; private set; }
 
     public Oficina Oficina { get; private set; } = null!;
 
 
+    public ICollection<HistoricoOrdemServico> Historicos { get; private set; }
+        = new List<HistoricoOrdemServico>();
+
+
     // Usado pelo Entity Framework
-    private OrdemServico()
-    {
-    }
-
-
-    public OrdemServico
-        (
-        Guid oficinaId, 
-        Guid clienteId, 
-        Guid veiculoId, 
-        string descricao, 
-        decimal valor
-        )
+    public OrdemServico(
+    Guid oficinaId,
+    Guid clienteId,
+    Guid veiculoId,
+    string descricao,
+    decimal valorMaoObra
+)
     {
         Id = Guid.NewGuid();
 
         OficinaId = oficinaId;
         ClienteId = clienteId;
         VeiculoId = veiculoId;
+
         Descricao = descricao;
-        Valor = valor;
-        
+
+        ValorMaoObra = valorMaoObra;
 
         Status = StatusOrdemServico.Aberta;
 
         DataCriacao = DateTime.UtcNow;
     }
 
-    public ICollection<HistoricoOrdemServico> Historicos { get; private set; } = new List<HistoricoOrdemServico>();
+
+    public void AdicionarItem(OrdemServicoItem item)
+    {
+        Itens.Add(item);
+    }
+
 
     public void EnviarParaAprovacao()
     {
@@ -145,6 +162,4 @@ public class OrdemServico
 
         DataReabertura = DateTime.UtcNow;
     }
-
-
 }

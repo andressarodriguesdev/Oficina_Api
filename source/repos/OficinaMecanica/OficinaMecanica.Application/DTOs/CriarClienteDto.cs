@@ -10,5 +10,8 @@ public class CriarClienteDto
 
     public string Telefone { get; set; } = string.Empty;
 
-    public Guid OficinaId { get; set; }
+    public string Email { get; set; } = string.Empty;
+
+    public int QuantidadeVeiculos { get; set; }
+
 }

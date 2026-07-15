@@ -16,7 +16,6 @@ public class OrdemServicoPdfService
             container.Page(page =>
             {
                 page.Margin(35);
-
                 page.Size(PageSizes.A4);
 
 
@@ -154,10 +153,59 @@ public class OrdemServicoPdfService
                         .Text(os.Descricao);
 
 
+
+                        servico.Item()
+                        .PaddingTop(15)
+                        .Text("MÃO DE OBRA")
+                        .Bold();
+
+
+                        servico.Item()
+                        .Text($"R$ {os.ValorMaoObra:F2}");
+
+
+
+                        if (os.Itens.Any())
+                        {
+                            servico.Item()
+                            .PaddingTop(15)
+                            .Text("PEÇAS / MATERIAIS")
+                            .Bold();
+
+
+
+                            foreach (var item in os.Itens)
+                            {
+                                servico.Item()
+                                .PaddingTop(5)
+                                .Text(
+                                    $"{item.Descricao} - " +
+                                    $"{item.Quantidade}x - " +
+                                    $"R$ {item.ValorTotal:F2}"
+                                );
+                            }
+                        }
+
+
+
+                        servico.Item()
+                        .PaddingTop(20)
+                        .LineHorizontal(1);
+
+
+
                         servico.Item()
                         .PaddingTop(10)
-                        .Text($"Valor: R$ {os.Valor:F2}")
-                        .Bold();
+                        .Text("TOTAL DA ORDEM DE SERVIÇO")
+                        .Bold()
+                        .FontSize(14);
+
+
+
+                        servico.Item()
+                        .Text($"R$ {os.ValorTotal:F2}")
+                        .Bold()
+                        .FontSize(18);
                     });
 
 
@@ -247,7 +295,7 @@ public class OrdemServicoPdfService
                     .AlignCenter()
                     .Text(text =>
                     {
-                        text.Span($"{os.Cliente.Oficina.Nome}• Página ");
+                        text.Span($"{os.Cliente.Oficina.Nome} • Página ");
                         text.CurrentPageNumber();
                     });
                 });
