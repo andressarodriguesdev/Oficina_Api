@@ -162,4 +162,18 @@ public class OrdemServico
 
         DataReabertura = DateTime.UtcNow;
     }
+
+    public void AtualizarDados(
+    Guid clienteId,
+    Guid veiculoId,
+    string descricao,
+    decimal valorMaoObra
+    )
+    {
+        ClienteId = clienteId;
+        VeiculoId = veiculoId;
+        Descricao = descricao;
+        ValorMaoObra = valorMaoObra;
+
+    }
 }

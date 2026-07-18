@@ -1,54 +1,19 @@
-import type { ReactNode } from 'react';
+import type { HTMLAttributes } from 'react';
 
-interface CardProps {
-  children: ReactNode;
-  className?: string;
-  hover?: boolean;
-  onClick?: () => void;
+interface CardProps extends HTMLAttributes<HTMLDivElement> { hover?: boolean; }
+
+export function Card({ className, hover, children, ...props }: CardProps) {
+  return <div className={['card', hover ? 'transition-all duration-200 hover:border-ink-600 hover:shadow-glow' : '', className ?? ''].join(' ')} {...props}>{children}</div>;
 }
 
-export function Card({ children, className = '', hover = false, onClick }: CardProps) {
+export function CardHeader({ title, subtitle, action, className, ...props }: { title: string; subtitle?: string; action?: React.ReactNode; className?: string } & HTMLAttributes<HTMLDivElement>) {
   return (
-    <div
-      onClick={onClick}
-      className={`card ${hover ? 'card-hover cursor-pointer' : ''} ${className}`}
-    >
-      {children}
-    </div>
-  );
-}
-
-interface StatCardProps {
-  title: string;
-  value: string;
-  icon: ReactNode;
-  trend?: string;
-  trendUp?: boolean;
-  accent?: 'orange' | 'steel' | 'green' | 'red';
-}
-
-const accentMap = {
-  orange: 'bg-accent-500/10 text-accent-400',
-  steel: 'bg-steel-500/10 text-steel-400',
-  green: 'bg-emerald-500/10 text-emerald-400',
-  red: 'bg-red-500/10 text-red-400',
-};
-
-export function StatCard({ title, value, icon, trend, trendUp, accent = 'orange' }: StatCardProps) {
-  return (
-    <Card hover className="p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-graphite-400 font-medium">{title}</p>
-          <p className="text-2xl font-bold text-graphite-100 mt-2">{value}</p>
-          {trend && (
-            <p className={`text-xs mt-2 ${trendUp ? 'text-emerald-400' : 'text-red-400'}`}>
-              {trend}
-            </p>
-          )}
-        </div>
-        <div className={`p-3 rounded-lg ${accentMap[accent]}`}>{icon}</div>
+    <div className={['flex items-start justify-between gap-4 border-b border-ink-700/60 px-5 py-4', className ?? ''].join(' ')} {...props}>
+      <div>
+        <h3 className="font-display text-base font-bold text-white">{title}</h3>
+        {subtitle && <p className="mt-0.5 text-sm text-ink-400">{subtitle}</p>}
       </div>
-    </Card>
+      {action}
+    </div>
   );
 }

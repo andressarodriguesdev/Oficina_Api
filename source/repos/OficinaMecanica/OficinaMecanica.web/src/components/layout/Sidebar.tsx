@@ -1,97 +1,61 @@
-import {
-  LayoutDashboard,
-  Users,
-  Car,
-  ClipboardList,
-  History,
-  Settings,
-  Wrench,
-  Plus,
-  LogOut,
-} from 'lucide-react';
-import type { Page } from '../hooks/useNavigation';
-import type { ReactNode } from 'react';
+import { NavLink } from 'react-router-dom';
+import { LayoutDashboard, Users, Car, ClipboardList, DollarSignIcon,Settings, Wrench, X,} from 'lucide-react';
 
-interface SidebarProps {
-  current: Page;
-  onNavigate: (page: Page) => void;
-  onLogout: () => void;
-}
-
-interface NavItem {
-  page: Page;
-  label: string;
-  icon: ReactNode;
-}
-
-const navItems: NavItem[] = [
-  { page: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-  { page: 'clientes', label: 'Clientes', icon: <Users size={20} /> },
-  { page: 'veiculos', label: 'Veículos', icon: <Car size={20} /> },
-  { page: 'os-nova', label: 'Ordens de Serviço', icon: <ClipboardList size={20} /> },
-  { page: 'historico', label: 'Histórico', icon: <History size={20} /> },
+const navItems = [
+  { to: '/painel', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/clientes', label: 'Clientes', icon: Users },
+  { to: '/veiculos', label: 'Veículos', icon: Car },
+  { to: '/ordens-servico', label: 'Ordens de Serviço', icon: ClipboardList },
+  { to: '/financeiro', label: 'Finanças', icon: DollarSignIcon },
+  { to: '/configuracoes', label: 'Configurações', icon: Settings },
 ];
 
-export function Sidebar({ current, onNavigate, onLogout }: SidebarProps) {
+export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
-    <aside className="w-64 bg-graphite-900 border-r border-graphite-800 flex flex-col h-screen sticky top-0">
-      {/* Logo */}
-      <div className="px-5 py-5 border-b border-graphite-800">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-accent-500/10 border border-accent-500/20">
-            <Wrench size={24} className="text-accent-500" />
+    <>
+      {open && <div className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden" onClick={onClose} />}
+      <aside className={[
+        'fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-ink-700/60 bg-ink-900/95 backdrop-blur transition-transform duration-300 lg:static lg:translate-x-0',
+        open ? 'translate-x-0' : '-translate-x-full',
+      ].join(' ')}>
+        <div className="flex items-center justify-between gap-2 px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-flame-500 to-flame-600 shadow-glow">
+              <Wrench className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <p className="font-display text-lg font-extrabold leading-tight text-white">OficinaMecânica</p>
+              <p className="text-xs font-medium text-ink-400">Painel Administrativo</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-bold text-graphite-100 leading-tight">OficinaMecanica</h1>
-            <p className="text-xs text-graphite-400">Sistema de Gestão</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick action */}
-      <div className="px-4 py-4">
-        <button
-          onClick={() => onNavigate('os-nova')}
-          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-accent-500 hover:bg-accent-600 text-white font-medium text-sm transition-all shadow-sm hover:shadow-glow"
-        >
-          <Plus size={18} />
-          Nova OS
-        </button>
-      </div>
-
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const isActive = current === item.page || (item.page === 'os-nova' && current === 'os-detalhes');
-          return (
-            <button
-              key={item.page}
-              onClick={() => onNavigate(item.page)}
-              className={`nav-link w-full ${isActive ? 'nav-link-active' : ''}`}
-            >
-              {item.icon}
-              <span className="text-sm font-medium">{item.label}</span>
-            </button>
-          );
-        })}
-        <div className="pt-3 mt-3 border-t border-graphite-800">
-          <button
-            onClick={() => onNavigate('configuracoes')}
-            className={`nav-link w-full ${current === 'configuracoes' ? 'nav-link-active' : ''}`}
-          >
-            <Settings size={20} />
-            <span className="text-sm font-medium">Configurações</span>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-ink-400 transition hover:bg-ink-800 hover:text-white lg:hidden">
+            <X className="h-5 w-5" />
           </button>
         </div>
-      </nav>
-
-      {/* Logout */}
-      <div className="px-3 py-4 border-t border-graphite-800">
-        <button onClick={onLogout} className="nav-link w-full text-graphite-400 hover:text-red-400">
-          <LogOut size={20} />
-          <span className="text-sm font-medium">Sair</span>
-        </button>
-      </div>
-    </aside>
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink key={item.to} to={item.to} end={item.end} onClick={onClose} className={({ isActive }) => [
+                'group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all duration-150',
+                isActive ? 'bg-flame-500/10 text-flame-400 shadow-[inset_0_0_0_1px_rgba(249,115,22,0.25)]' : 'text-ink-300 hover:bg-ink-800 hover:text-white',
+              ].join(' ')}>
+                <Icon className="h-5 w-5 shrink-0" />
+                {item.label}
+              </NavLink>
+            );
+          })}
+        </nav>
+        <div className="border-t border-ink-700/60 px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-700 text-sm font-bold text-ink-200">AD</div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-white">Administrador</p>
+              <p className="truncate text-xs text-ink-400">admin@oficina.com</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }

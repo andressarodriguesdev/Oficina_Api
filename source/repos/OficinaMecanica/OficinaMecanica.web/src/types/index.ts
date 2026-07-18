@@ -1,70 +1,73 @@
 export type OSStatus =
-| 'aberta'
-| 'aguardando_aprovacao'
-| 'aprovada'
-| 'recusada'
-| 'concluida'
-| 'cancelada'
-| 'reaberta';
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'mecanico';
-  avatar?: string;
-}
+  | 'Aberta'
+  | 'AguardandoAprovacao'
+  | 'Aprovada'
+  | 'Recusada'
+  | 'Concluida'
+  | 'Cancelada'
+  | 'Reaberta';
 
 export interface Cliente {
   id: string;
   nome: string;
-  telefone: string;
-  email: string;
-  quantidadeVeiculos?: number;
+  telefone?: string | null;
+  email?: string | null;
+  endereco?: string | null;
 }
 
 export interface Veiculo {
   id: string;
-  clienteId: string;
-  modelo: string;
-  marca: string;
-  ano: string;
   placa: string;
+  marca: string;
+  modelo: string;
+  ano: string;
+  clienteId: string;
+  cliente?: Cliente | null;
 }
-
-export interface OSItem {
+export interface OrdemServicoItem {
   id: string;
+  ordemServicoId: string;
   descricao: string;
   quantidade: number;
   valorUnitario: number;
+  valorTotal: number;
 }
 
-export interface OSTimelineEvent {
+export interface HistoricoOrdemServico {
   id: string;
-  status: OSStatus;
-  label: string;
-  timestamp: string;
-  user: string;
+  ordemServicoId: string;
+  statusAnterior: number | null;
+  novoStatus: number;
+  observacao?: string | null;
+  dataAlteracao: string;
 }
 
 export interface OrdemServico {
   id: string;
-  numero: string;
   clienteId: string;
   veiculoId: string;
   descricao: string;
   valorMaoObra: number;
-  itens: OSItem[];
-  status: OSStatus;
-  data: string;
-  timeline: OSTimelineEvent[];
+  valorTotal: number;
+  status: number;
+  dataCriacao: string;
+  dataEnvioAprovacao?: string | null;
+  dataConclusao?: string | null;
+  observacao?: string | null;
+  itens?: OrdemServicoItem[];
+  historicos?: HistoricoOrdemServico[];
+}
+export interface VeiculoResumo {
+  id: string;
+  placa: string;
+  marca: string;
+  modelo: string;
 }
 
-export interface Notification {
+export interface ClienteDetalhado {
   id: string;
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-  type: 'info' | 'warning' | 'success';
+  nome: string;
+  telefone: string;
+  email: string;
+  veiculos: VeiculoResumo[];
 }

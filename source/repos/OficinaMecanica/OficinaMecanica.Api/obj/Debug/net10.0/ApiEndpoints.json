@@ -79,6 +79,16 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "OficinaMecanica.Api.Controllers.FinanceiroController",
+    "Method": "Get",
+    "RelativePath": "api/financeiro",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "OficinaMecanica.Api.Controllers.OficinaController",
     "Method": "Criar",
     "RelativePath": "api/Oficina",
@@ -157,6 +167,27 @@
       {
         "Name": "id",
         "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "OficinaMecanica.Api.Controllers.OrdemServicoController",
+    "Method": "Atualizar",
+    "RelativePath": "api/ordens-servico/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "OficinaMecanica.Application.DTOs.AtualizarOrdemServicoDto",
         "IsRequired": true
       }
     ],

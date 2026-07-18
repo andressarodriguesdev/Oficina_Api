@@ -1,8 +1,9 @@
-﻿using System.Linq;
+﻿using Microsoft.EntityFrameworkCore;
 using OficinaMecanica.Application.DTOs;
 using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Domain.Enums;
 using OficinaMecanica.Infrastructure.Repositories;
+using System.Linq;
 
 namespace OficinaMecanica.Application.Services;
 
@@ -279,50 +280,49 @@ public class OrdemServicoAppService
 
             VeiculoId = ordem.VeiculoId,
 
+            Cliente = new ClienteResponseDto
+            {
+                Id = ordem.Cliente.Id,
+                Nome = ordem.Cliente.Nome,
+                Telefone = ordem.Cliente.Telefone
+            },
+
+            Veiculo = new VeiculoResponseDto
+            {
+                Id = ordem.Veiculo.Id,
+                Marca = ordem.Veiculo.Marca,
+                Modelo = ordem.Veiculo.Modelo,
+                Placa = ordem.Veiculo.Placa
+            },
+
             Descricao = ordem.Descricao,
 
-
-            // Valor informado pelo mecânico
             ValorMaoObra = ordem.ValorMaoObra,
 
-
-            // Mão de obra + itens
             ValorTotal = ordem.ValorTotal,
-
 
             Status = ordem.Status,
 
             DataCriacao = ordem.DataCriacao,
 
-
             Itens = ordem.Itens
                 .Select(i => new OrdemServicoItemDto
                 {
                     Descricao = i.Descricao,
-
                     Quantidade = i.Quantidade,
-
                     ValorUnitario = i.ValorUnitario
-
                 })
                 .ToList(),
-
 
             Historicos = ordem.Historicos
                 .Select(h => new HistoricoOrdemServicoResponseDto
                 {
                     Id = h.Id,
-
                     OrdemServicoId = h.OrdemServicoId,
-
                     StatusAnterior = h.StatusAnterior,
-
                     NovoStatus = h.NovoStatus,
-
                     Observacao = h.Observacao,
-
                     DataAlteracao = h.DataAlteracao
-
                 })
                 .ToList()
         };
@@ -346,6 +346,51 @@ public class OrdemServicoAppService
 
 
         ordem.AdicionarItem(item);
+
+
+        await _repository.AtualizarAsync(ordem);
+    }
+
+    public async Task AtualizarAsync(
+      Guid id,
+      AtualizarOrdemServicoDto dto)
+    {
+        var ordem = await _repository.ObterPorIdAsync(id);
+
+        if (ordem == null)
+            throw new Exception("Ordem de serviço não encontrada.");
+
+
+        if (ordem.Status != StatusOrdemServico.Aberta)
+            throw new Exception(
+                "Somente ordens abertas podem ser editadas."
+            );
+
+
+        var cliente = await _clienteRepository.ObterPorIdAsync(dto.ClienteId);
+
+        if (cliente == null)
+            throw new Exception("Cliente não encontrado.");
+
+
+        var veiculo = await _veiculoRepository.ObterPorIdAsync(dto.VeiculoId);
+
+        if (veiculo == null)
+            throw new Exception("Veículo não encontrado.");
+
+
+        if (veiculo.ClienteId != dto.ClienteId)
+            throw new Exception(
+                "O veículo não pertence ao cliente informado."
+            );
+
+
+        ordem.AtualizarDados(
+            dto.ClienteId,
+            dto.VeiculoId,
+            dto.Descricao,
+            dto.ValorMaoObra
+        );
 
 
         await _repository.AtualizarAsync(ordem);

@@ -29,6 +29,7 @@ builder.Services.AddSwaggerGen();
 
 
 
+
 // Banco de dados
 builder.Services.AddDbContext<OficinaDbContext>(options =>
     options.UseNpgsql(
@@ -47,6 +48,7 @@ builder.Services.AddScoped<OficinaRepository>();
 builder.Services.AddScoped<OficinaAppService>();
 builder.Services.AddScoped<OrdemServicoPdfService>();
 builder.Services.AddScoped<WhatsAppService>();
+builder.Services.AddScoped<FinanceiroAppService>();
 var app = builder.Build();
 
 

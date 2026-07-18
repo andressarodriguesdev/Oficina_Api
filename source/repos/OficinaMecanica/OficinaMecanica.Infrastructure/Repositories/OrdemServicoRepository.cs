@@ -83,4 +83,14 @@ public class OrdemServicoRepository
 
         await _context.SaveChangesAsync();
     }
+
+
+    public async Task<List<OrdemServico>> ListarFinanceiroAsync()
+    {
+        return await _context.OrdensServico
+            .Include(o => o.Cliente)
+            .Include(o => o.Veiculo)
+            .Include(o => o.Itens)
+            .ToListAsync();
+    }
 }

@@ -178,4 +178,14 @@ public class OrdemServicoController : ControllerBase
             link
         });
     }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Atualizar(
+    Guid id,
+    AtualizarOrdemServicoDto dto)
+    {
+        await _service.AtualizarAsync(id, dto);
+
+        return NoContent();
+    }
 }

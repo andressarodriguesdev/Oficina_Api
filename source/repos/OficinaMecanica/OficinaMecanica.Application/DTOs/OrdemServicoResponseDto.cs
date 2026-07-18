@@ -1,4 +1,5 @@
 ﻿using OficinaMecanica.Application.DTOs;
+using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Domain.Enums;
 
 public class OrdemServicoResponseDto
@@ -8,6 +9,10 @@ public class OrdemServicoResponseDto
     public Guid ClienteId { get; set; }
 
     public Guid VeiculoId { get; set; }
+
+    public ClienteResponseDto? Cliente { get; set; }
+
+    public VeiculoResponseDto? Veiculo { get; set; }
 
     public string Descricao { get; set; } = string.Empty;
 
