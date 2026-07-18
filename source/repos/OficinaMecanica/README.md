@@ -1,241 +1,165 @@
-# 🚗 OficinaMecanica API
+# 🚗 Oficina Mecânica API
 
-Sistema de gerenciamento para oficinas mecânicas desenvolvido com foco em organização de serviços, controle de clientes, veículos e ordens de serviço.
+Sistema de gerenciamento para oficinas mecânicas, desenvolvido como um projeto Full Stack com foco em organização de atendimentos, controle de veículos e gerenciamento de ordens de serviço.
 
-Este projeto nasceu como um estudo prático de **arquitetura de software, desenvolvimento Full Stack e aplicação de regras de negócio reais**, simulando um sistema utilizado no dia a dia de uma oficina.
+O objetivo do projeto é criar uma solução simples e eficiente para auxiliar oficinas no controle dos serviços realizados, desde o cadastro do cliente até a aprovação e conclusão da ordem de serviço.
 
 ---
 
-## 📌 Sobre o Projeto
+## 🚀 Funcionalidades
 
-O **OficinaMecanica** é uma aplicação web para auxiliar oficinas no controle dos seus atendimentos.
+### 👤 Clientes
 
-A ideia é centralizar o processo desde o cadastro do cliente e veículo até a criação, aprovação e conclusão de uma Ordem de Serviço.
+* Cadastro de clientes
+* Consulta de clientes cadastrados
+* Associação de veículos ao cliente
+* Armazenamento de informações de contato
 
-### Fluxo principal:
+### 🚘 Veículos
+
+* Cadastro de veículos vinculados ao cliente
+* Controle de:
+
+  * Marca
+  * Modelo
+  * Ano
+  * Placa
+
+### 📋 Ordens de Serviço
+
+Fluxo completo de atendimento:
 
 ```
-Cliente
-   ↓
-Veículo
-   ↓
-Ordem de Serviço
-   ↓
+Aberta
+  ↓
 Aguardando Aprovação
-   ↓
-Serviço Concluído
+  ↓
+Aprovada
+  ↓
+Concluída
 ```
 
----
+Também possui os estados:
 
-# 🚀 Funcionalidades
-
-## 👤 Clientes
-
-✅ Cadastro de clientes
-✅ Listagem de clientes
-✅ Integração Front-end e Back-end
-✅ Persistência no banco de dados
-
----
-
-## 🚘 Veículos
-
-✅ Cadastro de veículos vinculados aos clientes
-✅ Consulta de veículos
-✅ Controle de informações do veículo
-
----
-
-## 🔧 Ordens de Serviço
-
-✅ Criação de Ordem de Serviço
-✅ Controle de status do serviço
-
-Status disponíveis:
-
-* Aberta
-* Aguardando aprovação
-* Aprovada
 * Recusada
-* Concluída
 * Cancelada
 * Reaberta
 
-✅ Histórico de alterações da OS
-✅ Inclusão de itens/peças
-✅ Cálculo de valores
-✅ Geração de PDF da Ordem de Serviço
-✅ Estrutura preparada para envio via WhatsApp
+Funcionalidades:
+
+* Criação de ordens de serviço
+* Associação entre cliente e veículo
+* Cadastro de descrição do serviço
+* Controle de mão de obra
+* Cadastro de peças e materiais
+* Cálculo do valor total
+* Histórico de alterações de status
 
 ---
 
-# 🏗️ Arquitetura do Projeto
+## 📄 Geração de PDF
 
-O projeto utiliza uma arquitetura organizada em camadas:
+O sistema possui geração de Ordem de Serviço em PDF utilizando **QuestPDF**.
 
-```
-OficinaMecanica
-│
-├── OficinaMecanica.Api
-│   └── Controllers
-│
-├── OficinaMecanica.Application
-│   ├── DTOs
-│   └── Services
-│
-├── OficinaMecanica.Domain
-│   ├── Entities
-│   └── Enums
-│
-└── OficinaMecanica.Infrastructure
-    ├── Data
-    ├── Repositories
-    └── External Services
-```
+O documento contém:
+
+* Dados da oficina
+* Informações do cliente
+* Dados do veículo
+* Descrição técnica do serviço
+* Lista de peças utilizadas
+* Valores da mão de obra
+* Resumo financeiro
+* Espaço para assinaturas
+
+O PDF foi pensado para funcionar como documento de registro da oficina.
 
 ---
 
-# 🛠️ Tecnologias Utilizadas
+## 💻 Tecnologias utilizadas
 
-## Back-end
+### Back-end
 
 * C#
-* .NET 10
+* .NET
 * ASP.NET Core Web API
 * Entity Framework Core
 * PostgreSQL
-* Dependency Injection
-* REST API
-* Swagger/OpenAPI
+* QuestPDF
+* Swagger
 
----
-
-## Front-end
+### Front-end
 
 * React
 * TypeScript
 * Vite
 * Tailwind CSS
+* Axios
 * Lucide Icons
 
 ---
 
-## Outros
+## 🏗️ Arquitetura
 
-* Git
-* GitHub
-* Postman
-* Swagger
-* QuestPDF
-
----
-
-# 🔌 Integração Front-end + Back-end
-
-A aplicação possui comunicação entre:
+O projeto segue uma organização baseada em camadas:
 
 ```
-React
- |
- | HTTP Requests
- ↓
-ASP.NET Core API
- |
- ↓
-Entity Framework Core
- |
- ↓
-PostgreSQL
-```
-
-Os módulos de clientes, veículos e ordens de serviço são consumidos através de endpoints REST.
-
----
-
-# 📄 Geração de PDF
-
-O sistema possui geração automática de PDF para Ordem de Serviço utilizando:
-
-* QuestPDF
-
-A ideia é permitir que a oficina gere documentos profissionais para apresentar ao cliente.
-
----
-
-# 📱 Integração WhatsApp
-
-A estrutura do projeto já possui preparação para envio de aprovação de orçamento via WhatsApp.
-
-Fluxo planejado:
-
-```
-Mecânico cria OS
-        ↓
-Enviar para aprovação
-        ↓
-Cliente recebe link
-        ↓
-Cliente aprova ou recusa
+OficinaMecanica
+│
+├── API
+│   └── Controllers
+│
+├── Application
+│   ├── Services
+│   └── DTOs
+│
+├── Domain
+│   └── Entities
+│
+└── Infrastructure
+    ├── Database
+    └── Services
 ```
 
 ---
 
-# 🗄️ Banco de Dados
+## 🔄 Integrações planejadas
 
-Banco utilizado:
+Próximas evoluções:
 
-* PostgreSQL
-
-Principais entidades:
-
-```
-Cliente
-   |
-   |
-Veículo
-   |
-   |
-Ordem de Serviço
-   |
-   |
-Itens da OS
-```
+* [ ] Envio automático da OS pelo WhatsApp
+* [ ] Link de aprovação para cliente
+* [ ] Dashboard com indicadores da oficina
+* [ ] Melhorias no histórico de atendimento
+* [ ] Emissão de documentos fiscais
+* [ ] Controle financeiro da oficina
 
 ---
 
-# 🔮 Próximas Implementações
+## 📌 Status do projeto
 
-* [ ] Dashboard completo com indicadores
-* [ ] Tela de detalhes da Ordem de Serviço
-* [ ] Aprovação pelo cliente
-* [ ] Upload de fotos do veículo
-* [ ] Controle de peças em estoque
-* [ ] Autenticação e autorização de usuários
-* [ ] Multi-tenancy para várias oficinas
-* [ ] Deploy em ambiente cloud
+🚧 Em desenvolvimento
+
+O projeto está sendo desenvolvido como MVP, evoluindo gradualmente com novas funcionalidades e melhorias de experiência do usuário.
 
 ---
 
-# 🎯 Objetivo
-
-Este projeto tem como objetivo aplicar na prática conceitos de:
-
-* Arquitetura em camadas
-* Desenvolvimento de APIs REST
-* Regras de negócio
-* Integração Full Stack
-* Banco de dados relacional
-* Boas práticas de desenvolvimento
-
----
-
-# 👩‍💻 Desenvolvido por
+## 👩‍💻 Desenvolvido por
 
 **Andressa Rodrigues**
 
-Desenvolvedora Full Stack em formação, apaixonada por tecnologia, desenvolvimento de sistemas e criação de soluções que resolvem problemas reais.
+Desenvolvedora Full Stack
+
+Tecnologias principais:
+
+* C#
+* .NET
+* React
+* TypeScript
+* Banco de dados relacional
 
 ---
 
-⭐ Se este projeto te interessou, fique à vontade para acompanhar sua evolução!
+## 📸 Demonstração
+
+Em breve serão adicionadas imagens das telas do sistema e exemplos dos documentos gerados.
