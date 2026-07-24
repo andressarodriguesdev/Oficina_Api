@@ -1,0 +1,20 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# .NET
+bin/
+obj/
+
+# Logs
+*.log
+
+# Node
+node_modules/
+dist/
+
+# Ambiente
+.env
+
+
