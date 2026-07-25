@@ -13,6 +13,8 @@ import { OrdemEditar } from './pages/OrdemEditar';
 import { Historico } from './pages/Historico';
 import { Configuracoes } from './pages/Configuracoes';
 import { Financeiro } from './pages/Financeiro';
+import { Mecanicos } from './pages/MecanicosPage';
+import { MecanicoDetalhes } from './pages/MecanicoDetalhes';
 
 function App() {
   return (
@@ -34,6 +36,9 @@ function App() {
             <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="*" element={<Navigate to="/" replace />} />
             <Route  path="/financeiro" element={<Financeiro />} />
+            <Route path="/mecanicos" element={<Mecanicos />} />
+            <Route  path="/mecanicos/:id" element={<MecanicoDetalhes />} 
+/>
           </Route>
         </Routes>
       </BrowserRouter>

@@ -43,7 +43,7 @@ public class ClienteAppService
 
     public async Task<List<ClienteResponseDto>> ListarAsync()
     {
-        var clientes = await _repository.ListarAtivosAsync();
+        var clientes = await _repository.ListarAsync();
 
         return clientes.Select(cliente => new ClienteResponseDto
         {
@@ -51,6 +51,7 @@ public class ClienteAppService
             Nome = cliente.Nome,
             Telefone = cliente.Telefone,
             Email = cliente.Email,
+            Ativo = cliente.Ativo,
             QuantidadeVeiculos = cliente.Veiculos.Count
 
         }).ToList();
@@ -71,6 +72,8 @@ public class ClienteAppService
             Nome = cliente.Nome,
             Telefone = cliente.Telefone,
             Email = cliente.Email,
+
+            Ativo = cliente.Ativo,
 
             Veiculos = cliente.Veiculos
                 .Select(v => new VeiculoResumoDto

@@ -1,3 +1,5 @@
+
+
 export type OSStatus =
   | 'Aberta'
   | 'AguardandoAprovacao'
@@ -13,6 +15,7 @@ export interface Cliente {
   telefone?: string | null;
   email?: string | null;
   endereco?: string | null;
+  ativo: boolean;
 }
 
 export interface Veiculo {
@@ -22,6 +25,7 @@ export interface Veiculo {
   modelo: string;
   ano: string;
   clienteId: string;
+  ativo: boolean;
   cliente?: Cliente | null;
 }
 export interface OrdemServicoItem {
@@ -56,12 +60,14 @@ export interface OrdemServico {
   observacao?: string | null;
   itens?: OrdemServicoItem[];
   historicos?: HistoricoOrdemServico[];
+  mecanicosId:string;
 }
 export interface VeiculoResumo {
   id: string;
   placa: string;
   marca: string;
   modelo: string;
+  ativo: boolean;
 }
 
 export interface ClienteDetalhado {
@@ -69,5 +75,25 @@ export interface ClienteDetalhado {
   nome: string;
   telefone: string;
   email: string;
+  ativo: boolean;
   veiculos: VeiculoResumo[];
+}
+
+
+export interface mecanicos {
+  id: string;
+  nome: string;
+  telefone?: string;
+  especialidade?: string;
+  ativo: boolean;
+  oficinaId: string;
+  oficina?: OficinaResumo;
+}
+
+export interface OficinaResumo {
+  id: string;
+  nome: string;
+  telefone?: string;
+  endereco?: string;
+  logotipo?: string;
 }

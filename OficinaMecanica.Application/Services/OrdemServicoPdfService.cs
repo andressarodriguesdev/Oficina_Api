@@ -40,19 +40,59 @@ public class OrdemServicoPdfService
                     column.Spacing(15);
 
                     // DADOS DO CLIENTE E VEÍCULO (Blocos com fundo suave e borda no topo)
+                    // CLIENTE, VEÍCULO E MECÂNICO
                     column.Item().Row(row =>
                     {
-                        row.RelativeItem().Background(Colors.Grey.Lighten4).Padding(10).Column(c => {
-                            c.Item().Text("CLIENTE").FontSize(8).Bold().FontColor(primaryColor);
+                        row.RelativeItem().Background(Colors.Grey.Lighten4).Padding(10).Column(c =>
+                        {
+                            c.Item().Text("CLIENTE")
+                                .FontSize(8)
+                                .Bold()
+                                .FontColor(primaryColor);
+
                             c.Item().Text($"Nome: {os.Cliente.Nome}");
                             c.Item().Text($"Tel: {os.Cliente.Telefone}");
                             c.Item().Text($"Email: {os.Cliente.Email}");
                         });
-                        row.ConstantItem(15);
-                        row.RelativeItem().Background(Colors.Grey.Lighten4).Padding(10).Column(c => {
-                            c.Item().Text("VEÍCULO").FontSize(8).Bold().FontColor(primaryColor);
+
+
+                        row.ConstantItem(10);
+
+
+                        row.RelativeItem().Background(Colors.Grey.Lighten4).Padding(10).Column(c =>
+                        {
+                            c.Item().Text("VEÍCULO")
+                                .FontSize(8)
+                                .Bold()
+                                .FontColor(primaryColor);
+
                             c.Item().Text($"{os.Veiculo.Marca} {os.Veiculo.Modelo}");
-                            c.Item().Text($"Placa: {os.Veiculo.Placa} | Ano: {os.Veiculo.Ano}");
+                            c.Item().Text($"Placa: {os.Veiculo.Placa}");
+                            c.Item().Text($"Ano: {os.Veiculo.Ano}");
+                        });
+
+
+                        row.ConstantItem(10);
+
+
+                        row.RelativeItem().Background(Colors.Grey.Lighten4).Padding(10).Column(c =>
+                        {
+                            c.Item().Text("MECÂNICO RESPONSÁVEL")
+                                .FontSize(8)
+                                .Bold()
+                                .FontColor(primaryColor);
+
+
+                            if (os.Mecanico != null)
+                            {
+                                c.Item().Text($"Nome: {os.Mecanico.Nome}");
+                                c.Item().Text($"Tel: {os.Mecanico.Telefone}");
+                                c.Item().Text($"Especialidade: {os.Mecanico.Especialidade}");
+                            }
+                            else
+                            {
+                                c.Item().Text("Não informado");
+                            }
                         });
                     });
 
@@ -103,7 +143,7 @@ public class OrdemServicoPdfService
 
                     column.Item().PaddingTop(30).Row(row => {
                         row.RelativeItem().Column(c => { c.Item().PaddingHorizontal(10).LineHorizontal(0.5f); c.Item().AlignCenter().Text("Assinatura Cliente"); });
-                        row.RelativeItem().Column(c => { c.Item().PaddingHorizontal(10).LineHorizontal(0.5f); c.Item().AlignCenter().Text("Responsável"); });
+                        row.RelativeItem().Column(c => { c.Item().PaddingHorizontal(10).LineHorizontal(0.5f); c.Item().AlignCenter().Text("Mecânico Responsável"); });
                     });
                 });
             });

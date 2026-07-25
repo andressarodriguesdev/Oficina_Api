@@ -15,6 +15,8 @@ public class OficinaDbContext : DbContext
     public DbSet<HistoricoOrdemServico> HistoricosOrdemServico { get; set; }
     public DbSet<OrdemServicoItem> OrdemServicoItens { get; set; }
 
+    public DbSet<Mecanico> Mecanicos { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         base.OnModelCreating(modelBuilder);
         

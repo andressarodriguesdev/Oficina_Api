@@ -17,7 +17,9 @@ import {
 } from "../services/ordens";
 import { listClientes } from "../services/clientes";
 import { listVeiculos } from "../services/veiculos";
-import type { Cliente, Veiculo, OrdemServicoItem } from "../types";
+import { listMecanicos } from "../services/mecanico";
+
+import type { Cliente, Veiculo, OrdemServicoItem, mecanicos } from "../types";
 
 export function OrdemEditar() {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +27,7 @@ export function OrdemEditar() {
   const toast = useToast();
   const [ordem, setOrdem] = useState<OrdemWithRelations | null>(null);
   const [itens, setItens] = useState<OrdemServicoItem[]>([]);
+  const [mecanicos, setMecanicos] = useState<mecanicos[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,16 +36,18 @@ export function OrdemEditar() {
   const load = useCallback(async () => {
     if (!id) return;
     try {
-      const [o, c, v] = await Promise.all([
+      const [o, c, v, m] = await Promise.all([
         getOrdem(id),
         listClientes(),
         listVeiculos(),
+        listMecanicos(),
       ]);
 
       setOrdem(o);
       setItens(o?.itens ?? []);
       setClientes(c);
       setVeiculos(v);
+      setMecanicos(m);
     } catch (err) {
       toast.error("Erro ao carregar ordem de serviço");
       console.error(err);
@@ -67,6 +72,7 @@ export function OrdemEditar() {
       await updateOrdem(id, {
         clienteId: values.clienteId,
         veiculoId: values.veiculoId,
+        mecanicoId: values.mecanicoId,
         descricao: values.descricao,
         valorMaoObra: values.valorMaoObra,
         valorTotal: valorTotal,
@@ -121,6 +127,7 @@ export function OrdemEditar() {
             id: ordem.id,
             clienteId: ordem.clienteId,
             veiculoId: ordem.veiculoId,
+            mecanicoId: ordem.mecanicosId,
             descricao: ordem.descricao,
             valorMaoObra: ordem.valorMaoObra,
             observacao: ordem.observacao ?? "",
@@ -134,6 +141,7 @@ export function OrdemEditar() {
           }}
           clientes={clientes}
           veiculos={veiculos}
+          mecanico={mecanicos}
           onSubmit={handleSubmit}
           onCancel={() => navigate(`/ordens-servico/${id}`)}
           submitting={submitting}

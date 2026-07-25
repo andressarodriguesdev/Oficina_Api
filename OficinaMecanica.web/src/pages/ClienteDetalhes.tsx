@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   Phone,
@@ -7,108 +7,118 @@ import {
   Car,
   ClipboardList,
   Pencil,
-  Trash2,
+  UserX,
+  UserCheck,
   Plus,
   User,
-} from 'lucide-react';
+} from "lucide-react";
 
-import { Card, CardHeader } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { PageLoader } from '../components/ui/Spinner';
-import { EmptyState } from '../components/ui/EmptyState';
-import { Modal } from '../components/ui/Modal';
-import { ConfirmDialog } from '../components/ui/ConfirmDialog';
-import { useToast } from '../components/ui/Toast';
-import { ClienteForm, type ClienteFormValues } from '../components/forms/ClienteForm';
+import { Card, CardHeader } from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
+import { PageLoader } from "../components/ui/Spinner";
+import { EmptyState } from "../components/ui/EmptyState";
+import { Modal } from "../components/ui/Modal";
+import { useToast } from "../components/ui/Toast";
+import {
+  ClienteForm,
+  type ClienteFormValues,
+} from "../components/forms/ClienteForm";
 
 import {
   getCliente,
   updateCliente,
-  deleteCliente,
-} from '../services/clientes';
+  inativarCliente,
+  reativarCliente,
+} from "../services/clientes";
+import type { ClienteDetalhado, VeiculoResumo, OrdemServico } from "../types";
 
-import type {
-  ClienteDetalhado,
-  VeiculoResumo,
-  OrdemServico,
-} from '../types';
-
-import { initials, formatCurrency } from '../utils/format';
+import { initials, formatCurrency } from "../utils/format";
 
 export function ClienteDetalhes() {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const toast = useToast()
+  const { id } = useParams<{ id: string }>();
+  const toast = useToast();
 
-  const [cliente, setCliente] = useState<ClienteDetalhado | null>(null)
-  const [veiculos, setVeiculos] = useState<VeiculoResumo[]>([])
-  const [ordens] = useState<OrdemServico[]>([])
+  const [cliente, setCliente] = useState<ClienteDetalhado | null>(null);
+  const [veiculos, setVeiculos] = useState<VeiculoResumo[]>([]);
+  const [ordens] = useState<OrdemServico[]>([]);
 
-  const [loading, setLoading] = useState(true)
-  const [editOpen, setEditOpen] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const [deleting, setDeleting] = useState(false)
+  const [loading, setLoading] = useState(true);
+  const [editOpen, setEditOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!id) return
-
-    ;(async () => {
+    if (!id) return;
+    (async () => {
       try {
-        const detalhe = await getCliente(id)
+        const detalhe = await getCliente(id);
 
-        setCliente(detalhe)
-        setVeiculos(detalhe?.veiculos ?? [])
+        setCliente(detalhe);
+        setVeiculos(detalhe?.veiculos ?? []);
       } catch (err) {
-        toast.error('Erro ao carregar cliente')
-        console.error(err)
+        toast.error("Erro ao carregar cliente");
+        console.error(err);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    })()
-  }, [id, toast])
+    })();
+  }, [id, toast]);
 
   const handleEdit = async (values: ClienteFormValues) => {
-    if (!id) return
+    if (!id) return;
 
-    setSubmitting(true)
-
-    try {
-      await updateCliente(id, values)
-
-      toast.success('Cliente atualizado com sucesso')
-      setEditOpen(false)
-
-      const atualizado = await getCliente(id)
-      setCliente(atualizado)
-      setVeiculos(atualizado?.veiculos ?? [])
-    } catch (err) {
-      toast.error('Erro ao atualizar cliente')
-      console.error(err)
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const handleDelete = async () => {
-    if (!id) return
-
-    setDeleting(true)
+    setSubmitting(true);
 
     try {
-      await deleteCliente(id)
-      toast.success('Cliente excluído com sucesso')
-      navigate('/clientes')
+      await updateCliente(id, values);
+
+      toast.success("Cliente atualizado com sucesso");
+      setEditOpen(false);
+
+      const atualizado = await getCliente(id);
+      setCliente(atualizado);
+      setVeiculos(atualizado?.veiculos ?? []);
     } catch (err) {
-      toast.error('Erro ao excluir cliente')
-      console.error(err)
+      toast.error("Erro ao atualizar cliente");
+      console.error(err);
     } finally {
-      setDeleting(false)
+      setSubmitting(false);
     }
-  }
+  };
+
+  const handleInativar = async () => {
+    if (!id) return;
+
+    try {
+      await inativarCliente(id);
+
+      toast.success("Cliente inativado com sucesso");
+
+      const atualizado = await getCliente(id);
+      setCliente(atualizado);
+    } catch (err) {
+      toast.error("Erro ao inativar cliente");
+      console.error(err);
+    }
+  };
+
+  const handleReativar = async () => {
+    if (!id) return;
+
+    try {
+      await reativarCliente(id);
+
+      toast.success("Cliente reativado com sucesso");
+
+      const atualizado = await getCliente(id);
+      setCliente(atualizado);
+    } catch (err) {
+      toast.error("Erro ao reativar cliente");
+      console.error(err);
+    }
+  };
 
   if (loading) {
-    return <PageLoader label="Carregando cliente..." />
+    return <PageLoader label="Carregando cliente..." />;
   }
 
   if (!cliente) {
@@ -127,7 +137,7 @@ export function ClienteDetalhes() {
           }
         />
       </Card>
-    )
+    );
   }
 
   return (
@@ -146,13 +156,19 @@ export function ClienteDetalhes() {
             Editar
           </Button>
 
-          <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)}>
-            <Trash2 className="h-4 w-4" />
-            Excluir
-          </Button>
+          {cliente.ativo ? (
+            <Button variant="danger" size="sm" onClick={handleInativar}>
+              <UserX className="h-4 w-4" />
+              Inativar
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" onClick={handleReativar}>
+              <UserCheck className="h-4 w-4" />
+              Reativar
+            </Button>
+          )}
         </div>
       </div>
-
       <Card className="p-6">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-ink-700 to-ink-800 text-xl font-bold text-flame-400">
@@ -167,12 +183,12 @@ export function ClienteDetalhes() {
             <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
               <div className="flex items-center gap-2 text-sm text-ink-300">
                 <Phone className="h-4 w-4 text-ink-400" />
-                {cliente.telefone || '—'}
+                {cliente.telefone || "—"}
               </div>
 
               <div className="flex items-center gap-2 text-sm text-ink-300">
                 <Mail className="h-4 w-4 text-ink-400" />
-                {cliente.email || '—'}
+                {cliente.email || "—"}
               </div>
             </div>
           </div>
@@ -266,9 +282,7 @@ export function ClienteDetalhes() {
                     <p className="text-sm font-semibold text-white">
                       {v.marca} {v.modelo}
                     </p>
-                    <p className="text-xs text-ink-400">
-                      {v.placa || '—'}
-                    </p>
+                    <p className="text-xs text-ink-400">{v.placa || "—"}</p>
                   </div>
                 </div>
               </Link>
@@ -304,15 +318,6 @@ export function ClienteDetalhes() {
           submitting={submitting}
         />
       </Modal>
-
-      <ConfirmDialog
-        open={confirmDelete}
-        onClose={() => setConfirmDelete(false)}
-        onConfirm={handleDelete}
-        loading={deleting}
-        title="Excluir cliente"
-        message={`Tem certeza que deseja excluir o cliente "${cliente.nome}"?`}
-      />
     </div>
-  )
+  );
 }

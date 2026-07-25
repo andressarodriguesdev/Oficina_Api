@@ -1,5 +1,4 @@
 ﻿using OficinaMecanica.Application.DTOs;
-using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Domain.Enums;
 
 public class OrdemServicoResponseDto
@@ -10,18 +9,21 @@ public class OrdemServicoResponseDto
 
     public Guid VeiculoId { get; set; }
 
+    public Guid  MecanicoId { get; set; }
+
+
     public ClienteResponseDto? Cliente { get; set; }
 
     public VeiculoResponseDto? Veiculo { get; set; }
 
+    public MecanicoResponseDto Mecanico { get; set; }
+
+
     public string Descricao { get; set; } = string.Empty;
 
 
-    // Valor da mão de obra
     public decimal ValorMaoObra { get; set; }
 
-
-    // Valor total = mão de obra + itens
     public decimal ValorTotal { get; set; }
 
 

@@ -1,13 +1,17 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Car, ClipboardList, DollarSignIcon,Settings, Wrench, X,} from 'lucide-react';
+import { LayoutDashboard, Users, Car, ClipboardList, DollarSignIcon,Settings, Wrench, X,WrenchIcon} from 'lucide-react';
+import { statusLabel } from '../../utils/status';
+import { MecanicoForm } from '../forms/MecanicoForm';
 
 const navItems = [
   { to: '/painel', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/clientes', label: 'Clientes', icon: Users },
   { to: '/veiculos', label: 'Veículos', icon: Car },
   { to: '/ordens-servico', label: 'Ordens de Serviço', icon: ClipboardList },
+  {to: '/mecanicos', label: 'Mecânicos' , icon: WrenchIcon},
   { to: '/financeiro', label: 'Finanças', icon: DollarSignIcon },
   { to: '/configuracoes', label: 'Configurações', icon: Settings },
+  
 ];
 
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {

@@ -55,7 +55,7 @@ public class VeiculoAppService
 
     public async Task<List<VeiculoResponseDto>> ListarAsync()
     {
-        var veiculos = await _repository.ListarAtivosAsync();
+        var veiculos = await _repository.ListarAsync();
 
 
         return veiculos

@@ -32,6 +32,7 @@ import {
 } from "../services/ordens";
 import { listClientes } from "../services/clientes";
 import { listVeiculos } from "../services/veiculos";
+import { listMecanicos } from "../services/mecanico";
 import type { Cliente, Veiculo } from "../types";
 import { formatDate, formatCurrency } from "../utils/format";
 import {
@@ -40,6 +41,7 @@ import {
   STATUS_TEXT_TO_NUMBER,
 } from "../utils/status";
 import { buildWhatsAppMessage, whatsappUrl } from "../utils/whatsapp";
+import { mecanicos } from "../types";
 
 export function OrdensServico() {
   const toast = useToast();
@@ -53,25 +55,29 @@ export function OrdensServico() {
   const [submitting, setSubmitting] = useState(false);
   const [toDelete, setToDelete] = useState<OrdemWithRelations | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [mecanicos, setMecanicos] = useState<mecanicos[]>([]);
   const load = useCallback(async () => {
     setLoading(true);
 
     try {
-      const [o, c, v] = await Promise.all([
+      const [o, c, v, m,] = await Promise.all([
         listOrdens(),
         listClientes(),
         listVeiculos(),
+        listMecanicos(),
       ]);
 
       const ordensComRelacionamento = o.map((os) => ({
         ...os,
         cliente: c.find((cliente) => cliente.id === os.clienteId) ?? null,
         veiculo: v.find((veiculo) => veiculo.id === os.veiculoId) ?? null,
+       mecanico: m.find((mecanico) => mecanico.id === os.mecanicosId) ?? null,
       }));
 
       setOrdens(ordensComRelacionamento);
       setClientes(c);
       setVeiculos(v);
+      setMecanicos(m)
     } catch (err) {
       toast.error("Erro ao carregar ordens de serviço");
       console.error(err);
@@ -108,15 +114,16 @@ export function OrdensServico() {
         0,
       );
       const valorTotal = Number((values.valorMaoObra + totalItens).toFixed(2));
-      await createOrdem({
-        clienteId: values.clienteId,
-        veiculoId: values.veiculoId,
-        descricao: values.descricao,
-        valorMaoObra: values.valorMaoObra,
-        valorTotal: valorTotal,
-        observacao: values.observacao || null,
-        itens: values.itens.filter((it) => it.descricao.trim() !== ""),
-      });
+        await createOrdem({
+      clienteId: values.clienteId,
+      veiculoId: values.veiculoId,
+      mecanicoId: values.mecanicoId, // <-- adicionar aqui
+      descricao: values.descricao,
+      valorMaoObra: values.valorMaoObra,
+      valorTotal: valorTotal,
+      observacao: values.observacao || null,
+      itens: values.itens.filter((it) => it.descricao.trim() !== ""),
+    });
       toast.success("Ordem de serviço criada com sucesso");
       setModalOpen(false);
       await load();
@@ -326,6 +333,7 @@ export function OrdensServico() {
         <OrdemServicoForm
           clientes={clientes}
           veiculos={veiculos}
+          mecanico= {mecanicos}
           onSubmit={handleCreate}
           onCancel={() => setModalOpen(false)}
           submitting={submitting}

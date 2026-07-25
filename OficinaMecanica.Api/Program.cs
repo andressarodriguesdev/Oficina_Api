@@ -49,6 +49,8 @@ builder.Services.AddScoped<OficinaAppService>();
 builder.Services.AddScoped<OrdemServicoPdfService>();
 builder.Services.AddScoped<WhatsAppService>();
 builder.Services.AddScoped<FinanceiroAppService>();
+builder.Services.AddScoped<MecanicoRepository>();
+builder.Services.AddScoped<MecanicoAppService>();
 var app = builder.Build();
 
 

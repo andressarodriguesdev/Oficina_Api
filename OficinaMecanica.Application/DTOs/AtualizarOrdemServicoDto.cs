@@ -17,4 +17,6 @@ public class AtualizarOrdemServicoDto
     public decimal ValorTotal { get; set; }
 
     public string? Observacao { get; set; }
+
+    public Guid MecanicoId { get; set; }
 }

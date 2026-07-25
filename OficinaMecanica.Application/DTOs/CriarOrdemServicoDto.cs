@@ -10,6 +10,8 @@ public class CriarOrdemServicoDto
 
     public Guid VeiculoId { get; set; }
 
+    public Guid MecanicoId { get; set; }
+
     public string Descricao { get; set; } = string.Empty;
 
     public decimal ValorMaoObra { get; set; }

@@ -40,4 +40,11 @@ export async function deleteCliente(id: string): Promise<void> {
   await api.delete(`/clientes/${id}`);
 }
 
+export async function inativarCliente(id: string): Promise<void> {
+  await api.patch(`/clientes/${id}/inativar`);
+}
+
+export async function reativarCliente(id: string): Promise<void> {
+  await api.patch(`/clientes/${id}/reativar`);
+}
 

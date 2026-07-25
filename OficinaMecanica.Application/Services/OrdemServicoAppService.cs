@@ -13,18 +13,22 @@ public class OrdemServicoAppService
     private readonly ClienteRepository _clienteRepository;
     private readonly VeiculoRepository _veiculoRepository;
     private readonly HistoricoOrdemServicoRepository _historicoRepository;
+    private readonly MecanicoRepository _mecanicoRepository;
 
 
     public OrdemServicoAppService(
         OrdemServicoRepository repository,
         ClienteRepository clienteRepository,
         VeiculoRepository veiculoRepository,
-        HistoricoOrdemServicoRepository historicoRepository)
+        HistoricoOrdemServicoRepository historicoRepository,
+        MecanicoRepository mecanicoRepository)
+        
     {
         _repository = repository;
         _clienteRepository = clienteRepository;
         _veiculoRepository = veiculoRepository;
         _historicoRepository = historicoRepository;
+        _mecanicoRepository = mecanicoRepository;
     }
 
 
@@ -45,13 +49,20 @@ public class OrdemServicoAppService
         if (veiculo.ClienteId != dto.ClienteId)
             throw new Exception("O veículo não pertence ao cliente informado.");
 
+        var mecanico = await _mecanicoRepository.GetByIdAsync(dto.MecanicoId);
+
+        if (mecanico == null)
+            throw new Exception("Mecânico não encontrado.");
+
 
         var ordemServico = new OrdemServico(
             cliente.OficinaId,
             dto.ClienteId,
             dto.VeiculoId,
+            dto.MecanicoId,
             dto.Descricao,
             dto.ValorMaoObra
+            
         );
 
 
@@ -295,6 +306,19 @@ public class OrdemServicoAppService
                 Placa = ordem.Veiculo.Placa
             },
 
+            MecanicoId = ordem.MecanicoId,
+
+            Mecanico = ordem.Mecanico == null
+            ? null
+            : new MecanicoResponseDto
+            {
+                Id = ordem.Mecanico.Id,
+                Nome = ordem.Mecanico.Nome,
+                Telefone = ordem.Mecanico.Telefone,
+                Especialidade = ordem.Mecanico.Especialidade,
+                OficinaId = ordem.Mecanico.OficinaId
+            },
+
             Descricao = ordem.Descricao,
 
             ValorMaoObra = ordem.ValorMaoObra,
@@ -388,6 +412,7 @@ public class OrdemServicoAppService
         ordem.AtualizarDados(
             dto.ClienteId,
             dto.VeiculoId,
+            dto.MecanicoId,
             dto.Descricao,
             dto.ValorMaoObra
         );

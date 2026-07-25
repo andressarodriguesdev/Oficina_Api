@@ -51,6 +51,10 @@ public class OrdemServico
 
     public Oficina Oficina { get; private set; } = null!;
 
+    public Guid  MecanicoId { get; private set; }
+
+    public Mecanico Mecanico { get; private set; }
+
 
     public ICollection<HistoricoOrdemServico> Historicos { get; private set; }
         = new List<HistoricoOrdemServico>();
@@ -61,6 +65,7 @@ public class OrdemServico
     Guid oficinaId,
     Guid clienteId,
     Guid veiculoId,
+    Guid mecanicoId,
     string descricao,
     decimal valorMaoObra
 )
@@ -68,8 +73,12 @@ public class OrdemServico
         Id = Guid.NewGuid();
 
         OficinaId = oficinaId;
+
         ClienteId = clienteId;
+
         VeiculoId = veiculoId;
+
+        MecanicoId = mecanicoId;
 
         Descricao = descricao;
 
@@ -164,16 +173,17 @@ public class OrdemServico
     }
 
     public void AtualizarDados(
-    Guid clienteId,
-    Guid veiculoId,
-    string descricao,
-    decimal valorMaoObra
-    )
+  Guid clienteId,
+  Guid veiculoId,
+  Guid mecanicoId,
+  string descricao,
+  decimal valorMaoObra
+ )
     {
         ClienteId = clienteId;
         VeiculoId = veiculoId;
+        MecanicoId = mecanicoId;
         Descricao = descricao;
         ValorMaoObra = valorMaoObra;
-
     }
 }

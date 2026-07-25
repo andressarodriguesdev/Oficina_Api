@@ -4,7 +4,7 @@ import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
 import { Textarea } from "../ui/Textarea";
 import { Button } from "../ui/Button";
-import type { Cliente, Veiculo } from "../../types";
+import type { Cliente, Veiculo ,  mecanicos } from "../../types";
 import { formatCurrency } from "../../utils/format";
 
 export interface OrdemItemFormValue {
@@ -18,6 +18,7 @@ export interface OrdemItemFormValue {
 export interface OrdemFormValues {
   clienteId: string;
   veiculoId: string;
+  mecanicoId: string;
   descricao: string;
   valorMaoObra: number;
   observacao: string;
@@ -28,6 +29,7 @@ interface OrdemServicoFormProps {
   initial?: Partial<OrdemFormValues> & { id?: string };
   clientes: Cliente[];
   veiculos: Veiculo[];
+  mecanico: mecanicos[];
   onSubmit: (v: OrdemFormValues) => void;
   onCancel: () => void;
   submitting?: boolean;
@@ -37,10 +39,11 @@ export function OrdemServicoForm({
   initial,
   clientes,
   veiculos,
+  mecanico,
   onSubmit,
   onCancel,
   submitting,
-}: OrdemServicoFormProps) {
+}: OrdemServicoFormProps)  {
   const [itens, setItens] = useState<OrdemItemFormValue[]>(
     initial?.itens && initial.itens.length > 0
       ? initial.itens
@@ -53,6 +56,10 @@ export function OrdemServicoForm({
   const [veiculoSelecionado, setVeiculoSelecionado] = useState(
     initial?.veiculoId ?? "",
   );
+
+  const [mecanicoSelecionado, setMecanicoSelecionado] = useState(
+  initial?.mecanicoId ?? "",
+);
 
   const filteredVeiculos = clienteSelecionado
     ? veiculos.filter((v) => v.clienteId === clienteSelecionado)
@@ -96,27 +103,30 @@ export function OrdemServicoForm({
       prev.length > 1 ? prev.filter((_, i) => i !== index) : prev,
     );
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
 
-    const fd = new FormData(e.currentTarget);
+  const fd = new FormData(e.currentTarget);
 
-    onSubmit({
-      clienteId: String(fd.get("clienteId") ?? ""),
-      veiculoId: String(fd.get("veiculoId") ?? ""),
-      descricao: String(fd.get("descricao") ?? "").trim(),
-      valorMaoObra: Number(fd.get("valorMaoObra") ?? 0) || 0,
-      observacao: String(fd.get("observacao") ?? "").trim(),
-      itens: itens.map((it) => ({
-        id: it.id,
-        descricao: it.descricao.trim(),
-        quantidade: Number(it.quantidade) || 0,
-        valorUnitario: Number(it.valorUnitario) || 0,
-        valorTotal: Number(it.valorTotal) || 0,
-      })),
-    });
-  };
+  console.log("FormData mecânico:", fd.get("mecanicoId"));
+  console.log("Estado mecânico:", mecanicoSelecionado);
 
+  onSubmit({
+    clienteId: String(fd.get("clienteId") ?? ""),
+    veiculoId: String(fd.get("veiculoId") ?? ""),
+    mecanicoId: String(fd.get("mecanicoId") ?? ""),
+    descricao: String(fd.get("descricao") ?? "").trim(),
+    valorMaoObra: Number(fd.get("valorMaoObra") ?? 0) || 0,
+    observacao: String(fd.get("observacao") ?? "").trim(),
+    itens: itens.map((it) => ({
+      id: it.id,
+      descricao: it.descricao.trim(),
+      quantidade: Number(it.quantidade) || 0,
+      valorUnitario: Number(it.valorUnitario) || 0,
+      valorTotal: Number(it.valorTotal) || 0,
+    })),
+  });
+};
   const totalItens = itens.reduce(
     (sum, it) => sum + (Number(it.valorTotal) || 0),
     0,
@@ -160,6 +170,26 @@ export function OrdemServicoForm({
               {v.marca} {v.modelo} {v.placa ? `— ${v.placa}` : ""}
             </option>
           ))}
+        </Select>
+
+        <Select
+          label="Mecânico *"
+          name="mecanicoId"
+          value={mecanicoSelecionado}
+          onChange={(e) => setMecanicoSelecionado(e.target.value)}
+          required
+        >
+          <option value="" disabled>
+            Selecione um mecânico
+          </option>
+
+          {mecanico
+            .filter((m) => m.ativo)
+            .map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.nome} {m.especialidade ? `- ${m.especialidade}` : ""}
+              </option>
+            ))}
         </Select>
       </div>
 

@@ -40,6 +40,8 @@ public class OrdemServicoRepository
 
             .Include(o => o.Historicos)
 
+            .Include(o => o.Mecanico)
+
             .ToListAsync();
     }
 
@@ -56,6 +58,8 @@ public class OrdemServicoRepository
             .Include(o => o.Itens)
 
             .Include(o => o.Historicos)
+
+            .Include(o => o.Mecanico)
 
             .FirstOrDefaultAsync(o => o.Id == id);
     }
@@ -91,6 +95,8 @@ public class OrdemServicoRepository
             .Include(o => o.Cliente)
             .Include(o => o.Veiculo)
             .Include(o => o.Itens)
+            .Include(o => o.Mecanico)
+
             .ToListAsync();
     }
 }

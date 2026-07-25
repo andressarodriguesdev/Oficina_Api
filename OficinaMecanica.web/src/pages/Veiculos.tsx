@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { Select } from "../components/ui/Select";
 import { Link } from "react-router-dom";
-import { Plus, Car, Search, Pencil, Trash2, Eye, User } from "lucide-react";
-
+import { Plus, Car, Search, Pencil, Eye, User } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Modal } from "../components/ui/Modal";
-import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { EmptyState } from "../components/ui/EmptyState";
 import { PageLoader } from "../components/ui/Spinner";
 import { useToast } from "../components/ui/Toast";
@@ -21,7 +20,6 @@ import {
   listVeiculos,
   createVeiculo,
   updateVeiculo,
-  deleteVeiculo,
 } from "../services/veiculos";
 
 import { listClientes } from "../services/clientes";
@@ -44,9 +42,7 @@ export function Veiculos() {
 
   const [submitting, setSubmitting] = useState(false);
 
-  const [toDelete, setToDelete] = useState<Veiculo | null>(null);
-
-  const [deleting, setDeleting] = useState(false);
+  const [filtroStatus, setFiltroStatus] = useState("todos");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -85,15 +81,22 @@ export function Veiculos() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
 
-    if (!q) return veiculos;
-
-    return veiculos.filter(
-      (v) =>
-        v.marca.toLowerCase().includes(q) ||
+    return veiculos.filter((v) => {
+      const matchesSearch =
+        !q ||
+        v.placa.toLowerCase().includes(q) ||
         v.modelo.toLowerCase().includes(q) ||
-        v.placa.toLowerCase().includes(q),
-    );
-  }, [veiculos, search]);
+        v.marca.toLowerCase().includes(q) ||
+        v.cliente?.nome.toLowerCase().includes(q);
+
+      const matchesStatus =
+        filtroStatus === "todos" ||
+        (filtroStatus === "ativos" && v.ativo) ||
+        (filtroStatus === "inativos" && !v.ativo);
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [veiculos, search, filtroStatus]);
 
   async function handleSubmit(values: VeiculoFormValues) {
     setSubmitting(true);
@@ -133,28 +136,6 @@ export function Veiculos() {
     }
   }
 
-  async function handleDelete() {
-    if (!toDelete) return;
-
-    setDeleting(true);
-
-    try {
-      await deleteVeiculo(toDelete.id);
-
-      toast.success("Veículo excluído com sucesso");
-
-      setToDelete(null);
-
-      await load();
-    } catch (error) {
-      toast.error("Erro ao excluir veículo");
-
-      console.error(error);
-    } finally {
-      setDeleting(false);
-    }
-  }
-
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -179,8 +160,17 @@ export function Veiculos() {
             className="pl-9"
           />
         </div>
-
+        <Select
+          value={filtroStatus}
+          onChange={(e) => setFiltroStatus(e.target.value)}
+          className="sm:w-56"
+        >
+          <option value="todos">Todos os veículos</option>
+          <option value="ativos">Veículos ativos</option>
+          <option value="inativos">Veículos inativos</option>
+        </Select>
         <Button
+          className="whitespace-nowrap"
           onClick={() => {
             setEditing(null);
             setModalOpen(true);
@@ -237,16 +227,21 @@ export function Veiculos() {
                   </div>
 
                   <div>
-                    <p
-                      className="
-                    font-display
-                    text-sm
-                    font-bold
-                    text-white
-                    "
-                    >
-                      {v.marca} {v.modelo}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-display text-sm font-bold text-white">
+                        {v.marca} {v.modelo}
+                      </p>
+
+                      {v.ativo ? (
+                        <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-[10px] font-semibold text-green-400">
+                          Ativo
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-semibold text-red-400">
+                          Inativo
+                        </span>
+                      )}
+                    </div>
 
                     <p className="text-xs text-ink-400">
                       {v.ano} · {v.placa}
@@ -271,13 +266,6 @@ export function Veiculos() {
                   >
                     <Pencil className="h-4 w-4" />
                   </button>
-
-                  <button
-                    onClick={() => setToDelete(v)}
-                    className="rounded-lg p-2 text-ink-400 hover:text-red-400"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
                 </div>
               </div>
 
@@ -296,7 +284,7 @@ export function Veiculos() {
               >
                 <User className="h-3 w-3" />
                 Cliente:
-                <span className="truncate"> {v.cliente?.nome ?? '—'}</span>
+                <span className="truncate"> {v.cliente?.nome ?? "—"}</span>
               </div>
             </Card>
           ))}
@@ -317,15 +305,6 @@ export function Veiculos() {
           submitting={submitting}
         />
       </Modal>
-
-      <ConfirmDialog
-        open={!!toDelete}
-        onClose={() => setToDelete(null)}
-        onConfirm={handleDelete}
-        loading={deleting}
-        title="Excluir veículo"
-        message={`Tem certeza que deseja excluir o veículo "${toDelete?.marca} ${toDelete?.modelo}"?`}
-      />
     </div>
   );
 }

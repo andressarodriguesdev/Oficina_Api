@@ -1,5 +1,6 @@
+
 import { api } from './api';
-import type { Cliente, HistoricoOrdemServico, OrdemServico, OrdemServicoItem, Veiculo } from '../types';
+import type { Cliente, HistoricoOrdemServico, OrdemServico, OrdemServicoItem, Veiculo, mecanico } from '../types';
 
 export type OrdemWithRelations = OrdemServico & { cliente: Cliente | null; veiculo: Veiculo | null };
 
@@ -32,6 +33,7 @@ export interface CreateOrdemInput {
   descricao: string;
   valorMaoObra: number;
   valorTotal: number;
+  mecanicoId:string;
   observacao?: string | null;
   itens?: OrdemItemInput[];
 }

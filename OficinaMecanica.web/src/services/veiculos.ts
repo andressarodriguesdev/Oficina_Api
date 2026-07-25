@@ -39,3 +39,11 @@ export async function deleteVeiculo(
 ): Promise<void> {
   await api.delete(`/veiculo/${id}`);
 }
+
+export async function inativarVeiculo(id: string): Promise<void> {
+  await api.patch(`/veiculo/${id}/inativar`);
+}
+
+export async function reativarVeiculo(id: string): Promise<void> {
+  await api.patch(`/veiculo/${id}/reativar`);
+}

@@ -13,6 +13,8 @@ public class ClienteDetalhadoResponseDto
 
     public string Email { get; set; } = string.Empty;
 
+    public bool Ativo { get; set; }
+
     public List<VeiculoResumoDto> Veiculos { get; set; } = new();
 
 }

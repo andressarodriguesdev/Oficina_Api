@@ -1,129 +1,163 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { Select } from "../components/ui/Select";
+import { Link } from "react-router-dom";
 import {
   Plus,
   Users,
   Search,
   Pencil,
-  Trash2,
   Eye,
   Phone,
   Mail,
-  MapPin
-} from 'lucide-react';
+  MapPin,
+  UserX,
+  UserCheck,
+} from "lucide-react";
 
-import { Card } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Modal } from '../components/ui/Modal';
-import { ConfirmDialog } from '../components/ui/ConfirmDialog';
-import { EmptyState } from '../components/ui/EmptyState';
-import { PageLoader } from '../components/ui/Spinner';
-import { useToast } from '../components/ui/Toast';
+import { Card } from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Modal } from "../components/ui/Modal";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { EmptyState } from "../components/ui/EmptyState";
+import { PageLoader } from "../components/ui/Spinner";
+import { useToast } from "../components/ui/Toast";
 
 import {
   ClienteForm,
-  type ClienteFormValues
-} from '../components/forms/ClienteForm';
+  type ClienteFormValues,
+} from "../components/forms/ClienteForm";
 
 import {
   listClientes,
   createCliente,
   updateCliente,
-  deleteCliente
-} from '../services/clientes';
-
-import type { Cliente } from '../types';
-import { initials } from '../utils/format';
+  deleteCliente,
+  inativarCliente,
+  reativarCliente,
+} from "../services/clientes";
+import type { Cliente } from "../types";
+import { initials } from "../utils/format";
 
 export function Clientes() {
-  const toast = useToast()
+  const toast = useToast();
 
-  const [clientes, setClientes] = useState<Cliente[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editing, setEditing] = useState<Cliente | null>(null)
-  const [submitting, setSubmitting] = useState(false)
-  const [toDelete, setToDelete] = useState<Cliente | null>(null)
-  const [deleting, setDeleting] = useState(false)
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState<Cliente | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [toDelete, setToDelete] = useState<Cliente | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [filtroStatus, setFiltroStatus] = useState("todos");
 
   const load = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const data = await listClientes()
-      setClientes(data)
+      const data = await listClientes();
+      setClientes(data);
     } catch (err) {
-      toast.error('Erro ao carregar clientes')
-      console.error(err)
+      toast.error("Erro ao carregar clientes");
+      console.error(err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [toast])
+  }, [toast]);
 
   useEffect(() => {
-    load()
-  }, [load])
+    load();
+  }, [load]);
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
+    const q = search.trim().toLowerCase();
 
-    if (!q) return clientes
-
-    return clientes.filter(
-      (c) =>
+    return clientes.filter((c) => {
+      const matchesSearch =
+        !q ||
         c.nome.toLowerCase().includes(q) ||
-        (c.email ?? '').toLowerCase().includes(q) ||
-        (c.telefone ?? '').toLowerCase().includes(q)
-    )
-  }, [clientes, search])
+        (c.email ?? "").toLowerCase().includes(q) ||
+        (c.telefone ?? "").toLowerCase().includes(q);
+
+      const matchesStatus =
+        filtroStatus === "todos" ||
+        (filtroStatus === "ativos" && c.ativo) ||
+        (filtroStatus === "inativos" && !c.ativo);
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [clientes, search, filtroStatus]);
 
   const handleSubmit = async (values: ClienteFormValues) => {
-    setSubmitting(true)
+    setSubmitting(true);
 
     try {
       if (editing) {
-        await updateCliente(editing.id, values)
-        toast.success('Cliente atualizado com sucesso')
+        await updateCliente(editing.id, values);
+        toast.success("Cliente atualizado com sucesso");
       } else {
-        await createCliente(values)
-        toast.success('Cliente cadastrado com sucesso')
+        await createCliente(values);
+        toast.success("Cliente cadastrado com sucesso");
       }
 
-      setModalOpen(false)
-      setEditing(null)
-      await load()
+      setModalOpen(false);
+      setEditing(null);
+      await load();
     } catch (err) {
       toast.error(
-        editing
-          ? 'Erro ao atualizar cliente'
-          : 'Erro ao cadastrar cliente'
-      )
+        editing ? "Erro ao atualizar cliente" : "Erro ao cadastrar cliente",
+      );
 
-      console.error(err)
+      console.error(err);
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!toDelete) return
+    if (!toDelete) return;
 
-    setDeleting(true)
+    setDeleting(true);
 
     try {
-      await deleteCliente(toDelete.id)
-      toast.success('Cliente excluído com sucesso')
-      setToDelete(null)
-      await load()
+      await deleteCliente(toDelete.id);
+      toast.success("Cliente excluído com sucesso");
+      setToDelete(null);
+      await load();
     } catch (err) {
-      toast.error('Erro ao excluir cliente')
-      console.error(err)
+      toast.error("Erro ao excluir cliente");
+      console.error(err);
     } finally {
-      setDeleting(false)
+      setDeleting(false);
     }
-  }
+  };
+
+  const handleInativar = async (cliente: Cliente) => {
+    try {
+      await inativarCliente(cliente.id);
+
+      toast.success("Cliente inativado com sucesso");
+
+      await load();
+    } catch (err) {
+      toast.error("Erro ao inativar cliente");
+      console.error(err);
+    }
+  };
+
+  const handleReativar = async (cliente: Cliente) => {
+    try {
+      await reativarCliente(cliente.id);
+
+      toast.success("Cliente reativado com sucesso");
+
+      await load();
+    } catch (err) {
+      toast.error("Erro ao reativar cliente");
+      console.error(err);
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -138,11 +172,20 @@ export function Clientes() {
             className="pl-9"
           />
         </div>
-
+        <Select
+          value={filtroStatus}
+          onChange={(e) => setFiltroStatus(e.target.value)}
+          className="sm:w-56"
+        >
+          <option value="todos">Todos os clientes</option>
+          <option value="ativos">Clientes ativos</option>
+          <option value="inativos">Clientes inativos</option>
+        </Select>
         <Button
+          className="whitespace-nowrap"
           onClick={() => {
-            setEditing(null)
-            setModalOpen(true)
+            setEditing(null);
+            setModalOpen(true);
           }}
         >
           <Plus className="h-4 w-4" />
@@ -157,21 +200,19 @@ export function Clientes() {
           <EmptyState
             icon={<Users className="h-7 w-7" />}
             title={
-              search
-                ? 'Nenhum cliente encontrado'
-                : 'Nenhum cliente cadastrado'
+              search ? "Nenhum cliente encontrado" : "Nenhum cliente cadastrado"
             }
             description={
               search
-                ? 'Tente outra busca.'
-                : 'Cadastre o primeiro cliente da oficina.'
+                ? "Tente outra busca."
+                : "Cadastre o primeiro cliente da oficina."
             }
             action={
               !search && (
                 <Button
                   onClick={() => {
-                    setEditing(null)
-                    setModalOpen(true)
+                    setEditing(null);
+                    setModalOpen(true);
                   }}
                 >
                   <Plus className="h-4 w-4" />
@@ -195,13 +236,25 @@ export function Clientes() {
                   </div>
 
                   <div className="min-w-0">
-                    <p className="truncate font-display text-sm font-bold text-white hover:text-flame-400">
-                      {c.nome}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="truncate font-display text-sm font-bold text-white hover:text-flame-400">
+                        {c.nome}
+                      </p>
+
+                      {c.ativo ? (
+                        <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-[10px] font-semibold text-green-400">
+                          Ativo
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-semibold text-red-400">
+                          Inativo
+                        </span>
+                      )}
+                    </div>
 
                     <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-ink-400">
                       <Phone className="h-3 w-3" />
-                      {c.telefone || '—'}
+                      {c.telefone || "—"}
                     </p>
                   </div>
                 </Link>
@@ -217,8 +270,8 @@ export function Clientes() {
 
                   <button
                     onClick={() => {
-                      setEditing(c)
-                      setModalOpen(true)
+                      setEditing(c);
+                      setModalOpen(true);
                     }}
                     className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-800 hover:text-flame-400"
                     title="Editar"
@@ -226,25 +279,35 @@ export function Clientes() {
                     <Pencil className="h-4 w-4" />
                   </button>
 
-                  <button
-                    onClick={() => setToDelete(c)}
-                    className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-800 hover:text-red-400"
-                    title="Excluir"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  {c.ativo ? (
+                    <button
+                      onClick={() => handleInativar(c)}
+                      className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-800 hover:text-red-400"
+                      title="Inativar cliente"
+                    >
+                      <UserX className="h-4 w-4" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleReativar(c)}
+                      className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-800 hover:text-green-400"
+                      title="Reativar cliente"
+                    >
+                      <UserCheck className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
               <div className="mt-3 space-y-1.5 border-t border-ink-700/40 pt-3 text-xs text-ink-400">
                 <p className="flex items-center gap-1.5 truncate">
                   <Mail className="h-3 w-3 shrink-0" />
-                  {c.email || '—'}
+                  {c.email || "—"}
                 </p>
 
                 <p className="flex items-start gap-1.5">
                   <MapPin className="mt-0.5 h-3 w-3 shrink-0" />
-                  {c.endereco || '—'}
+                  {c.endereco || "—"}
                 </p>
               </div>
             </Card>
@@ -255,11 +318,11 @@ export function Clientes() {
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editing ? 'Editar cliente' : 'Cadastrar cliente'}
+        title={editing ? "Editar cliente" : "Cadastrar cliente"}
         description={
           editing
-            ? 'Atualize os dados do cliente.'
-            : 'Preencha os dados do novo cliente.'
+            ? "Atualize os dados do cliente."
+            : "Preencha os dados do novo cliente."
         }
         size="lg"
       >
@@ -280,5 +343,5 @@ export function Clientes() {
         message={`Tem certeza que deseja excluir o cliente "${toDelete?.nome}"?`}
       />
     </div>
-  )
+  );
 }
