@@ -19,6 +19,7 @@ import {
   reabrir,
   deleteOrdem,
   baixarPdf,
+  gerarWhatsApp,
   type OrdemWithRelations
 } from '../services/ordens';
 import type { OrdemServicoItem, HistoricoOrdemServico } from '../types';
@@ -78,11 +79,19 @@ setHistoricos(hist);
     finally { setActionLoading(null); }
   };
 
-  const handleWhatsApp = () => {
-    if (!ordem?.cliente?.telefone) { toast.warning('Cliente não possui telefone cadastrado'); return; }
-    const msg = buildWhatsAppMessage(ordem, ordem.cliente, ordem.veiculo);
-    window.open(whatsappUrl(ordem.cliente.telefone, msg), '_blank');
-  };
+ const handleWhatsApp = async () => {
+  if (!ordem) return;
+
+  try {
+    const link = await gerarWhatsApp(ordem.id);
+
+    window.open(link, '_blank');
+
+  } catch (error) {
+    console.error(error);
+    toast.error('Erro ao gerar WhatsApp');
+  }
+};
 
 const handlePdf = async () => {
   if (!ordem) return;

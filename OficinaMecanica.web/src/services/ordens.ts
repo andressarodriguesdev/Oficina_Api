@@ -1,6 +1,6 @@
 
 import { api } from './api';
-import type { Cliente, HistoricoOrdemServico, OrdemServico, OrdemServicoItem, Veiculo, mecanico } from '../types';
+import type { Cliente, HistoricoOrdemServico, OrdemServico, OrdemServicoItem, Veiculo, mecanicos } from '../types';
 
 export type OrdemWithRelations = OrdemServico & { cliente: Cliente | null; veiculo: Veiculo | null };
 
@@ -91,4 +91,12 @@ export async function baixarPdf(id: string): Promise<Blob> {
     `/ordens-servico/${id}/pdf`,
     'blob'
   );
+}
+
+export async function gerarWhatsApp(id: string): Promise<string> {
+  const response = await api.get<{ link: string }>(
+    `/ordens-servico/${id}/whatsapp`
+  );
+
+  return response.link;
 }

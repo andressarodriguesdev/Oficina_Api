@@ -7,7 +7,6 @@ export interface MecanicosFormValues {
   nome: string;
   telefone: string;
   especialidade: string;
-  oficinaId: string;
 }
 
 export function MecanicoForm({
@@ -29,8 +28,7 @@ export function MecanicoForm({
     onSubmit({
       nome: String(fd.get("nome") ?? "").trim(),
       telefone: String(fd.get("telefone") ?? "").trim(),
-      especialidade: String(fd.get("especialidade") ?? "").trim(),
-      oficinaId: "SEU_ID_FIXO_DA_OFICINA",
+      especialidade: String(fd.get("especialidade") ?? "").trim()
     });
   };
 

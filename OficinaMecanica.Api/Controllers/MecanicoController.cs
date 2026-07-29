@@ -50,15 +50,16 @@ public class MecanicoController : ControllerBase
 
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, Mecanico mecanico)
+    public async Task<IActionResult> Update(Guid id, MecanicoRequestDto dto)
     {
-        var atualizado = await _service.UpdateAsync(id, mecanico);
+        var atualizado = await _service.UpdateAsync(id, dto);
 
         if (!atualizado)
             return NotFound();
 
         return NoContent();
     }
+
 
     [HttpPatch("{id}/inativar")]
     public async Task<IActionResult> Inativar(Guid id)

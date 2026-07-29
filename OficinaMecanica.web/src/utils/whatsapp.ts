@@ -14,19 +14,23 @@ export function buildWhatsAppMessage(os: OrdemServico, cliente?: Cliente | null,
   L.push(`*Cliente:* ${cliente?.nome ?? '—'}`);
   L.push(`*Veículo:* ${veiculo ? `${veiculo.marca} ${veiculo.modelo} — ${veiculo.placa ?? ''}` : '—'}`);
   L.push(`*Status:* ${statusLabel(statusFromNumber(os.status))}`);
-  L.push(`*Data:* ${formatDate(os.data_criacao)}`);
+  L.push(`*Data:* ${formatDate(os.dataCriacao)}`);
   L.push('');
   L.push(`*Descrição:* ${os.descricao || '—'}`);
   L.push('');
-  L.push(`*Mão de obra:* ${formatCurrency(os.valor_mao_obra)}`);
+  L.push(`*Mão de obra:* ${formatCurrency(os.valorMaoObra)}`);
   if (os.itens && os.itens.length > 0) {
     L.push('*Peças/Serviços:*');
     os.itens.forEach((item, i) => {
-      L.push(`${i + 1}. ${item.descricao} — ${item.quantidade}x ${formatCurrency(item.valor_unitario)} = ${formatCurrency(item.valor_total)}`);
-    });
+  const valorTotalItem = item.quantidade * item.valorUnitario;
+
+  L.push(
+    `${i + 1}. ${item.descricao} — ${item.quantidade}x ${formatCurrency(item.valorUnitario)} = ${formatCurrency(valorTotalItem)}`
+  );
+});
   }
   L.push('');
-  L.push(`*VALOR TOTAL:* ${formatCurrency(os.valor_total)}`);
+  L.push(`*VALOR TOTAL:* ${formatCurrency(os.valorTotal)}`);
   L.push('');
   L.push('Aguarde a aprovação para iniciarmos o serviço. Obrigado!');
   return L.join('\n');

@@ -13,7 +13,7 @@ export interface MecanicoRequest {
   nome: string;
   telefone?: string;
   especialidade?: string;
-  oficinaId: string;
+
 }
 
 export async function listMecanicos() {

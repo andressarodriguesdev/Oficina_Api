@@ -10,6 +10,6 @@ namespace OficinaMecanica.Application.DTOs
         public string? Telefone { get; set; }
         public string? Especialidade { get; set; }
 
-        public Guid OficinaId { get; set; }
+        
     }
 }

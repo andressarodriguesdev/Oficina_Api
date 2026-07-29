@@ -9,44 +9,57 @@ public class WhatsAppService
     {
         var mensagem = new StringBuilder();
 
-
-        mensagem.AppendLine($"Olá, {ordemServico.Cliente.Nome}!");
+        mensagem.AppendLine($"Olá, {ordemServico.Cliente.Nome}! Tudo bem?");
         mensagem.AppendLine();
 
+        mensagem.AppendLine(
+        $"Mensagem enviada pela {ordemServico.Oficina.Nome}.");
+        mensagem.AppendLine();
 
         mensagem.AppendLine(
-            $"Sua Ordem de Serviço #{ordemServico.Id.ToString()[..8].ToUpper()} foi enviada para aprovação."
+            $"Sua Ordem de Serviço #{ordemServico.Id.ToString()[..8].ToUpper()} foi criada e está aguardando sua aprovação."
         );
 
         mensagem.AppendLine();
 
-
-        mensagem.AppendLine($"Veículo: {ordemServico.Veiculo.Modelo}");
+        mensagem.AppendLine("Veículo:");
+        mensagem.AppendLine(
+            $"{ordemServico.Veiculo.Marca} {ordemServico.Veiculo.Modelo} - {ordemServico.Veiculo.Placa}"
+        );
 
         mensagem.AppendLine();
 
-
-        mensagem.AppendLine("Serviço:");
+        mensagem.AppendLine("Serviço solicitado:");
         mensagem.AppendLine(ordemServico.Descricao);
 
+
+        if (ordemServico.Mecanico != null)
+        {
+            mensagem.AppendLine();
+
+            mensagem.AppendLine("Mecânico responsável:");
+            mensagem.AppendLine(ordemServico.Mecanico.Nome);
+        }
+
+
         mensagem.AppendLine();
 
-
         mensagem.AppendLine("Mão de obra:");
-        mensagem.AppendLine($"R$ {ordemServico.ValorMaoObra:F2}");
-
+        mensagem.AppendLine(
+            $"R$ {ordemServico.ValorMaoObra:N2}"
+        );
 
 
         if (ordemServico.Itens.Any())
         {
             mensagem.AppendLine();
 
-            mensagem.AppendLine("Peças / Materiais:");
+            mensagem.AppendLine("Peças e materiais:");
 
             foreach (var item in ordemServico.Itens)
             {
                 mensagem.AppendLine(
-                    $"- {item.Descricao} ({item.Quantidade}x) | R$ {item.ValorTotal:F2}"
+                    $"- {item.Descricao} ({item.Quantidade}x) - R$ {item.ValorTotal:N2}"
                 );
             }
         }
@@ -54,19 +67,33 @@ public class WhatsAppService
 
         mensagem.AppendLine();
 
+        mensagem.AppendLine("Valor total da ordem de serviço:");
         mensagem.AppendLine(
-            $"Total da Ordem de Serviço: R$ {ordemServico.ValorTotal:F2}"
+            $"R$ {ordemServico.ValorTotal:N2}"
         );
 
 
         mensagem.AppendLine();
 
         mensagem.AppendLine(
-            "Responda SIM para aprovar o serviço."
+            "Para aprovar ou recusar o serviço:"
+        );
+
+        mensagem.AppendLine();
+
+        mensagem.AppendLine(
+            "Responda SIM para aprovar."
         );
 
         mensagem.AppendLine(
-            "Responda NÃO para recusar o serviço."
+            "Responda NÃO para recusar."
+        );
+
+
+        mensagem.AppendLine();
+
+        mensagem.AppendLine(
+            "Caso tenha alguma dúvida, estamos à disposição."
         );
 
 
@@ -75,7 +102,6 @@ public class WhatsAppService
             .Replace(")", "")
             .Replace("-", "")
             .Replace(" ", "");
-
 
 
         var textoCodificado = Uri.EscapeDataString(

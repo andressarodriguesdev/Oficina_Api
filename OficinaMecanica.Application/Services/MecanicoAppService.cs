@@ -1,6 +1,8 @@
-﻿using OficinaMecanica.Application.DTOs;
+﻿using OficinaMecanica.Application.Constants;
+using OficinaMecanica.Application.DTOs;
 using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Infrastructure.Repositories;
+
 
 namespace OficinaMecanica.Application.Services;
 
@@ -32,7 +34,7 @@ public class MecanicoAppService
             Telefone = dto.Telefone ?? "",
             Especialidade = dto.Especialidade,
             Ativo = true,
-            OficinaId = dto.OficinaId
+            OficinaId = OficinaConstants.OficinaPadraoId
         };
 
         await _repository.AddAsync(mecanico);
@@ -48,22 +50,21 @@ public class MecanicoAppService
         };
     }
 
-    public async Task<bool> UpdateAsync(Guid id, Mecanico mecanico)
+    public async Task<bool> UpdateAsync(Guid id, MecanicoRequestDto dto)
     {
         var existente = await _repository.GetByIdAsync(id);
 
         if (existente == null)
             return false;
 
-        existente.Nome = mecanico.Nome;
-        existente.Telefone = mecanico.Telefone;
-        existente.Especialidade = mecanico.Especialidade;
+        existente.Nome = dto.Nome;
+        existente.Telefone = dto.Telefone ?? "";
+        existente.Especialidade = dto.Especialidade;
 
         _repository.Update(existente);
         await _repository.SaveChangesAsync();
 
         return true;
-
     }
 
     public async Task InativarAsync(Guid id)
