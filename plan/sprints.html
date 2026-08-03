@@ -50,45 +50,45 @@
 
   <div class="sprint" data-sprint="0" data-title="Limpar o terreno" data-est="2–3 dias">
     <ul class="tasks">
-      <li data-id="s0-1">Apagar <code>source/repos/</code> — 581 ficheiros versionados de uma cópia obsoleta, anterior à funcionalidade de mecânico</li>
-      <li data-id="s0-2">Apagar <code>OficinaMecanica/</code> — projeto órfão na raiz, fora do <code>.slnx</code></li>
-      <li data-id="s0-3"><code>git rm -r --cached</code> nas pastas <code>obj/</code> commitadas apesar do <code>.gitignore</code></li>
-      <li data-id="s0-4">Remover <code>@supabase/supabase-js</code> — instalado pelo template Bolt, zero imports</li>
-      <li data-id="s0-5">Apagar bloco CORS morto em <code>Program.cs:71</code>, depois do <code>app.Run()</code></li>
-      <li data-id="s0-6">Connection string para user-secrets — senha em claro em <code>appsettings.json:10</code></li>
-      <li data-id="s0-7">Confirmar que a solução ainda compila</li>
+      <li data-id="s0-1" data-done>Apagar <code>source/repos/</code> — 581 ficheiros versionados de uma cópia obsoleta, anterior à funcionalidade de mecânico</li>
+      <li data-id="s0-2" data-done>Apagar <code>OficinaMecanica/</code> — projeto órfão na raiz, fora do <code>.slnx</code></li>
+      <li data-id="s0-3" data-done><code>git rm -r --cached</code> nas pastas <code>obj/</code> commitadas apesar do <code>.gitignore</code></li>
+      <li data-id="s0-4" data-done>Remover <code>@supabase/supabase-js</code> — instalado pelo template Bolt, zero imports</li>
+      <li data-id="s0-5" data-done>Apagar bloco CORS morto em <code>Program.cs:71</code>, depois do <code>app.Run()</code></li>
+      <li data-id="s0-6" data-done>Connection string para user-secrets — senha em claro em <code>appsettings.json:10</code></li>
+      <li data-id="s0-7" data-done>Confirmar que a solução ainda compila</li>
     </ul>
   </div>
 
   <div class="sprint" data-sprint="1" data-title="Rename e Malta" data-est="1,5–2 semanas">
     <ul class="tasks">
-      <li data-id="s1-1">Projetos e namespaces → <code>GarageManager.Api</code>, <code>.Application</code>, <code>.Domain</code>, <code>.Infrastructure</code></li>
-      <li data-id="s1-2">Entidades: <code>Oficina→Workshop</code>, <code>Cliente→Customer</code>, <code>Veiculo→Vehicle</code>, <code>OrdemServico→JobCard</code></li>
-      <li data-id="s1-3">Entidades: <code>OrdemServicoItem→Part</code>, <code>Mecanico→Mechanic</code>, <code>HistoricoOrdemServico→JobCardStatusChange</code></li>
-      <li data-id="s1-4">Propriedades: <code>Placa→RegistrationNumber</code>, <code>ValorMaoObra→LabourCharge</code>, <code>Ativo→IsActive</code></li>
-      <li data-id="s1-5">Enum <code>JobCardStatus</code>: <code>Open</code>, <code>AwaitingApproval</code>, <code>Approved</code>, <code>Declined</code>, <code>Completed</code>, <code>Cancelled</code>, <code>Reopened</code></li>
-      <li data-id="s1-6">DTOs, Services, Repositories e Controllers a acompanhar</li>
-      <li data-id="s1-7">Apagar as 3 migrations e regerar <code>InitialCreate</code> do zero — não há produção para migrar</li>
-      <li data-id="s1-8">Frontend: rotas, tipos, serviços e as 14 páginas</li>
-      <li data-id="s1-9">Todas as strings de UI para inglês</li>
-      <li data-id="s1-10"><code>format.ts:2</code> → <code>en-MT</code> e <code>EUR</code>, hoje em <code>pt-BR</code>/<code>BRL</code></li>
-      <li data-id="s1-11">Sete ocorrências de <code>R$</code> → <code>€</code> — quatro no PDF, três no WhatsApp</li>
-      <li data-id="s1-12"><code>WhatsAppService.cs:112</code> — <code>wa.me/55</code> → <code>+356</code>, vindo de configuração</li>
+      <li data-id="s1-1" data-done>Projetos e namespaces → <code>GarageManager.Api</code>, <code>.Application</code>, <code>.Domain</code>, <code>.Infrastructure</code></li>
+      <li data-id="s1-2" data-done>Entidades: <code>Oficina→Workshop</code>, <code>Cliente→Customer</code>, <code>Veiculo→Vehicle</code>, <code>OrdemServico→JobCard</code></li>
+      <li data-id="s1-3" data-done>Entidades: <code>OrdemServicoItem→Part</code>, <code>Mecanico→Mechanic</code>, <code>HistoricoOrdemServico→JobCardStatusChange</code></li>
+      <li data-id="s1-4" data-done>Propriedades: <code>Placa→RegistrationNumber</code>, <code>ValorMaoObra→LabourCharge</code>, <code>Ativo→IsActive</code></li>
+      <li data-id="s1-5" data-done>Enum <code>JobCardStatus</code>: <code>Open</code>, <code>AwaitingApproval</code>, <code>Approved</code>, <code>Declined</code>, <code>Completed</code>, <code>Cancelled</code>, <code>Reopened</code></li>
+      <li data-id="s1-6" data-done>DTOs, Services, Repositories e Controllers a acompanhar</li>
+      <li data-id="s1-7" data-done>Apagar as 3 migrations e regerar <code>InitialCreate</code> do zero — não há produção para migrar</li>
+      <li data-id="s1-8" data-done>Frontend: rotas, tipos, serviços e as 14 páginas</li>
+      <li data-id="s1-9" data-done>Todas as strings de UI para inglês</li>
+      <li data-id="s1-10" data-done><code>format.ts:2</code> → <code>en-MT</code> e <code>EUR</code>, hoje em <code>pt-BR</code>/<code>BRL</code></li>
+      <li data-id="s1-11" data-done>Sete ocorrências de <code>R$</code> → <code>€</code> — quatro no PDF, três no WhatsApp</li>
+      <li data-id="s1-12" data-done><code>WhatsAppService.cs:112</code> — <code>wa.me/55</code> → <code>+356</code>, vindo de configuração</li>
     </ul>
   </div>
 
   <div class="sprint" data-sprint="2" data-title="Autenticação e perímetro" data-est="1,5 semanas">
     <ul class="tasks">
-      <li data-id="s2-1">ASP.NET Core Identity com <code>MapIdentityApi</code></li>
-      <li data-id="s2-2"><code>UseAuthentication()</code> antes de <code>UseAuthorization()</code> — hoje só existe o segundo</li>
-      <li data-id="s2-3">Dois papéis atrás de políticas nomeadas, não <code>[Authorize(Roles=…)]</code> espalhado</li>
-      <li data-id="s2-4"><code>[Authorize]</code> nos 44 endpoints conforme a <a href="../reference/matriz-de-permissoes.html">matriz de permissões</a></li>
-      <li data-id="s2-5"><code>GET /api/financeiro</code> restrito ao dono — hoje aberto a qualquer um</li>
-      <li data-id="s2-6"><code>Login.tsx:21</code> — autenticar a sério, hoje é <code>setTimeout</code> e <code>navigate</code></li>
-      <li data-id="s2-7">Guardas de rota no React — <code>/financeiro</code> abre digitando o URL</li>
-      <li data-id="s2-8">Descomentar o hook de JWT em <code>api.ts:52</code></li>
-      <li data-id="s2-9">Remover <code>AllowAnyOrigin()</code> — desnecessário com o front servido pelo .NET</li>
-      <li data-id="s2-10">Decidir <code>DELETE</code> de cliente, veículo e mecânico: manter ou remover da API</li>
+      <li data-id="s2-1" data-done>ASP.NET Core Identity com <code>MapIdentityApi</code></li>
+      <li data-id="s2-2" data-done><code>UseAuthentication()</code> antes de <code>UseAuthorization()</code> — hoje só existe o segundo</li>
+      <li data-id="s2-3" data-done>Dois papéis atrás de políticas nomeadas, não <code>[Authorize(Roles=…)]</code> espalhado</li>
+      <li data-id="s2-4" data-done><code>[Authorize]</code> nos 44 endpoints conforme a <a href="../reference/matriz-de-permissoes.html">matriz de permissões</a></li>
+      <li data-id="s2-5" data-done><code>GET /api/financeiro</code> restrito ao dono — hoje aberto a qualquer um</li>
+      <li data-id="s2-6" data-done><code>Login.tsx:21</code> — autenticar a sério, hoje é <code>setTimeout</code> e <code>navigate</code></li>
+      <li data-id="s2-7" data-done>Guardas de rota no React — <code>/financeiro</code> abre digitando o URL</li>
+      <li data-id="s2-8" data-done>Descomentar o hook de JWT em <code>api.ts:52</code></li>
+      <li data-id="s2-9" data-done>Remover <code>AllowAnyOrigin()</code> — desnecessário com o front servido pelo .NET</li>
+      <li data-id="s2-10" data-done>Decidir <code>DELETE</code> de cliente, veículo e mecânico: manter ou remover da API</li>
     </ul>
   </div>
 

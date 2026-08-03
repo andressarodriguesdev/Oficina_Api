@@ -5,7 +5,7 @@
 
    <div class="sprint" data-sprint="0" data-title="Limpar o terreno">
      <ul class="tasks">
-       <li data-id="s0-dup">Apagar source/repos/</li>
+       <li data-id="s0-dup" data-done>Apagar source/repos/</li>
      </ul>
    </div>
 
@@ -13,6 +13,11 @@
 
    O estado guarda-se em localStorage, com chave derivada do
    nome do ficheiro — cada documento tem o seu progresso.
+
+   `data-done` no <li> marca a tarefa como feita por omissão, para
+   que o que já está entregue viaje no repositório em vez de viver
+   só no navegador de quem clicou. Assim que a caixa for mexida à
+   mão, o localStorage passa a mandar nessa tarefa.
    ============================================================ */
 
 (function () {
@@ -126,7 +131,10 @@
       var label = document.createElement("label");
       var box = document.createElement("input");
       box.type = "checkbox";
-      box.checked = !!state[id];
+      // O que o utilizador clicou ganha sempre; sem clique, vale o data-done.
+      box.checked = Object.prototype.hasOwnProperty.call(state, id)
+        ? !!state[id]
+        : li.hasAttribute("data-done");
 
       var span = document.createElement("span");
       span.innerHTML = html;
@@ -174,13 +182,14 @@
       var reset = document.createElement("button");
       reset.type = "button";
       reset.className = "tracker-reset";
-      reset.textContent = "Limpar todo o progresso";
+      reset.textContent = "Esquecer as minhas alterações";
       reset.addEventListener("click", function () {
-        if (!confirm("Desmarcar todas as tarefas?")) return;
+        if (!confirm("Descartar as tuas marcações e voltar ao estado do repositório?")) return;
         state = {};
         save(state);
         document.querySelectorAll("ul.tasks input").forEach(function (b) {
-          b.checked = false;
+          var li = b.closest("li[data-id]");
+          b.checked = !!(li && li.hasAttribute("data-done"));
         });
         refresh();
       });
