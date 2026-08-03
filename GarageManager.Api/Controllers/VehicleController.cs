@@ -1,3 +1,5 @@
+using GarageManager.Api.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using GarageManager.Application.DTOs;
 using GarageManager.Application.Services;
@@ -6,6 +8,7 @@ namespace GarageManager.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Policy = Policies.WorkshopStaff)]
 public class VehicleController : ControllerBase
 {
     private readonly VehicleAppService _service;
@@ -54,6 +57,7 @@ public class VehicleController : ControllerBase
     }
 
     [HttpPatch("{id}/deactivate")]
+    [Authorize(Policy = Policies.ProprietorOnly)]
     public async Task<IActionResult> Deactivate(Guid id)
     {
         await _service.DeactivateAsync(id);
@@ -62,17 +66,10 @@ public class VehicleController : ControllerBase
     }
 
     [HttpPatch("{id}/reactivate")]
+    [Authorize(Policy = Policies.ProprietorOnly)]
     public async Task<IActionResult> Reactivate(Guid id)
     {
         await _service.ReactivateAsync(id);
-
-        return NoContent();
-    }
-
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Remove(Guid id)
-    {
-        await _service.RemoveAsync(id);
 
         return NoContent();
     }

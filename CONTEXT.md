@@ -28,6 +28,15 @@ A person who can sign in to a Workshop's installation. A Mechanic may or may not
 and a User need not be a Mechanic.
 _Avoid_: Utilizador, login, account, operator
 
+**Proprietor**:
+The User who owns and runs the Workshop. Sees the money, hires and stands down staff, and
+decides anything that changes what has already been agreed with a Customer. One of the two
+roles a User can hold; the other is Mechanic.
+_Avoid_: Dono, owner, admin, administrator, boss, manager
+
+Note that a Vehicle's **owner** is a Customer, never a Proprietor — which is why the role
+is not called Owner.
+
 ### Vehicles
 
 **Vehicle**:
@@ -103,3 +112,6 @@ _Avoid_: Recibo, receipt, cupom
 - **`Completed` and `Paid` are deliberately separate.** The original model conflated them,
   reporting completed work as revenue received. Keeping them apart is the reason the
   financial figures can be trusted.
+- **Four parties, two roles.** Customer and installer both interact with the system but
+  hold no role: the installer works outside it, and the Customer will reach a single Job
+  Card through a capability token, never an account. Only Proprietor and Mechanic sign in.

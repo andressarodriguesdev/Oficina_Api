@@ -1,3 +1,5 @@
+using GarageManager.Api.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using GarageManager.Application.DTOs;
 using GarageManager.Application.Services;
@@ -7,6 +9,7 @@ namespace GarageManager.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Policy = Policies.WorkshopStaff)]
 public class MechanicController : ControllerBase
 {
     private readonly MechanicAppService _service;
@@ -36,6 +39,7 @@ public class MechanicController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = Policies.ProprietorOnly)]
     public async Task<ActionResult<MechanicResponseDto>> Create(MechanicRequestDto dto)
     {
         var created = await _service.CreateAsync(dto);
@@ -48,6 +52,7 @@ public class MechanicController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = Policies.ProprietorOnly)]
     public async Task<IActionResult> Update(Guid id, MechanicRequestDto dto)
     {
         var updated = await _service.UpdateAsync(id, dto);
@@ -59,6 +64,7 @@ public class MechanicController : ControllerBase
     }
 
     [HttpPatch("{id}/deactivate")]
+    [Authorize(Policy = Policies.ProprietorOnly)]
     public async Task<IActionResult> Deactivate(Guid id)
     {
         await _service.DeactivateAsync(id);
@@ -66,20 +72,10 @@ public class MechanicController : ControllerBase
     }
 
     [HttpPatch("{id}/reactivate")]
+    [Authorize(Policy = Policies.ProprietorOnly)]
     public async Task<IActionResult> Reactivate(Guid id)
     {
         await _service.ReactivateAsync(id);
-        return NoContent();
-    }
-
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(Guid id)
-    {
-        var removed = await _service.DeleteAsync(id);
-
-        if (!removed)
-            return NotFound();
-
         return NoContent();
     }
 }

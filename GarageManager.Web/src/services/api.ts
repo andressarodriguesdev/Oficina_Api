@@ -7,24 +7,49 @@
  * All routes follow the REST pattern:
  *   GET    /customers            GET    /customers/{id}
  *   POST   /customers            PUT    /customers/{id}
- *   DELETE /customers/{id}
+ *   PATCH  /customers/{id}/deactivate
  *
  *   GET    /Vehicle              GET    /Vehicle/{id}
  *   POST   /Vehicle              PUT    /Vehicle/{id}
- *   DELETE /Vehicle/{id}
+ *   PATCH  /Vehicle/{id}/deactivate
  *
  *   GET    /job-cards            GET    /job-cards/{id}
  *   POST   /job-cards            PUT    /job-cards/{id}
- *   DELETE /job-cards/{id}
  *   POST   /job-cards/{id}/send-for-approval
  *   POST   /job-cards/{id}/approve
  *   POST   /job-cards/{id}/decline
  *   POST   /job-cards/{id}/complete
  *   POST   /job-cards/{id}/cancel
  *   POST   /job-cards/{id}/reopen
+ *
+ * Records are never deleted — deactivating keeps the repair history intact.
  */
 
 const BASE_URL = (import.meta.env.VITE_API_URL as string) || '/api';
+
+const TOKEN_KEY = 'garagemanager.accessToken';
+
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token: string): void {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearToken(): void {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+/**
+ * Called when the API rejects the stored token, so the app can send the user back to
+ * the sign-in page from anywhere. Set by the auth provider.
+ */
+let onUnauthenticated: (() => void) | null = null;
+
+export function setUnauthenticatedHandler(handler: (() => void) | null): void {
+  onUnauthenticated = handler;
+}
 
 export class ApiError extends Error {
   status: number;
@@ -47,13 +72,19 @@ async function request<T>(
     ...((options.headers as Record<string, string>) ?? {}),
   };
 
-  // When JWT auth is added in the future, just uncomment:
-  // const token = localStorage.getItem('token');
-  // if (token) headers['Authorization'] = `Bearer ${token}`;
+  const token = getToken();
+  if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const response = await fetch(url, { ...options, headers });
 
   if (!response.ok) {
+    // 401 means the token is missing or no longer good. 403 means it is fine but this
+    // role may not do this — that is a message, not a sign-out.
+    if (response.status === 401) {
+      clearToken();
+      onUnauthenticated?.();
+    }
+
     let message = `Error ${response.status}`;
     try {
       const body = await response.json();

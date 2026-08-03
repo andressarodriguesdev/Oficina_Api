@@ -105,22 +105,6 @@ public class VehicleAppService
         await _repository.UpdateAsync(vehicle);
     }
 
-    public async Task RemoveAsync(Guid id)
-    {
-        var vehicle = await _repository.GetByIdAsync(id);
-
-        if (vehicle == null)
-            throw new Exception("Vehicle not found");
-
-        if (vehicle.JobCards.Any())
-        {
-            throw new Exception(
-                "This vehicle has job cards linked and cannot be deleted. Deactivate it instead.");
-        }
-
-        await _repository.RemoveAsync(vehicle);
-    }
-
     private static VehicleResponseDto MapToResponse(Vehicle vehicle)
     {
         return new VehicleResponseDto

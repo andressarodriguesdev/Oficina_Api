@@ -1,9 +1,13 @@
 using GarageManager.Domain.Entities;
+using GarageManager.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace GarageManager.Infrastructure.Data;
 
-public class GarageManagerDbContext : DbContext
+public class GarageManagerDbContext
+    : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
 {
     public GarageManagerDbContext(DbContextOptions<GarageManagerDbContext> options)
         : base(options)
@@ -72,5 +76,18 @@ public class GarageManagerDbContext : DbContext
             .HasMany(j => j.Parts)
             .WithOne(p => p.JobCard)
             .HasForeignKey(p => p.JobCardId);
+
+        // A User may be a Mechanic, and a Mechanic may have at most one sign-in.
+        // Restrict, not cascade: deactivating a Mechanic must not delete the account.
+        modelBuilder.Entity<ApplicationUser>()
+            .HasOne<Mechanic>()
+            .WithMany()
+            .HasForeignKey(u => u.MechanicId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ApplicationUser>()
+            .HasIndex(u => u.MechanicId)
+            .IsUnique();
     }
 }

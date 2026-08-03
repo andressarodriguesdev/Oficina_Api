@@ -28,10 +28,12 @@ import {
 } from "../services/vehicles";
 import { listCustomers } from "../services/customers";
 import type { Customer, Vehicle } from "../types";
+import { useAuth } from "../auth/AuthProvider";
 
 export function VehicleDetails() {
   const { id } = useParams<{ id: string }>();
   const toast = useToast();
+  const { isProprietor } = useAuth();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -155,7 +157,7 @@ export function VehicleDetails() {
             Edit
           </Button>
 
-          {vehicle.isActive ? (
+          {isProprietor && (vehicle.isActive ? (
             <Button variant="danger" size="sm" onClick={handleDeactivate}>
               <UserX className="h-4 w-4" />
               Deactivate
@@ -165,7 +167,7 @@ export function VehicleDetails() {
               <UserCheck className="h-4 w-4" />
               Reactivate
             </Button>
-          )}
+          ))}
         </div>
       </div>
 

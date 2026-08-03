@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Pencil, FileDown, MessageCircle, Send, Check, X, CheckCircle2, XCircle, RotateCcw, ClipboardList, User, Car, Wrench, Package, Clock } from 'lucide-react';
 import { Card, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { PageLoader } from '../components/ui/Spinner';
 import { EmptyState } from '../components/ui/EmptyState';
-import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useToast } from '../components/ui/Toast';
 import {
   getJobCard,
@@ -17,7 +16,6 @@ import {
   complete,
   cancel,
   reopen,
-  deleteJobCard,
   downloadPdf,
   generateWhatsApp,
   type JobCardWithRelations
@@ -26,17 +24,16 @@ import type { Part, JobCardStatusChange } from '../types';
 import { formatCurrency, formatDate } from '../utils/format';
 import { statusFromNumber, statusLabel } from '../utils/status';
 import { buildWhatsAppMessage, whatsappUrl } from '../utils/whatsapp';
+import { useAuth } from '../auth/AuthProvider';
 
 export function JobCardDetails() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const toast = useToast();
+  const { isProprietor } = useAuth();
   const [jobCard, setJobCard] = useState<JobCardWithRelations | null>(null);
   const [parts, setParts] = useState<Part[]>([]);
   const [statusChanges, setStatusChanges] = useState<JobCardStatusChange[]>([]);
   const [loading, setLoading] = useState(true);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [cancellationReason, setCancellationReason] = useState('');
 
@@ -149,24 +146,6 @@ const handleCancel = async () => {
   }
 };
 
-const handleDelete = async () => {
-  if (!jobCard) return;
-
-  setDeleting(true);
-
-  try {
-    await deleteJobCard(jobCard.id);
-    toast.success('Job card deleted successfully');
-    navigate('/job-cards');
-  } catch (error) {
-    console.error(error);
-    toast.error('Failed to delete the job card');
-  } finally {
-    setDeleting(false);
-    setConfirmDelete(false);
-  }
-};
-
   if (loading) return <PageLoader label="Loading job card..." />;
   if (!jobCard) return <Card><EmptyState icon={<ClipboardList className="h-7 w-7" />} title="Job card not found" action={<Link to="/job-cards"><Button variant="outline"><ArrowLeft className="h-4 w-4" />Back</Button></Link>} /></Card>;
 
@@ -260,14 +239,14 @@ const handleDelete = async () => {
             <CardHeader title="Actions" subtitle="Job card workflow" />
             <div className="space-y-2 p-4">
               {status === 'Open' && <Button className="w-full justify-start" onClick={handleSendForApproval} loading={actionLoading === 'send'}><Send className="h-4 w-4" />Send for Approval</Button>}
-              {status === 'AwaitingApproval' && (
+              {status === 'AwaitingApproval' && isProprietor && (
                 <>
                   <Button variant="success" className="w-full justify-start" onClick={() => runAction('approve', approve, 'Job card approved', 'Failed to approve job card')} loading={actionLoading === 'approve'}><Check className="h-4 w-4" />Approve</Button>
                   <Button variant="danger" className="w-full justify-start" onClick={() => runAction('decline', decline, 'Job card declined', 'Failed to decline job card')} loading={actionLoading === 'decline'}><X className="h-4 w-4" />Decline</Button>
                 </>
               )}
               {status === 'Approved' && <Button variant="success" className="w-full justify-start" onClick={() => runAction('complete', complete, 'Job card completed', 'Failed to complete job card')} loading={actionLoading === 'complete'}><CheckCircle2 className="h-4 w-4" />Complete</Button>}
-              {(status === 'Approved' ||
+              {isProprietor && (status === 'Approved' ||
   status === 'AwaitingApproval' ||
   status === 'Declined') && (
   <>
@@ -296,7 +275,7 @@ const handleDelete = async () => {
     </Button>
   </>
 )}
-              {(status === 'Completed' || status === 'Cancelled' || status === 'Declined') && <Button variant="outline" className="w-full justify-start" onClick={() => runAction('reopen', reopen, 'Job card reopened', 'Failed to reopen job card')} loading={actionLoading === 'reopen'}><RotateCcw className="h-4 w-4" />Reopen</Button>}
+              {isProprietor && (status === 'Completed' || status === 'Cancelled' || status === 'Declined') && <Button variant="outline" className="w-full justify-start" onClick={() => runAction('reopen', reopen, 'Job card reopened', 'Failed to reopen job card')} loading={actionLoading === 'reopen'}><RotateCcw className="h-4 w-4" />Reopen</Button>}
               <Button variant="outline" className="w-full justify-start" onClick={handleWhatsApp}><MessageCircle className="h-4 w-4" />Send WhatsApp</Button>
               <Button variant="outline" className="w-full justify-start" onClick={handlePdf}><FileDown className="h-4 w-4" />Generate PDF</Button>
             </div>
@@ -369,14 +348,6 @@ const handleDelete = async () => {
         </div>
       </div>
 
-      <ConfirmDialog
-        open={confirmDelete}
-        onClose={() => setConfirmDelete(false)}
-        onConfirm={handleDelete}
-        loading={deleting}
-        title="Delete job card"
-        message="Are you sure you want to delete this job card?"
-      />
     </div>
   );
 }

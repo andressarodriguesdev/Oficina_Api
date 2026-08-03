@@ -52,10 +52,4 @@ public class VehicleRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task RemoveAsync(Vehicle vehicle)
-    {
-        _context.Vehicles.Remove(vehicle);
-
-        await _context.SaveChangesAsync();
-    }
 }

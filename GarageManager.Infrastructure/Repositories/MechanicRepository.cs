@@ -38,11 +38,6 @@ public class MechanicRepository
         _context.Mechanics.Update(mechanic);
     }
 
-    public void Delete(Mechanic mechanic)
-    {
-        _context.Mechanics.Remove(mechanic);
-    }
-
     public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();

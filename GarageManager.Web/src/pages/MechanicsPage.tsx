@@ -37,8 +37,10 @@ import {
 import type { Mechanic } from "../types";
 
 import { initials } from "../utils/format";
+import { useAuth } from "../auth/AuthProvider";
 
 export function Mechanics() {
+  const { isProprietor } = useAuth();
   const toast = useToast();
 
   const [mechanics, setMechanics] = useState<Mechanic[]>([]);
@@ -181,16 +183,18 @@ export function Mechanics() {
           <option value="inactive">Inactive mechanics</option>
         </Select>
 
-        <Button
-          className="whitespace-nowrap"
-          onClick={() => {
-            setEditing(null);
-            setModalOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4" />
-          New mechanic
-        </Button>
+        {isProprietor && (
+          <Button
+            className="whitespace-nowrap"
+            onClick={() => {
+              setEditing(null);
+              setModalOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4" />
+            New mechanic
+          </Button>
+        )}
       </div>
 
       {loading ? (
@@ -324,25 +328,27 @@ export function Mechanics() {
                     <Eye className="h-4 w-4" />
                   </Link>
 
-                  <button
-                    onClick={() => {
-                      setEditing(m);
-                      setModalOpen(true);
-                    }}
-                                    className="
-                    rounded-lg
-                    p-2
-                    text-ink-400
-                    transition
-                    hover:bg-ink-800
-                    hover:text-flame-400
-                    "
-                    title="Edit"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </button>
+                  {isProprietor && (
+                    <button
+                      onClick={() => {
+                        setEditing(m);
+                        setModalOpen(true);
+                      }}
+                                      className="
+                      rounded-lg
+                      p-2
+                      text-ink-400
+                      transition
+                      hover:bg-ink-800
+                      hover:text-flame-400
+                      "
+                      title="Edit"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                  )}
 
-                  {m.isActive ? (
+                  {isProprietor && (m.isActive ? (
                     <button
                       onClick={() => handleDeactivate(m)}
                                         className="
@@ -372,7 +378,7 @@ export function Mechanics() {
                     >
                       <UserCheck className="h-4 w-4" />
                     </button>
-                  )}
+                  ))}
                 </div>
               </div>
 

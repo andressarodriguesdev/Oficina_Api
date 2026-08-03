@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Car, ClipboardList, DollarSignIcon, Settings, Wrench, X, WrenchIcon } from 'lucide-react';
+import { LayoutDashboard, Users, Car, ClipboardList, DollarSignIcon, Settings, Wrench, X, WrenchIcon, LogOut } from 'lucide-react';
+import { useAuth } from '../../auth/AuthProvider';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -7,12 +8,23 @@ const navItems = [
   { to: '/vehicles', label: 'Vehicles', icon: Car },
   { to: '/job-cards', label: 'Job Cards', icon: ClipboardList },
   { to: '/mechanics', label: 'Mechanics', icon: WrenchIcon },
-  { to: '/finance', label: 'Finance', icon: DollarSignIcon },
+  { to: '/finance', label: 'Finance', icon: DollarSignIcon, proprietorOnly: true },
   { to: '/settings', label: 'Settings', icon: Settings },
 
 ];
 
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+
+  if (parts.length === 0) return '?';
+
+  return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+}
+
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { user, isProprietor, signOut } = useAuth();
+  const visibleNavItems = navItems.filter((item) => isProprietor || !item.proprietorOnly);
+
   return (
     <>
       {open && <div className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden" onClick={onClose} />}
@@ -35,7 +47,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
           </button>
         </div>
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink key={item.to} to={item.to} end={item.end} onClick={onClose} className={({ isActive }) => [
@@ -50,11 +62,21 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
         </nav>
         <div className="border-t border-ink-700/60 px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-700 text-sm font-bold text-ink-200">AD</div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-white">Administrator</p>
-              <p className="truncate text-xs text-ink-400">admin@garagemanager.com</p>
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink-700 text-sm font-bold text-ink-200">
+              {initialsOf(user?.displayName ?? '')}
             </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-white">{user?.displayName}</p>
+              <p className="truncate text-xs text-ink-400">{user?.role}</p>
+            </div>
+            <button
+              onClick={signOut}
+              title="Sign out"
+              aria-label="Sign out"
+              className="rounded-lg p-1.5 text-ink-400 transition hover:bg-ink-800 hover:text-white"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </aside>

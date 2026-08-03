@@ -45,7 +45,7 @@ public class JobCard
 
     public Guid MechanicId { get; private set; }
 
-    public Mechanic Mechanic { get; private set; }
+    public Mechanic Mechanic { get; private set; } = null!;
 
     public ICollection<JobCardStatusChange> StatusChanges { get; private set; }
         = new List<JobCardStatusChange>();

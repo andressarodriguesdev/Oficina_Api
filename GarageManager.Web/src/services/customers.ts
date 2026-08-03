@@ -35,10 +35,6 @@ export async function updateCustomer(
   return api.put<Customer>(`/customers/${id}`, input);
 }
 
-export async function deleteCustomer(id: string): Promise<void> {
-  await api.delete(`/customers/${id}`);
-}
-
 export async function deactivateCustomer(id: string): Promise<void> {
   await api.patch(`/customers/${id}/deactivate`);
 }

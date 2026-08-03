@@ -18,7 +18,6 @@ import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Modal } from "../components/ui/Modal";
-import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { EmptyState } from "../components/ui/EmptyState";
 import { PageLoader } from "../components/ui/Spinner";
 import { useToast } from "../components/ui/Toast";
@@ -32,15 +31,16 @@ import {
   listCustomers,
   createCustomer,
   updateCustomer,
-  deleteCustomer,
   deactivateCustomer,
   reactivateCustomer,
 } from "../services/customers";
 import type { Customer } from "../types";
 import { initials } from "../utils/format";
+import { useAuth } from "../auth/AuthProvider";
 
 export function Customers() {
   const toast = useToast();
+  const { isProprietor } = useAuth();
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,8 +48,6 @@ export function Customers() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [toDelete, setToDelete] = useState<Customer | null>(null);
-  const [deleting, setDeleting] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
 
   const load = useCallback(async () => {
@@ -112,24 +110,6 @@ export function Customers() {
       console.error(err);
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!toDelete) return;
-
-    setDeleting(true);
-
-    try {
-      await deleteCustomer(toDelete.id);
-      toast.success("Customer deleted successfully");
-      setToDelete(null);
-      await load();
-    } catch (err) {
-      toast.error("Failed to delete customer");
-      console.error(err);
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -279,7 +259,7 @@ export function Customers() {
                     <Pencil className="h-4 w-4" />
                   </button>
 
-                  {c.isActive ? (
+                  {isProprietor && (c.isActive ? (
                     <button
                       onClick={() => handleDeactivate(c)}
                       className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-800 hover:text-red-400"
@@ -295,7 +275,7 @@ export function Customers() {
                     >
                       <UserCheck className="h-4 w-4" />
                     </button>
-                  )}
+                  ))}
                 </div>
               </div>
 
@@ -333,15 +313,6 @@ export function Customers() {
           submitting={submitting}
         />
       </Modal>
-
-      <ConfirmDialog
-        open={!!toDelete}
-        onClose={() => setToDelete(null)}
-        onConfirm={handleDelete}
-        loading={deleting}
-        title="Delete customer"
-        message={`Are you sure you want to delete "${toDelete?.name}"?`}
-      />
     </div>
   );
 }

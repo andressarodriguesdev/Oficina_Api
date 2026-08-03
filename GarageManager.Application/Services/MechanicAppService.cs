@@ -90,16 +90,4 @@ public class MechanicAppService
         await _repository.SaveChangesAsync();
     }
 
-    public async Task<bool> DeleteAsync(Guid id)
-    {
-        var mechanic = await _repository.GetByIdAsync(id);
-
-        if (mechanic == null)
-            return false;
-
-        _repository.Delete(mechanic);
-        await _repository.SaveChangesAsync();
-
-        return true;
-    }
 }

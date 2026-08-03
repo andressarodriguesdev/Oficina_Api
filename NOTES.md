@@ -22,26 +22,51 @@ Servem de matéria-prima para lições futuras — não são para corrigir sem e
 - Pastas `obj/` versionadas apesar do `.gitignore` listá-las (foram commitadas antes do ignore).
 - Domínio lança `throw new Exception` genérico em todas as regras de `OrdemServico`.
 
-## Estado em 2026-08-03: sprint 1 completo, aguardando commit
+## Estado em 2026-08-03: sprints 0, 1 e 2 commitados
 
-Rename total OficinaMecanica → GarageManager executado por completo (backend +
-frontend), localizado para Malta (EUR, +356, inglês). 749 arquivos alterados,
-**nada commitado ainda** — usuário pediu para revisar o diff antes de decidir.
-Revisão feita: máquina de estados de JobCard verificada guarda-por-guarda contra
-o original, build e typecheck 100% limpos, bug conhecido do Approved sumindo do
-financeiro preservado de propósito (correção é sprint 4).
+Branch `sprint-1-garagemanager-rebrand`, três commits sobre `main`. Ainda não
+mergeado nem enviado — `main` continua em `169a589`.
 
-Sprints 0 e 1 de `plan/sprints.html` estão de fato prontos — as checkboxes do
-tracker são client-side (localStorage), então não refletem isso automaticamente;
-o usuário precisa marcá-las manualmente ou eu preciso confirmar ao reabrir.
+Sprints 0 e 1 (rename + Malta) num commit só, mais os dois ADRs em `docs/adr/`,
+mais o sprint 2 (autenticação e perímetro). Sprint 2 foi validado de ponta a
+ponta contra um Postgres em container: sem token dá 401; o Proprietor passa em
+tudo; o mecânico recebe 403 em `/api/finance`, `/api/users`, `POST /api/Mechanic`
+e nas transições `approve`/`decline`/`cancel`/`reopen`; `/api/auth/register` está
+fechado (404) e os DELETE removidos dão 405.
 
-Pendências levantadas na sessão anterior e ainda não respondidas:
-- Se quer os dois ADRs propostos (instalação dedicada por oficina + vocabulário
-  britânico) escritos em `docs/adr/`.
-- Se decide commitar o diff do sprint 1 como está.
+Decisões do usuário nesta sessão:
+- Sprint 1 commitado como um commit único.
+- Os dois ADRs escritos.
+- `DELETE` de Customer, Vehicle e Mechanic removidos da API (o `IsActive` já
+  cobre o caso e apagar destruía histórico).
+- CORS com origens vindas de configuração agora; servir a SPA pelo .NET fica
+  para o sprint 5.
 
-Próximo passo do plano: sprint 2 (autenticação e perímetro) — `Login.tsx` ainda
-autentica com `setTimeout`, `/api/finance` continua aberto sem `[Authorize]`.
+Decisões que eu tomei e que valem revisão:
+- O papel do dono chama-se **`Proprietor`**, não `Owner` — `CONTEXT.md` lista
+  "owner" como termo a evitar, porque o dono do *veículo* é o Customer.
+- Criei `UserController` e `IdentityBootstrap` sem estarem nas 10 tarefas do
+  sprint: sem eles ninguém consegue criar a conta do mecânico e o sprint não
+  entrega um sistema utilizável.
+- `POST`/`GET` de `/api/Workshop` ficaram restritos ao Proprietor por não haver
+  conta de instalador; deviam sair da API no sprint 5.
+
+Sprints 0, 1 e 2 de `plan/sprints.html` estão prontos — as checkboxes do tracker
+são client-side (localStorage), então não refletem isso automaticamente.
+
+Próximo passo: sprint 3 (Job Card com o ciclo certo) — separar `Description` em
+`Complaint`, `Cause` e `Correction`.
+
+## Achados abertos, não corrigidos (verificados em 2026-08-03)
+- `/status-history` no React chama `GET /api/status-history`, que **não tem
+  controller**. A página está quebrada desde antes do rename.
+- Domínio lança `Exception` genérica: pedir um Job Card inexistente devolve 500,
+  não 404. Confirmado por teste.
+- Rotas inconsistentes: `api/Workshop`, `api/Mechanic` e `api/Vehicle` usam
+  `[controller]` (singular, PascalCase); as outras são kebab-case plural.
+- A connection string em user-secrets ainda aponta para a base `oficinamecanica`.
+- `JobCardRepository.RemoveAsync` e `WorkshopRepository.RemoveAsync` continuam
+  como código morto.
 
 ## Sequência provável de lições
 1. ✅ Dois isolamentos que parecem um só — topologia vs. autorização.

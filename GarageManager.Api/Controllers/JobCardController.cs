@@ -1,3 +1,5 @@
+using GarageManager.Api.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using GarageManager.Application.DTOs;
@@ -8,6 +10,7 @@ namespace GarageManager.Api.Controllers;
 
 [ApiController]
 [Route("api/job-cards")]
+[Authorize(Policy = Policies.WorkshopStaff)]
 public class JobCardController : ControllerBase
 {
     private readonly JobCardAppService _service;
@@ -63,7 +66,12 @@ public class JobCardController : ControllerBase
         return NoContent();
     }
 
+    // Approving, declining, cancelling and reopening all move money that has already been
+    // agreed with the Customer, so they stay with the Proprietor. Approve and Decline will
+    // also become reachable by the Customer through a per-Job-Card capability token — the
+    // Job Card id is an identifier, never a credential.
     [HttpPost("{id}/approve")]
+    [Authorize(Policy = Policies.ProprietorOnly)]
     public async Task<IActionResult> Approve(Guid id)
     {
         await _service.ApproveAsync(id);
@@ -72,6 +80,7 @@ public class JobCardController : ControllerBase
     }
 
     [HttpPost("{id}/decline")]
+    [Authorize(Policy = Policies.ProprietorOnly)]
     public async Task<IActionResult> Decline(Guid id)
     {
         await _service.DeclineAsync(id);
@@ -88,6 +97,7 @@ public class JobCardController : ControllerBase
     }
 
     [HttpPost("{id}/cancel")]
+    [Authorize(Policy = Policies.ProprietorOnly)]
     public async Task<IActionResult> Cancel(
         Guid id,
         CancelJobCardDto dto)
@@ -98,6 +108,7 @@ public class JobCardController : ControllerBase
     }
 
     [HttpPost("{id}/reopen")]
+    [Authorize(Policy = Policies.ProprietorOnly)]
     public async Task<IActionResult> Reopen(
         Guid id,
         ReopenJobCardDto dto)

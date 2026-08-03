@@ -37,10 +37,6 @@ export async function updateMechanic(
   );
 }
 
-export async function deleteMechanic(id: string) {
-  await api.delete(`/Mechanic/${id}`);
-}
-
 export async function deactivateMechanic(id: string) {
   return api.patch(`/Mechanic/${id}/deactivate`);
 }

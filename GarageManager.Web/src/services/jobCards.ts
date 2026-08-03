@@ -47,10 +47,6 @@ export async function updateJobCard(
   return api.put<JobCard>(`/job-cards/${id}`, input);
 }
 
-export async function deleteJobCard(id: string): Promise<void> {
-  await api.delete(`/job-cards/${id}`);
-}
-
 // Status transitions — implemented by the backend job card endpoints
 export async function sendForApproval(id: string): Promise<JobCard> {
   return api.post<JobCard>(`/job-cards/${id}/send-for-approval`);

@@ -1,28 +1,50 @@
-import { type FormEvent, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { type FormEvent, useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Wrench, Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Zap, ClipboardList } from 'lucide-react';
 import { useToast } from '../components/ui/Toast';
 import { Button } from '../components/ui/Button';
+import { useAuth } from '../auth/AuthProvider';
+import { ApiError } from '../services/api';
 
 const WORKSHOP_IMAGE =
   'https://images.pexels.com/photos/4116231/pexels-photo-4116231.jpeg?auto=crop&fit=crop&w=1200&q=80';
 
 export function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
+  const { user, signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Whatever the guard turned them away from, or the dashboard.
+  const destination = (location.state as { from?: string } | null)?.from ?? '/dashboard';
+
+  useEffect(() => {
+    if (user) navigate(destination, { replace: true });
+  }, [user, destination, navigate]);
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    // No authentication yet — just redirects to the dashboard
-    await new Promise((r) => setTimeout(r, 500));
-    setLoading(false);
-    toast.success('Welcome to GarageManager!');
-    navigate('/dashboard');
+
+    try {
+      await signIn(email, password);
+      toast.success('Welcome to GarageManager!');
+      navigate(destination, { replace: true });
+    } catch (error) {
+      // The API answers 401 for both a wrong password and an unknown email, and it
+      // stays that way here: saying which one is wrong tells you which emails exist.
+      toast.error(
+        error instanceof ApiError && error.status !== 401
+          ? error.message
+          : 'Those details were not recognised.',
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

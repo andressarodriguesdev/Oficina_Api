@@ -34,12 +34,6 @@ export async function updateVehicle(
   return api.put<Vehicle>(`/Vehicle/${id}`, input);
 }
 
-export async function deleteVehicle(
-  id: string
-): Promise<void> {
-  await api.delete(`/Vehicle/${id}`);
-}
-
 export async function deactivateVehicle(id: string): Promise<void> {
   await api.patch(`/Vehicle/${id}/deactivate`);
 }

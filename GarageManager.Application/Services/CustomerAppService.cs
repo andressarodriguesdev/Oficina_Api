@@ -128,20 +128,4 @@ public class CustomerAppService
 
         await _repository.UpdateAsync(customer);
     }
-
-    public async Task RemoveAsync(Guid id)
-    {
-        var customer = await _repository.GetByIdAsync(id);
-
-        if (customer == null)
-            throw new Exception("Customer not found");
-
-        if (customer.JobCards != null && customer.JobCards.Any())
-        {
-            throw new Exception(
-                "This customer has job cards linked and cannot be deleted. Deactivate them instead.");
-        }
-
-        await _repository.RemoveAsync(customer);
-    }
 }

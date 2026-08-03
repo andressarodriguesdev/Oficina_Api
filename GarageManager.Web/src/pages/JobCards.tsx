@@ -5,7 +5,6 @@ import {
   ClipboardList,
   Search,
   Pencil,
-  Trash2,
   Eye,
   FileText,
 } from "lucide-react";
@@ -15,7 +14,6 @@ import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { Modal } from "../components/ui/Modal";
-import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { EmptyState } from "../components/ui/EmptyState";
 import { PageLoader } from "../components/ui/Spinner";
 import { useToast } from "../components/ui/Toast";
@@ -26,7 +24,6 @@ import {
 import {
   listJobCards,
   createJobCard,
-  deleteJobCard,
   sendForApproval,
   type JobCardWithRelations,
 } from "../services/jobCards";
@@ -52,8 +49,6 @@ export function JobCards() {
   const [statusFilter, setStatusFilter] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [toDelete, setToDelete] = useState<JobCardWithRelations | null>(null);
-  const [deleting, setDeleting] = useState(false);
   const [mechanics, setMechanics] = useState<Mechanic[]>([]);
   const load = useCallback(async () => {
     setLoading(true);
@@ -133,21 +128,6 @@ export function JobCards() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!toDelete) return;
-    setDeleting(true);
-    try {
-      await deleteJobCard(toDelete.id);
-      toast.success("Job card deleted successfully");
-      setToDelete(null);
-      await load();
-    } catch (err) {
-      toast.error("Failed to delete job card");
-      console.error(err);
-    } finally {
-      setDeleting(false);
-    }
-  };
 
   const handleSendForApproval = async (jobCard: JobCardWithRelations) => {
     try {
@@ -304,13 +284,6 @@ export function JobCards() {
                             <FileText className="h-4 w-4" />
                           </button>
                         )}
-                        <button
-                          onClick={() => setToDelete(jc)}
-                          className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-700 hover:text-red-400"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -337,14 +310,6 @@ export function JobCards() {
           submitting={submitting}
         />
       </Modal>
-      <ConfirmDialog
-        open={!!toDelete}
-        onClose={() => setToDelete(null)}
-        onConfirm={handleDelete}
-        loading={deleting}
-        title="Delete job card"
-        message="Are you sure you want to delete this job card?"
-      />
     </div>
   );
 }
