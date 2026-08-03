@@ -1,0 +1,198 @@
+<meta charset="utf-8">
+<title>GarageManager — Plano de sprints</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../assets/lesson.css">
+
+<div class="wrap">
+
+  <p class="eyebrow">Plano · GarageManager</p>
+  <h1>Do MVP ao produto vendável</h1>
+  <p class="standfirst">
+    Sete sprints entre o que existe hoje e a primeira oficina maltesa a pagar.
+    As caixas guardam-se no navegador — marca à medida que avanças.
+  </p>
+
+  <div class="overall" data-title="Progresso do v1"></div>
+
+  <h2>Decisões fechadas</h2>
+
+  <p>
+    Estas não se rediscutem sem motivo novo. Saíram da sessão de grilling de
+    2 de agosto de 2026.
+  </p>
+
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Decisão</th><th>Consequência</th></tr></thead>
+      <tbody>
+        <tr><td>Mercado: <strong>Malta</strong></td><td>EUR, +356, inglês, RGPD, IVA 18%, convenção britânica</td></tr>
+        <tr><td>Construir antes de validar</td><td>Sem piloto. Escopo enxuto vira critério de sobrevivência</td></tr>
+        <tr><td>Instalação dedicada por oficina</td><td>Isolamento grátis; custo operacional linear</td></tr>
+        <tr><td><code>Completed</code> ≠ <code>Paid</code></td><td>Payment entra no v1</td></tr>
+        <tr><td>Rename total, agora</td><td>Código, UI, schema, projetos → <code>GarageManager.*</code></td></tr>
+        <tr><td>Vocabulário do ramo britânico</td><td><code>JobCard</code>, <code>LabourCharge</code>, <code>Cancelled</code></td></tr>
+        <tr><td><code>Mechanic</code> ≠ <code>User</code></td><td>Ligação anulável; despedir não parte o histórico</td></tr>
+        <tr><td>Job Card abre na entrada do veículo</td><td><code>Complaint</code>/<code>Cause</code>/<code>Correction</code></td></tr>
+        <tr><td>React servido pelo .NET</td><td>Um artefacto por oficina; CORS deixa de existir</td></tr>
+        <tr><td>CalVer + <code>/version</code></td><td>Responde “há quanto tempo esta oficina não é atualizada”</td></tr>
+        <tr><td>v1 = degrau B</td><td>Job cards + pagamento + IVA. Aprovação do cliente fica para a 1.1</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="font-size:.9rem;color:var(--muted)">
+    Glossário completo em <a href="../CONTEXT.md">CONTEXT.md</a>. Fundamentação das duas
+    primeiras em <a href="../lessons/0001-dois-isolamentos.html">Lição 01</a> e
+    <a href="../lessons/0002-quem-usa-o-sistema.html">Lição 02</a>.
+  </p>
+
+  <h2>Sprints</h2>
+
+  <div class="sprint" data-sprint="0" data-title="Limpar o terreno" data-est="2–3 dias">
+    <ul class="tasks">
+      <li data-id="s0-1">Apagar <code>source/repos/</code> — 581 ficheiros versionados de uma cópia obsoleta, anterior à funcionalidade de mecânico</li>
+      <li data-id="s0-2">Apagar <code>OficinaMecanica/</code> — projeto órfão na raiz, fora do <code>.slnx</code></li>
+      <li data-id="s0-3"><code>git rm -r --cached</code> nas pastas <code>obj/</code> commitadas apesar do <code>.gitignore</code></li>
+      <li data-id="s0-4">Remover <code>@supabase/supabase-js</code> — instalado pelo template Bolt, zero imports</li>
+      <li data-id="s0-5">Apagar bloco CORS morto em <code>Program.cs:71</code>, depois do <code>app.Run()</code></li>
+      <li data-id="s0-6">Connection string para user-secrets — senha em claro em <code>appsettings.json:10</code></li>
+      <li data-id="s0-7">Confirmar que a solução ainda compila</li>
+    </ul>
+  </div>
+
+  <div class="sprint" data-sprint="1" data-title="Rename e Malta" data-est="1,5–2 semanas">
+    <ul class="tasks">
+      <li data-id="s1-1">Projetos e namespaces → <code>GarageManager.Api</code>, <code>.Application</code>, <code>.Domain</code>, <code>.Infrastructure</code></li>
+      <li data-id="s1-2">Entidades: <code>Oficina→Workshop</code>, <code>Cliente→Customer</code>, <code>Veiculo→Vehicle</code>, <code>OrdemServico→JobCard</code></li>
+      <li data-id="s1-3">Entidades: <code>OrdemServicoItem→Part</code>, <code>Mecanico→Mechanic</code>, <code>HistoricoOrdemServico→JobCardStatusChange</code></li>
+      <li data-id="s1-4">Propriedades: <code>Placa→RegistrationNumber</code>, <code>ValorMaoObra→LabourCharge</code>, <code>Ativo→IsActive</code></li>
+      <li data-id="s1-5">Enum <code>JobCardStatus</code>: <code>Open</code>, <code>AwaitingApproval</code>, <code>Approved</code>, <code>Declined</code>, <code>Completed</code>, <code>Cancelled</code>, <code>Reopened</code></li>
+      <li data-id="s1-6">DTOs, Services, Repositories e Controllers a acompanhar</li>
+      <li data-id="s1-7">Apagar as 3 migrations e regerar <code>InitialCreate</code> do zero — não há produção para migrar</li>
+      <li data-id="s1-8">Frontend: rotas, tipos, serviços e as 14 páginas</li>
+      <li data-id="s1-9">Todas as strings de UI para inglês</li>
+      <li data-id="s1-10"><code>format.ts:2</code> → <code>en-MT</code> e <code>EUR</code>, hoje em <code>pt-BR</code>/<code>BRL</code></li>
+      <li data-id="s1-11">Sete ocorrências de <code>R$</code> → <code>€</code> — quatro no PDF, três no WhatsApp</li>
+      <li data-id="s1-12"><code>WhatsAppService.cs:112</code> — <code>wa.me/55</code> → <code>+356</code>, vindo de configuração</li>
+    </ul>
+  </div>
+
+  <div class="sprint" data-sprint="2" data-title="Autenticação e perímetro" data-est="1,5 semanas">
+    <ul class="tasks">
+      <li data-id="s2-1">ASP.NET Core Identity com <code>MapIdentityApi</code></li>
+      <li data-id="s2-2"><code>UseAuthentication()</code> antes de <code>UseAuthorization()</code> — hoje só existe o segundo</li>
+      <li data-id="s2-3">Dois papéis atrás de políticas nomeadas, não <code>[Authorize(Roles=…)]</code> espalhado</li>
+      <li data-id="s2-4"><code>[Authorize]</code> nos 44 endpoints conforme a <a href="../reference/matriz-de-permissoes.html">matriz de permissões</a></li>
+      <li data-id="s2-5"><code>GET /api/financeiro</code> restrito ao dono — hoje aberto a qualquer um</li>
+      <li data-id="s2-6"><code>Login.tsx:21</code> — autenticar a sério, hoje é <code>setTimeout</code> e <code>navigate</code></li>
+      <li data-id="s2-7">Guardas de rota no React — <code>/financeiro</code> abre digitando o URL</li>
+      <li data-id="s2-8">Descomentar o hook de JWT em <code>api.ts:52</code></li>
+      <li data-id="s2-9">Remover <code>AllowAnyOrigin()</code> — desnecessário com o front servido pelo .NET</li>
+      <li data-id="s2-10">Decidir <code>DELETE</code> de cliente, veículo e mecânico: manter ou remover da API</li>
+    </ul>
+  </div>
+
+  <div class="sprint" data-sprint="3" data-title="Job Card com o ciclo certo" data-est="1 semana">
+    <ul class="tasks">
+      <li data-id="s3-1">Separar <code>Descricao</code> em <code>Complaint</code>, <code>Cause</code> e <code>Correction</code></li>
+      <li data-id="s3-2"><code>MechanicId</code> anulável — hoje obrigatório no construtor, força inventar um mecânico</li>
+      <li data-id="s3-3"><code>LabourCharge</code> anulável até haver orçamento</li>
+      <li data-id="s3-4">Trava de status no <code>AddPart</code> — hoje aceita peça em job card concluída</li>
+      <li data-id="s3-5">Congelar o total ao completar — <code>ValorTotal</code> é calculado, não persistido</li>
+      <li data-id="s3-6">Substituir <code>throw new Exception</code> genérico por exceções de domínio</li>
+    </ul>
+  </div>
+
+  <div class="sprint" data-sprint="4" data-title="Dinheiro a sério" data-est="2 semanas">
+    <ul class="tasks">
+      <li data-id="s4-1">Entidade <code>Payment</code> com valor, data e forma</li>
+      <li data-id="s4-2">Pagamentos parciais — vários por job card</li>
+      <li data-id="s4-3"><code>OutstandingBalance</code> por cliente e por job card</li>
+      <li data-id="s4-4">IVA a 18% no cálculo e na apresentação</li>
+      <li data-id="s4-5">Corrigir o buraco: <code>Approved</code> não entra em <code>TotalFaturado</code> nem em <code>TotalPrevisto</code></li>
+      <li data-id="s4-6">“Faturado” passa a significar dinheiro recebido, não serviço entregue</li>
+      <li data-id="s4-7">Ecrã “quem me deve” — o argumento de venda mais forte do produto</li>
+    </ul>
+  </div>
+
+  <div class="sprint" data-sprint="5" data-title="Instalação repetível" data-est="1,5 semanas">
+    <ul class="tasks">
+      <li data-id="s5-1">Tenant fora do código — <code>OficinaConstants.cs:5</code> obriga a recompilar por oficina</li>
+      <li data-id="s5-2">Endpoint <code>/version</code> devolvendo CalVer e a última migration aplicada</li>
+      <li data-id="s5-3">Adotar CalVer <code>2026.MM.n</code> e etiquetar</li>
+      <li data-id="s5-4"><code>UseStaticFiles</code> e <code>MapFallbackToFile</code> — React servido pelo .NET</li>
+      <li data-id="s5-5">Script de provisionamento de instalação nova</li>
+      <li data-id="s5-6">Rotina de backup <strong>e um restauro testado a sério</strong></li>
+      <li data-id="s5-7">Aplicar migrations à frota com um comando, não uma a uma</li>
+    </ul>
+  </div>
+
+  <div class="sprint" data-sprint="6" data-title="Endurecer para venda" data-est="1,5 semanas">
+    <ul class="tasks">
+      <li data-id="s6-1">Testes nos caminhos de dinheiro — o repositório tem zero testes hoje</li>
+      <li data-id="s6-2">Testes na transição de estados da job card</li>
+      <li data-id="s6-3">RGPD: base legal, exportação e apagamento de dados de cliente</li>
+      <li data-id="s6-4">Resolver a tensão RGPD × retenção fiscal de 6 anos</li>
+      <li data-id="s6-5">PDF em inglês, euros e com dados da oficina maltesa</li>
+      <li data-id="s6-6">Instalação de demonstração com dados fictícios credíveis</li>
+    </ul>
+  </div>
+
+  <h2>Em aberto</h2>
+
+  <p>Por decidir, e cada um bloqueia um sprint específico:</p>
+
+  <div class="callout warn">
+    <span class="label">Bloqueia o sprint 4</span>
+    <p>
+      <strong>Certificação fiscal.</strong> As fontes indicam que prestadores de serviço
+      em Malta emitem recibo a partir de livros do Departamento, e que a certificação por
+      caixa registadora recai sobre retalho e restauração. Uma oficina vende serviço
+      <em>e</em> peças. Confirmar com contabilista maltês — multa de €700 a €3.500 por
+      infração.
+    </p>
+  </div>
+
+  <div class="callout warn">
+    <span class="label">Bloqueia o sprint 5</span>
+    <p>
+      <strong>Onde vivem as instalações.</strong> VPS por oficina? Qual fornecedor? Em
+      Malta ou na UE continental? Determina o script de provisionamento e o custo por
+      cliente — que por sua vez determina o preço mínimo viável.
+    </p>
+  </div>
+
+  <div class="callout">
+    <span class="label">Decidir antes do sprint 1</span>
+    <p>
+      <strong>Inglês só, ou inglês e maltês.</strong> Assumido inglês, que é língua oficial
+      e de negócios. Se quiseres maltês depois, o sprint 1 deve usar i18n em vez de strings
+      fixas — mudar isso depois custa reabrir as 14 páginas.
+    </p>
+  </div>
+
+  <div class="callout">
+    <span class="label">Sem sprint atribuído</span>
+    <p>
+      <strong>Preço.</strong> Nunca discutido. Com instalação dedicada, o custo de infra
+      por oficina é linear — o preço tem de o cobrir com margem, senão o modelo não fecha.
+      Ver a análise em <a href="../reference/topologias-de-entrega.html">topologias de entrega</a>.
+    </p>
+  </div>
+
+  <div class="ask">
+    <strong>Fora do v1, de propósito.</strong> Link de aprovação do cliente por token
+    (degrau C), Tax Invoice vs Fiscal Receipt para frotas (degrau D), emissão fiscal e
+    controlo de contas a pagar. Não são esquecimentos — são a versão 1.1 em diante.
+  </div>
+
+  <div class="nav">
+    <a href="../CONTEXT.md">Glossário</a>
+    <a href="../reference/matriz-de-permissoes.html">Matriz de permissões</a>
+    <a href="../reference/topologias-de-entrega.html">Topologias de entrega</a>
+    <a href="../MISSION.md">Missão</a>
+  </div>
+
+</div>
+
+<script src="../assets/tracker.js"></script>

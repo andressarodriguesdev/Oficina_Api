@@ -1,0 +1,143 @@
+<meta charset="utf-8">
+<title>Referência — Topologias de entrega para software de oficina</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../assets/lesson.css">
+
+<div class="wrap">
+
+  <p class="eyebrow">Referência · Garage_API</p>
+  <h1>Topologias de entrega</h1>
+  <p class="standfirst">
+    As quatro formas de entregar o mesmo sistema para várias oficinas, o que cada uma
+    custa, e o gatilho que indica que chegou a hora de trocar. Feito para consulta rápida.
+  </p>
+
+  <h2>Vocabulário</h2>
+
+  <p><strong>Tenant (inquilino)</strong><br>
+  Uma oficina cliente. A unidade de isolamento do negócio. No Garage_API, corresponde a
+  uma linha em <code>Oficina</code>.</p>
+
+  <p><strong>Deployment / stamp</strong><br>
+  Um conjunto rodando de infraestrutura — API mais banco. Um stamp pode conter um tenant
+  ou muitos. Tenant é conceito de negócio; stamp é conceito de infraestrutura. Confundir
+  os dois é a origem da maior parte da confusão sobre multi-tenancy.</p>
+
+  <p><strong>Tenant resolution</strong><br>
+  O ponto do código que responde “de qual oficina é esta requisição?”. Pode vir do login,
+  do subdomínio, de um header ou da configuração da instância. Existir <em>em um único
+  lugar</em> é o que mantém a topologia trocável.</p>
+
+  <p><strong>Noisy neighbor</strong><br>
+  Um tenant consumindo recursos a ponto de degradar os outros. Só existe em stamps
+  compartilhados.</p>
+
+  <h2>As quatro topologias</h2>
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Topologia</th>
+          <th>Como é</th>
+          <th>Custo por oficina</th>
+          <th>Custo operacional</th>
+          <th>Quando serve</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Single-tenant automatizado</strong><br><em>o seu plano</em></td>
+          <td>Uma API e um banco por oficina, provisionados por script.</td>
+          <td class="no">Alto e linear.<br>100 oficinas ≈ 100×.</td>
+          <td class="no">Alto. Cada migration roda N vezes.</td>
+          <td>Poucos clientes, ticket alto, exigência forte de isolamento.</td>
+        </tr>
+        <tr>
+          <td><strong>Totalmente multitenant</strong></td>
+          <td>Uma API e um banco para todas, separadas por <code>OficinaId</code>.</td>
+          <td class="yes">Baixo.<br>Escala sublinear.</td>
+          <td class="yes">Baixo. Uma migration serve todas.</td>
+          <td>Muitos clientes de ticket baixo. O perfil da oficina de bairro.</td>
+        </tr>
+        <tr>
+          <td><strong>Particionado horizontal</strong></td>
+          <td>API única compartilhada, banco separado por oficina.</td>
+          <td>Médio.</td>
+          <td>Médio. Um deploy de app, N bancos.</td>
+          <td>Meio-termo: isolamento de dados sem frota de servidores.</td>
+        </tr>
+        <tr>
+          <td><strong>Particionado vertical</strong></td>
+          <td>Maioria no compartilhado; instalação dedicada para quem paga por isso.</td>
+          <td>Misto.</td>
+          <td>Alto. O código precisa suportar os dois modos.</td>
+          <td>Quando aparece uma rede ou concessionária exigindo dedicado.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="font-size:.88rem;color:var(--muted)">
+    Classificação conforme
+    <a href="https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/considerations/tenancy-models">Tenancy
+    Models for a Multitenant Solution</a>, Azure Architecture Center.
+  </p>
+
+  <h2>O que cada topologia resolve</h2>
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Preocupação</th>
+          <th>Resolvido pela topologia?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Oficina A ver dados da oficina B</td><td class="yes">Sim, se banco separado</td></tr>
+        <tr><td>Mecânico ver o faturamento do dono</td><td class="no">Nunca. É autorização.</td></tr>
+        <tr><td>Uma oficina derrubar a outra</td><td class="yes">Sim, se instância separada</td></tr>
+        <tr><td>Vazamento por query sem filtro</td><td class="yes">Sim, se banco separado</td></tr>
+        <tr><td>Senha fraca no login</td><td class="no">Nunca. É autenticação.</td></tr>
+        <tr><td>Custo de rodar uma migration</td><td class="no">Piora com banco separado</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout insight">
+    <span class="label">A regra que resume a tabela</span>
+    <p>
+      Topologia resolve isolamento <strong>entre</strong> organizações. Autenticação e
+      autorização resolvem isolamento <strong>dentro</strong> de uma organização.
+      Nenhuma das duas substitui a outra, e a segunda é obrigatória em qualquer topologia.
+    </p>
+  </div>
+
+  <h2>Gatilhos para trocar de topologia</h2>
+
+  <ul>
+    <li><strong>Passou de ~5 instalações e a migration virou tarde inteira</strong> → automatize com deployment rings, ou migre para banco compartilhado.</li>
+    <li><strong>O custo de infra por oficina se aproxima da mensalidade cobrada</strong> → o modelo dedicado deixou de fechar. Vá para compartilhado.</li>
+    <li><strong>Apareceu uma rede com filiais querendo relatório consolidado</strong> → banco por oficina passa a atrapalhar; considere particionamento vertical.</li>
+    <li><strong>Um cliente exige isolamento contratual explícito</strong> → mantenha dedicado só para ele e cobre por isso.</li>
+  </ul>
+
+  <h2>Checklist antes de instalar para a primeira oficina paga</h2>
+
+  <ul>
+    <li>Existe login, e o mecânico não alcança <code>/api/financeiro</code>.</li>
+    <li>A identidade da oficina vem de configuração, não de <code>OficinaConstants.cs</code>.</li>
+    <li>A connection string sai do <code>appsettings.json</code> versionado e vai para variável de ambiente ou secret.</li>
+    <li>CORS restrito à origem do front daquela oficina, não <code>AllowAnyOrigin()</code>.</li>
+    <li>Existe rotina de backup do banco e ela já foi restaurada uma vez em teste.</li>
+    <li>Aplicar uma migration em todas as instalações é um comando, não um roteiro manual.</li>
+  </ul>
+
+  <div class="nav">
+    <a href="../lessons/0001-dois-isolamentos.html">Lição 01 — Dois isolamentos</a>
+    <a href="../MISSION.md">Missão</a>
+    <a href="../RESOURCES.md">Recursos</a>
+  </div>
+
+</div>

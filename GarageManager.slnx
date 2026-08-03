@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="GarageManager.Api/GarageManager.Api.csproj" />
+  <Project Path="GarageManager.Application/GarageManager.Application.csproj" />
+  <Project Path="GarageManager.Domain/GarageManager.Domain.csproj" />
+  <Project Path="GarageManager.Infrastructure/GarageManager.Infrastructure.csproj" />
+</Solution>

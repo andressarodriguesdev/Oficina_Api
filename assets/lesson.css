@@ -1,0 +1,256 @@
+/* ============================================================
+   lesson.css — folha de estilo compartilhada do workspace
+   Todas as lições e documentos de referência linkam este arquivo.
+   Inspiração: Tufte. Prioridade: legibilidade e impressão limpa.
+   ============================================================ */
+
+:root {
+  --bg: #fffdf9;
+  --fg: #14110c;
+  --muted: #6b6357;
+  --rule: #ddd6c9;
+  --accent: #8a2f1d;
+  --accent-soft: #f6ece6;
+  --ok: #1f5d3a;
+  --ok-soft: #eaf3ed;
+  --warn: #8a5a00;
+  --warn-soft: #fbf2df;
+  --code-bg: #f3efe7;
+  --maxw: 46rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14130f;
+    --fg: #eae5da;
+    --muted: #9c9384;
+    --rule: #35322a;
+    --accent: #e2795f;
+    --accent-soft: #2a1a15;
+    --ok: #7dc79c;
+    --ok-soft: #16241c;
+    --warn: #ddab52;
+    --warn-soft: #2a2213;
+    --code-bg: #1e1c17;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  margin: 0;
+  padding: 3rem 1.5rem 6rem;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: var(--maxw); margin: 0 auto; }
+
+/* ---------- Cabeçalho ---------- */
+
+.eyebrow {
+  font-family: ui-sans-serif, -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.75rem;
+}
+
+h1 {
+  font-size: 2.1rem;
+  line-height: 1.15;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  letter-spacing: -0.015em;
+}
+
+.standfirst {
+  font-size: 1.15rem;
+  line-height: 1.5;
+  color: var(--muted);
+  font-style: italic;
+  margin: 0 0 2rem;
+}
+
+h2 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin: 3rem 0 0.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 2rem 0 0.4rem;
+}
+
+p { margin: 0 0 1.1rem; }
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+strong { font-weight: 700; }
+
+ul, ol { margin: 0 0 1.1rem; padding-left: 1.3rem; }
+li { margin-bottom: 0.4rem; }
+
+/* ---------- Código e referências a arquivos ---------- */
+
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  background: var(--code-bg);
+  padding: 0.12em 0.36em;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+pre {
+  background: var(--code-bg);
+  border-left: 3px solid var(--rule);
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  border-radius: 0 4px 4px 0;
+}
+
+pre code { background: none; padding: 0; white-space: pre; font-size: inherit; }
+
+/* ---------- Blocos de destaque ---------- */
+
+.callout {
+  border-left: 3px solid var(--rule);
+  background: var(--code-bg);
+  padding: 1rem 1.2rem;
+  margin: 1.75rem 0;
+  border-radius: 0 4px 4px 0;
+}
+
+.callout > :last-child { margin-bottom: 0; }
+
+.callout .label {
+  font-family: ui-sans-serif, -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.callout.insight { border-left-color: var(--accent); background: var(--accent-soft); }
+.callout.insight .label { color: var(--accent); }
+
+.callout.evidence { border-left-color: var(--ok); background: var(--ok-soft); }
+.callout.evidence .label { color: var(--ok); }
+
+.callout.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+.callout.warn .label { color: var(--warn); }
+
+/* ---------- Tabelas ---------- */
+
+.table-scroll { overflow-x: auto; margin: 1.75rem 0; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9rem;
+  font-family: ui-sans-serif, -apple-system, "Segoe UI", sans-serif;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.6rem 0.7rem;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+
+th {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 2px solid var(--rule);
+  font-weight: 700;
+}
+
+tbody tr:hover { background: var(--code-bg); }
+
+td.yes { color: var(--ok); font-weight: 600; }
+td.no { color: var(--accent); font-weight: 600; }
+
+/* ---------- Fonte primária ---------- */
+
+.primary-source {
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  padding: 1.1rem 1.25rem;
+  margin: 2rem 0;
+  background: var(--bg);
+}
+
+.primary-source .label {
+  font-family: ui-sans-serif, -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.primary-source p { margin-bottom: 0; font-size: 0.95rem; }
+
+/* ---------- Rodapé / navegação ---------- */
+
+.ask {
+  margin-top: 3.5rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px dashed var(--rule);
+  border-radius: 5px;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.ask strong { color: var(--fg); }
+
+.nav {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  font-family: ui-sans-serif, -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.85rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+/* ---------- Impressão ---------- */
+
+@media print {
+  :root {
+    --bg: #fff; --fg: #000; --muted: #444; --rule: #bbb;
+    --code-bg: #f4f4f4; --accent-soft: #f7f2f0;
+    --ok-soft: #f2f7f4; --warn-soft: #faf6ec;
+  }
+  body { padding: 0; font-size: 10.5pt; }
+  h2 { page-break-after: avoid; }
+  .callout, table, .primary-source { page-break-inside: avoid; }
+  .quiz, .ask, .nav { display: none; }
+  a::after { content: " (" attr(href) ")"; font-size: 0.75em; color: #555; word-break: break-all; }
+  a[href^="#"]::after { content: ""; }
+}
+
+@media (max-width: 480px) {
+  body { padding: 2rem 1.1rem 4rem; }
+  h1 { font-size: 1.7rem; }
+}

@@ -1,0 +1,247 @@
+<meta charset="utf-8">
+<title>Lição 01 — Dois isolamentos que parecem um só</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../assets/lesson.css">
+
+<div class="wrap">
+
+  <p class="eyebrow">Lição 01 · Garage_API</p>
+  <h1>Dois isolamentos que parecem um só</h1>
+  <p class="standfirst">
+    Você escolheu instalar uma cópia do sistema para cada oficina. Essa decisão resolve
+    um problema de isolamento por completo — e não encosta no outro. Confundir os dois é
+    o erro que faz um sistema vendido a oficinas vazar dinheiro na frente do cliente.
+  </p>
+
+  <h2>A decisão que você já tomou</h2>
+
+  <p>
+    Cada oficina vai receber sua própria instância e seu próprio banco. Na
+    <a href="https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/considerations/tenancy-models">taxonomia
+    da Azure Architecture Center</a>, isso se chama <strong>automated single-tenant deployment</strong>:
+    infraestrutura dedicada por cliente, provisionada por automação.
+  </p>
+
+  <p>
+    É uma escolha legítima e ela compra uma coisa de verdade — o eixo 1 abaixo. O risco
+    é achar que ela compra as duas.
+  </p>
+
+  <h2>Eixo 1 — isolamento <em>entre</em> oficinas</h2>
+
+  <p>
+    A oficina do Seu Jorge não pode ver os clientes da oficina do Marcos. Esse é o eixo
+    que a sua topologia resolve, e resolve bem: bancos separados, processos separados.
+    Não existe query capaz de atravessar de um para o outro, porque não existe conexão
+    entre eles.
+  </p>
+
+  <div class="callout evidence">
+    <span class="label">Consequência prática no seu código</span>
+    <p>
+      Com um banco por oficina, o campo <code>OficinaId</code> que hoje existe em
+      <code>Cliente</code>, <code>Veiculo</code>, <code>OrdemServico</code> e
+      <code>Mecanico</code> passa a guardar <strong>sempre o mesmo valor</strong> em todas
+      as linhas daquele banco. Ele deixa de ser um mecanismo de isolamento e vira apenas
+      o ponteiro para os dados de identidade da oficina — nome, telefone, endereço e
+      logotipo — que o PDF e a mensagem de WhatsApp precisam imprimir.
+    </p>
+  </div>
+
+  <h2>Eixo 2 — isolamento <em>dentro</em> da oficina</h2>
+
+  <p>
+    Numa oficina de bairro com três pessoas, nem todas devem enxergar a mesma coisa.
+    O mecânico precisa ver as OS que vai executar. O dono precisa ver o faturamento.
+    Não é a mesma pessoa, e muitas vezes nem é uma relação de plena confiança —
+    faturamento é o dado mais sensível que uma oficina pequena tem.
+  </p>
+
+  <p>Hoje, no Garage_API, esse eixo não existe. Nem um pouco.</p>
+
+  <div class="callout warn">
+    <span class="label">Evidência no repositório</span>
+    <p>
+      <code>FinanceiroController.cs</code> expõe <code>GET /api/financeiro</code> sem
+      nenhum atributo de autorização. Ele devolve <code>TotalFaturado</code>,
+      <code>TotalMaoObra</code>, <code>TotalPecas</code> e a lista completa de ordens com
+      valores. Qualquer pessoa que alcance a URL recebe o resultado — não há login a ser
+      burlado, porque não há login.
+    </p>
+    <p>
+      Em <code>Program.cs:66</code> existe <code>app.UseAuthorization()</code>, mas sem
+      nenhum <code>app.UseAuthentication()</code> antes e sem um único <code>[Authorize]</code>
+      em qualquer controller do projeto. Autorização sem autenticação não protege nada:
+      não há identidade para autorizar.
+    </p>
+    <p>
+      E <code>Program.cs:18</code> libera <code>AllowAnyOrigin()</code>, então qualquer
+      site aberto no navegador do balcão pode chamar essa API.
+    </p>
+  </div>
+
+  <div class="callout insight">
+    <span class="label">O ponto da lição</span>
+    <p>
+      Instalar por cliente resolve <strong>somente o eixo 1</strong>. O eixo 2 é
+      autenticação e autorização de usuário, e ele custa o mesmo trabalho quer você
+      tenha uma instalação ou cinquenta. A topologia de entrega e o controle de acesso
+      são decisões ortogonais — e é justamente por parecerem a mesma coisa que a
+      segunda costuma ser esquecida.
+    </p>
+  </div>
+
+  <h2>Onde o código está hoje</h2>
+
+  <p>
+    Vale ver os dois eixos como um quadrante. Cada célula é um estado possível do
+    sistema — e o Garage_API está na pior delas:
+  </p>
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>Sem controle de acesso</th>
+          <th>Com controle de acesso</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Uma instalação<br>para todas</th>
+          <td class="no">Vazamento entre oficinas.<br>Impossível vender.</td>
+          <td>SaaS compartilhado.<br>Barato de operar, exige rigor.</td>
+        </tr>
+        <tr>
+          <th>Uma instalação<br>por oficina</th>
+          <td class="no"><strong>← você está aqui</strong><br>Oficinas isoladas, pessoas não.</td>
+          <td class="yes">O alvo desta missão.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    Note que o sistema hoje não está sequer na linha de baixo de forma completa:
+    <code>OficinaConstants.cs:5</code> fixa um GUID de oficina em código-fonte, e
+    <code>ClienteAppService</code> e <code>MecanicoAppService</code> gravam nele. Instalar
+    para uma oficina nova exige <strong>editar e recompilar</strong> — o que torna a
+    própria topologia escolhida cara de executar.
+  </p>
+
+  <h2>O aviso econômico que vem junto</h2>
+
+  <p>
+    A mesma fonte da Azure é direta sobre o risco de instalar por cliente, e vale ler a
+    frase inteira:
+  </p>
+
+  <blockquote>
+    <p>
+      “If you expect your business to scale to a large number of customers, it's important
+      to deploy shared infrastructure. Otherwise, you have to maintain a large and growing
+      fleet of resource instances. […] Conversely, if you expect that your business will
+      have only a few customers, you might want to consider using single-tenant resources
+      that are dedicated to each customer.”
+    </p>
+  </blockquote>
+
+  <p>
+    Traduzindo para o seu caso: <strong>instalação por cliente é o modelo de poucos
+    clientes pagando caro.</strong> Oficina de bairro é o perfil oposto — muitos clientes
+    pagando pouco. Essa tensão é real e não se resolve nesta lição; ela se resolve com
+    automação de provisionamento e de migrations, que é para onde vamos depois. Por
+    ora, basta você saber que ela existe e que é o que vai determinar sua margem.
+  </p>
+
+  <div class="quiz" data-title="Recuperação">
+    <script type="application/json">
+    [
+      {
+        "q": "Instalando uma cópia do sistema para cada oficina, o que fica resolvido?",
+        "a": [
+          "Isolamento entre oficinas diferentes",
+          "Isolamento entre papéis internos",
+          "Ambos os isolamentos citados",
+          "Nenhum dos isolamentos citados"
+        ],
+        "correct": 0,
+        "why": "Bancos e processos separados tornam impossível uma oficina ler dados da outra. Mas dentro de cada instalação, dono e mecânico continuam com exatamente o mesmo acesso."
+      },
+      {
+        "q": "No código atual, o que impede um mecânico de abrir o faturamento total?",
+        "a": [
+          "Absolutamente nada impede hoje",
+          "O atributo Authorize aplicado",
+          "O filtro por OficinaId ativo",
+          "A política de CORS definida"
+        ],
+        "correct": 0,
+        "why": "<code>GET /api/financeiro</code> não tem <code>[Authorize]</code>, não existe autenticação configurada em <code>Program.cs</code>, e o CORS está em <code>AllowAnyOrigin()</code>. Não há barreira alguma."
+      },
+      {
+        "q": "Segundo a Azure Architecture Center, instalar por cliente serve para quem tem:",
+        "a": [
+          "Poucos clientes pagando caro",
+          "Muitos clientes pagando pouco",
+          "Muitos clientes pagando caro",
+          "Poucos clientes pagando pouco"
+        ],
+        "correct": 0,
+        "why": "O custo de infraestrutura e de manutenção cresce linearmente com o número de instalações. Cem clientes custam cerca de cem vezes um. Isso só fecha se o ticket for alto — ou se o provisionamento e o upgrade forem totalmente automatizados."
+      },
+      {
+        "q": "Qual arquivo hoje prende todos os clientes numa única oficina fixa?",
+        "a": [
+          "OficinaConstants.cs",
+          "OficinaDbContext.cs",
+          "OficinaRepository.cs",
+          "OficinaAppService.cs"
+        ],
+        "correct": 0,
+        "why": "<code>OficinaConstants.OficinaPadraoId</code> é um GUID <code>readonly</code> em código-fonte, consumido por <code>ClienteAppService</code> e <code>MecanicoAppService</code>. Cada oficina nova exige recompilar o projeto."
+      },
+      {
+        "q": "O que permitiria trocar de topologia depois sem reescrever o sistema?",
+        "a": [
+          "Resolver tenant num ponto",
+          "Espalhar OficinaId nos services",
+          "Remover OficinaId das entidades",
+          "Manter um banco por cliente"
+        ],
+        "correct": 0,
+        "why": "Se a identidade da oficina é resolvida num único lugar (um serviço injetado, lido do login ou da configuração), trocar entre instalação dedicada e SaaS compartilhado vira mudança de implementação desse ponto. Espalhar a constante pelos services é o que trava a decisão."
+      }
+    ]
+    </script>
+  </div>
+
+  <div class="primary-source">
+    <span class="label">Fonte primária para ler agora</span>
+    <p>
+      <a href="https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/considerations/tenancy-models">Tenancy
+      Models for a Multitenant Solution</a> — Azure Architecture Center, por John Downs.
+      Leia especificamente as seções <em>Decide which model to use</em> e
+      <em>Automated single-tenant deployments</em>. São cerca de dez minutos e cobrem
+      exatamente a decisão que você tomou, com os riscos listados de forma honesta.
+    </p>
+  </div>
+
+  <div class="ask">
+    <strong>Eu sou seu professor aqui.</strong> Se algo ficou vago — por que autorização
+    não é resolvida pela topologia, o que exatamente vira configuração numa instalação
+    nova, ou como isso muda se aparecer uma rede com três filiais — pergunte. Discutir a
+    dúvida agora é mais barato que descobrir na quinta oficina instalada.
+  </div>
+
+  <div class="nav">
+    <a href="0002-quem-usa-o-sistema.html">Lição 02 — Quem usa o sistema →</a>
+    <a href="../reference/topologias-de-entrega.html">Referência: topologias de entrega</a>
+    <a href="../MISSION.md">Missão</a>
+    <a href="../RESOURCES.md">Recursos</a>
+  </div>
+
+</div>
+
+<script src="../assets/quiz.js"></script>

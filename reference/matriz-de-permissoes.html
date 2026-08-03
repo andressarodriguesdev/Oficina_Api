@@ -1,0 +1,179 @@
+<meta charset="utf-8">
+<title>Referência — Matriz de permissões do Garage_API</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../assets/lesson.css">
+
+<div class="wrap">
+
+  <p class="eyebrow">Referência · Garage_API</p>
+  <h1>Matriz de permissões</h1>
+  <p class="standfirst">
+    Os endpoints reais do projeto e quem deveria alcançar cada um. Ponto de partida para
+    a discussão, não verdade revelada — as linhas marcadas com ◆ são as que dependem do
+    perfil da oficina e devem ser confirmadas com o primeiro cliente.
+  </p>
+
+  <div class="callout warn">
+    <span class="label">Estado atual</span>
+    <p>
+      Nenhum dos endpoints abaixo tem <code>[Authorize]</code>. Todos respondem a qualquer
+      requisição. A coluna “hoje” foi omitida porque seria a mesma resposta 44 vezes.
+    </p>
+  </div>
+
+  <h2>Os quatro atores</h2>
+
+  <p><strong>IMP · Implantação</strong> — você, instalando ou dando suporte. Operações que
+  o cliente não deve tocar.</p>
+
+  <p><strong>DONO · Dono da oficina</strong> — vê dinheiro, cancela, apaga cadastro.</p>
+
+  <p><strong>MEC · Mecânico ou recepção</strong> — o dia a dia. Não vê consolidado financeiro.</p>
+
+  <p><strong>CLI · Dono do carro</strong> — não tem conta. Chega por token de capacidade
+  amarrado a uma ordem específica, com validade.</p>
+
+  <h2>Financeiro</h2>
+
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Endpoint</th><th>IMP</th><th>DONO</th><th>MEC</th><th>CLI</th></tr></thead>
+      <tbody>
+        <tr><td><code>GET /api/financeiro</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="font-size:.9rem;color:var(--muted)">
+    O endpoint mais sensível do sistema inteiro. Devolve <code>TotalFaturado</code>,
+    <code>TotalMaoObra</code>, <code>TotalPecas</code> e a lista completa de ordens com valores.
+  </p>
+
+  <h2>Oficina</h2>
+
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Endpoint</th><th>IMP</th><th>DONO</th><th>MEC</th><th>CLI</th></tr></thead>
+      <tbody>
+        <tr><td><code>POST /api/Oficina</code></td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td><code>GET /api/Oficina</code></td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td><code>GET /api/Oficina/{id}</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="font-size:.9rem;color:var(--muted)">
+    Numa instalação dedicada existe uma oficina só. <code>GET /api/Oficina</code> (listar
+    todas) não faz sentido para o cliente e vira operação de implantação. O
+    <code>GET /{id}</code> continua aberto internamente porque PDF e WhatsApp precisam do
+    nome e do logotipo.
+  </p>
+
+  <h2>Mecânicos</h2>
+
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Endpoint</th><th>IMP</th><th>DONO</th><th>MEC</th><th>CLI</th></tr></thead>
+      <tbody>
+        <tr><td><code>GET /api/Mecanico</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td><code>GET /api/Mecanico/{id}</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td><code>POST /api/Mecanico</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td><code>PUT /api/Mecanico/{id}</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td><code>PATCH .../inativar</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td><code>PATCH .../reativar</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td><code>DELETE /api/Mecanico/{id}</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="font-size:.9rem;color:var(--muted)">
+    Cadastro de funcionário é do dono. Listar é de todos, porque abrir uma OS exige
+    escolher o mecânico responsável.
+  </p>
+
+  <h2>Clientes e veículos</h2>
+
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Endpoint</th><th>IMP</th><th>DONO</th><th>MEC</th><th>CLI</th></tr></thead>
+      <tbody>
+        <tr><td><code>POST /api/clientes</code> ◆</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td><code>GET /api/clientes</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td><code>GET /api/clientes/{id}</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td><code>PUT /api/clientes/{id}</code> ◆</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td><code>PATCH .../inativar</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td><code>PATCH .../reativar</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td><code>DELETE /api/clientes/{id}</code></td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td colspan="5" style="padding-top:1rem"><em>Veículos seguem exatamente o mesmo padrão.</em></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="font-size:.9rem;color:var(--muted)">
+    ◆ Depende da oficina: em algumas o mecânico cadastra o cliente no balcão, em outras só
+    a recepção. <code>DELETE</code> destrói histórico e não deveria estar ao alcance de
+    ninguém no dia a dia — inativar já cobre o caso real.
+  </p>
+
+  <h2>Ordens de serviço</h2>
+
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Endpoint</th><th>IMP</th><th>DONO</th><th>MEC</th><th>CLI</th></tr></thead>
+      <tbody>
+        <tr><td><code>POST /api/ordens-servico</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td><code>GET /api/ordens-servico</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td><code>GET .../{id}</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">token</td></tr>
+        <tr><td><code>PUT .../{id}</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td><code>POST .../itens</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td><code>POST .../enviar-aprovacao</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td><code>POST .../aprovar</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="yes">token</td></tr>
+        <tr><td><code>POST .../recusar</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="yes">token</td></tr>
+        <tr><td><code>POST .../concluir</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td><code>POST .../cancelar</code> ◆</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td><code>POST .../reabrir</code> ◆</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td><code>GET .../historico</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td><code>GET .../pdf</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">token</td></tr>
+        <tr><td><code>GET .../whatsapp</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="font-size:.9rem;color:var(--muted)">
+    “token” significa: alcançável sem conta, mas só com um token de capacidade emitido
+    para <em>aquela</em> ordem, com validade e revogado assim que a ordem sai de
+    <code>AguardandoAprovacao</code>. Nunca o GUID puro da OS.
+  </p>
+
+  <h2>Pontos em aberto que a matriz revela</h2>
+
+  <div class="callout insight">
+    <span class="label">O vazamento que sobra</span>
+    <p>
+      Bloquear <code>/api/financeiro</code> para o mecânico não esconde o dinheiro dele.
+      <code>OrdemServico</code> carrega <code>ValorMaoObra</code>, os itens carregam
+      <code>ValorUnitario</code>, e <code>GET /api/ordens-servico</code> devolve tudo isso
+      para quem pode listar ordens. O mecânico não vê o consolidado, mas vê valor por ordem
+      e consegue somar.
+    </p>
+    <p>
+      Isso é decisão de produto, não bug: numa oficina pequena o mecânico geralmente
+      <em>precisa</em> saber quanto foi cobrado pelo serviço que ele fez. Registrado aqui
+      para ser escolha consciente, não descoberta depois.
+    </p>
+  </div>
+
+  <ul>
+    <li><strong><code>DELETE</code> em cliente, veículo e mecânico</strong> — apagar destrói histórico e o modelo já tem <code>Ativo</code>. Candidato a sumir da API.</li>
+    <li><strong><code>GET /api/Oficina</code> listando todas</strong> — sem sentido numa instalação dedicada.</li>
+    <li><strong>Cancelar e reabrir</strong> ◆ — mexem em dinheiro já combinado. Restringir ao dono é o padrão seguro; confirme com a primeira oficina se atrapalha o fluxo.</li>
+    <li><strong>Recusa pelo cliente</strong> — hoje <code>Recusar()</code> só aceita ordens em <code>AguardandoAprovacao</code>. Confere com o token de capacidade; nada a mudar no domínio.</li>
+  </ul>
+
+  <div class="nav">
+    <a href="../lessons/0002-quem-usa-o-sistema.html">Lição 02 — Quem usa o sistema</a>
+    <a href="topologias-de-entrega.html">Referência: topologias</a>
+    <a href="../MISSION.md">Missão</a>
+  </div>
+
+</div>
