@@ -1,0 +1,6 @@
+@GarageManager.Api_HostAddress = http://localhost:5275
+
+GET {{GarageManager.Api_HostAddress}}/api/job-cards
+Accept: application/json
+
+###

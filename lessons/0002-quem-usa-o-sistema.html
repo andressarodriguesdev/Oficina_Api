@@ -1,0 +1,231 @@
+<meta charset="utf-8">
+<title>Lição 02 — Quem realmente usa o sistema</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../assets/lesson.css">
+
+<div class="wrap">
+
+  <p class="eyebrow">Lição 02 · Garage_API</p>
+  <h1>Quem realmente usa o sistema</h1>
+  <p class="standfirst">
+    Antes de escrever uma linha de autenticação, a pergunta é outra: quantos tipos de
+    gente tocam nessa API? Errar essa lista é o que obriga a refazer o login seis meses
+    depois — e a lista do Garage_API tem um ator que não é papel nenhum.
+  </p>
+
+  <h2>O primeiro trabalho do login não é o que parece</h2>
+
+  <p>
+    A intuição diz que login existe para separar dono de mecânico. Numa oficina de bairro,
+    isso é secundário. O dono está no balcão, são três pessoas, todo mundo se conhece.
+  </p>
+
+  <p>
+    O primeiro trabalho do login ali é <strong>fechar o perímetro</strong>. No instante em
+    que você sobe a instalação num servidor, a API fica na internet, e hoje
+    <code>GET /api/financeiro</code> devolve o faturamento inteiro para qualquer pessoa
+    que descubra o endereço. Não há senha a quebrar, porque não há senha.
+  </p>
+
+  <div class="callout insight">
+    <span class="label">Reordene as prioridades</span>
+    <p>
+      Autenticação (quem é você) resolve o perímetro e é urgente hoje. Autorização (o que
+      você pode fazer) resolve a separação interna e pode começar simples. Muita gente
+      trava meses desenhando papéis elaborados enquanto a API segue aberta — o inverso
+      exato da ordem de risco.
+    </p>
+  </div>
+
+  <h2>Três categorias de ator, não dois papéis</h2>
+
+  <p>Mapeando quem toca no Garage_API de verdade:</p>
+
+  <h3>1. Quem opera a oficina</h3>
+  <p>
+    Dono, recepção, mecânico. São usuários com conta e senha, funcionários daquela
+    instalação. Aqui sim cabe papel — e provavelmente <strong>dois, não cinco</strong>.
+  </p>
+
+  <h3>2. Você, que vende e mantém</h3>
+  <p>
+    Alguém precisa cadastrar a oficina na instalação nova.
+    <code>POST /api/Oficina</code> e o cadastro de mecânicos são operações de implantação,
+    não do dia a dia. Se ficarem no mesmo balcão que o resto, o cliente vai mexer e quebrar.
+  </p>
+
+  <h3>3. O dono do carro</h3>
+  <p>
+    Esse é o que quebra o modelo de papéis. O README lista “link de aprovação para cliente”
+    como próxima evolução, e os endpoints <code>POST /api/ordens-servico/{id}/aprovar</code>
+    e <code>/recusar</code> já existem, abertos. No dia em que o link for enviado por
+    WhatsApp, um estranho — sem conta, sem senha, que nunca vai criar uma — precisa
+    alcançar aquele endpoint. E só aquele.
+  </p>
+
+  <div class="callout warn">
+    <span class="label">A armadilha exata</span>
+    <p>
+      A saída óbvia é mandar o link com o GUID da OS:
+      <code>/aprovar/3f2a...</code>. Isso transforma um <em>identificador</em> em
+      <em>credencial</em> — e são coisas diferentes. Identificador aparece em log de
+      servidor, em histórico de navegador, no <code>Referer</code>, na conversa
+      encaminhada para o grupo da família. Quem tiver o GUID aprova a ordem, e a
+      aprovação é o que autoriza a oficina a cobrar.
+    </p>
+    <p>
+      O que esse ator precisa é de um <strong>token de capacidade</strong>: gerado por OS,
+      com validade, revogável quando a ordem sai do estado
+      <code>AguardandoAprovacao</code>, e que não dá acesso a mais nada. Não é papel. Não
+      entra na tabela de usuários.
+    </p>
+  </div>
+
+  <h2>Quantos papéis, afinal</h2>
+
+  <p>
+    Para a categoria 1, a tentação é modelar dono, gerente, recepcionista, mecânico,
+    auxiliar. Numa oficina de três pessoas, isso é atrito puro: mais telas de cadastro,
+    mais senha esquecida para você atender no telefone, mais motivo para o dono desistir
+    e pedir “me dá um login que vê tudo”.
+  </p>
+
+  <p>
+    A <a href="https://learn.microsoft.com/en-us/aspnet/core/security/authorization/roles?view=aspnetcore-10.0">documentação
+    da Microsoft</a> é direta sobre a limitação: papéis “são uma forma fácil de agrupar
+    usuários, mas não são muito expressivos”. A recomendação é usar
+    <a href="https://learn.microsoft.com/en-us/aspnet/core/security/authorization/policies?view=aspnetcore-8.0">políticas
+    nomeadas</a> quando a regra passa de trivial.
+  </p>
+
+  <p>
+    Para o seu caso isso se traduz em algo pequeno e defensável: <strong>dois papéis</strong>
+    — quem vê dinheiro e quem não vê — expressos através de <strong>políticas nomeadas</strong>.
+    A política é o seam: <code>[Authorize(Policy = "VerFinanceiro")]</code> no controller,
+    e a definição da regra num único ponto do <code>Program.cs</code>. No dia em que uma
+    oficina maior pedir um perfil de recepção, você muda a definição da política, não
+    quarenta e quatro controllers.
+  </p>
+
+  <div class="callout insight">
+    <span class="label">O mesmo princípio da lição 01</span>
+    <p>
+      Na <a href="0001-dois-isolamentos.html">lição anterior</a>, a conclusão foi resolver
+      a identidade da oficina <em>num único ponto</em> para poder trocar de topologia
+      depois. Aqui é a mesma ideia noutro eixo: expressar a permissão <em>num único ponto</em>
+      para poder trocar o modelo de papéis depois. Decisão que você ainda não tem como
+      tomar bem vira um ponto de indireção, não uma escolha precipitada espalhada pelo código.
+    </p>
+  </div>
+
+  <h2>A escolha de mecanismo, e a pegadinha dela</h2>
+
+  <p>
+    O caminho mais curto em .NET 10 é ASP.NET Core Identity com
+    <a href="https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity-api-authorization?view=aspnetcore-10.0"><code>MapIdentityApi</code></a>:
+    ele já entrega registro, login, refresh e recuperação de senha, e conversa bem com o
+    front em React que você já tem. Para uma instalação por oficina, é proporcional ao problema.
+  </p>
+
+  <div class="callout warn">
+    <span class="label">Leia isto antes de adotar</span>
+    <p>
+      A própria documentação avisa: os tokens emitidos <strong>não são JWT padrão</strong>.
+      São proprietários do Identity, e a escolha é intencional — a API embutida é feita
+      para cenários simples, não para ser um servidor de identidade completo.
+    </p>
+    <p>
+      Consequência prática: enquanto você vender instalação isolada para oficina de bairro,
+      isso não incomoda. Se um dia aparecer rede ou concessionária pedindo login único
+      corporativo, esse token não federa e a troca é retrabalho. Adote sabendo o teto.
+    </p>
+  </div>
+
+  <div class="quiz" data-title="Recuperação">
+    <script type="application/json">
+    [
+      {
+        "q": "Numa oficina de bairro com o dono no balcão, o login serve primeiro para:",
+        "a": [
+          "Fechar o perímetro externo",
+          "Separar os papéis internos",
+          "Auditar as ações realizadas",
+          "Cumprir exigência legal específica"
+        ],
+        "correct": 0,
+        "why": "São três pessoas que se conhecem; a separação interna é secundária. O risco imediato é a API exposta na internet sem nenhuma barreira — hoje <code>GET /api/financeiro</code> responde para qualquer um."
+      },
+      {
+        "q": "O cliente que aprova a ordem pelo link do WhatsApp deve receber:",
+        "a": [
+          "Acesso pontual por token",
+          "Um papel do sistema",
+          "Um usuário sem senha",
+          "Um mecânico com restrições"
+        ],
+        "correct": 0,
+        "why": "Ele não é funcionário, nunca vai criar conta e precisa alcançar exatamente um endpoint de uma ordem. Isso é um token de capacidade — com validade e revogação —, não uma linha na tabela de usuários."
+      },
+      {
+        "q": "Mandar o link de aprovação só com o GUID da ordem é inseguro porque:",
+        "a": [
+          "Identificador não é credencial",
+          "GUID vaza dados pessoais",
+          "GUID expira muito rápido",
+          "GUID não indexa bem"
+        ],
+        "correct": 0,
+        "why": "O GUID existe para localizar a ordem, não para provar autorização. Ele aparece em log, histórico, cabeçalho <code>Referer</code> e em conversa encaminhada. Quem o obtiver aprova a cobrança."
+      },
+      {
+        "q": "A regra “só o dono vê faturamento” deve morar em que lugar?",
+        "a": [
+          "Numa política nomeada única",
+          "Espalhada por cada controller",
+          "Dentro de cada repositório",
+          "Na camada de apresentação"
+        ],
+        "correct": 0,
+        "why": "<code>[Authorize(Policy = \"VerFinanceiro\")]</code> nos controllers e a definição num só ponto. Mudar o modelo de papéis depois passa a ser editar a política, não os quarenta e quatro endpoints."
+      },
+      {
+        "q": "Modelar cinco papéis numa oficina de três pessoas costuma custar:",
+        "a": [
+          "Atrito que impede adoção",
+          "Segurança extra bem vinda",
+          "Nada além de código",
+          "Melhor conformidade com auditoria"
+        ],
+        "correct": 0,
+        "why": "Mais cadastro, mais senha esquecida para você atender no telefone, e um dono que acaba pedindo “um login que vê tudo” — anulando o modelo inteiro. Comece com dois papéis atrás de políticas."
+      }
+    ]
+    </script>
+  </div>
+
+  <div class="primary-source">
+    <span class="label">Fonte primária para ler agora</span>
+    <p>
+      <a href="https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity-api-authorization?view=aspnetcore-10.0">Use
+      Identity to secure a Web API backend for SPAs</a> — Microsoft Learn, versão
+      ASP.NET Core 10.0. É o caminho exato do seu caso: API .NET com front SPA em React.
+      Preste atenção à seção sobre tokens, que explica por que eles não são JWT.
+    </p>
+  </div>
+
+  <div class="ask">
+    <strong>Pergunte.</strong> Os pontos que costumam ficar vagos aqui: como o token de
+    aprovação do cliente é gerado e revogado na prática, se dois papéis realmente bastam
+    para o seu primeiro cliente, ou como isso muda quando a oficina tem recepcionista
+    dedicada. Qualquer um deles vira a próxima conversa.
+  </div>
+
+  <div class="nav">
+    <a href="../reference/matriz-de-permissoes.html">Referência: matriz de permissões</a>
+    <a href="0001-dois-isolamentos.html">← Lição 01</a>
+    <a href="../MISSION.md">Missão</a>
+  </div>
+
+</div>
+
+<script src="../assets/quiz.js"></script>
