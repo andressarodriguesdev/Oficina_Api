@@ -32,7 +32,7 @@ import {
 } from "../services/ordens";
 import { listClientes } from "../services/clientes";
 import { listVeiculos } from "../services/veiculos";
-import { listMecanicos } from "../services/mecanico";
+import { listMecanico } from "../services/mecanico";
 import type { Cliente, Veiculo } from "../types";
 import { formatDate, formatCurrency } from "../utils/format";
 import {
@@ -41,7 +41,7 @@ import {
   STATUS_TEXT_TO_NUMBER,
 } from "../utils/status";
 import { buildWhatsAppMessage, whatsappUrl } from "../utils/whatsapp";
-import { mecanicos } from "../types";
+import { Mecanico } from "../types";
 
 export function OrdensServico() {
   const toast = useToast();
@@ -55,7 +55,7 @@ export function OrdensServico() {
   const [submitting, setSubmitting] = useState(false);
   const [toDelete, setToDelete] = useState<OrdemWithRelations | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [mecanicos, setMecanicos] = useState<mecanicos[]>([]);
+  const [mecanicos, setMecanicos] = useState<Mecanico[]>([]);
   const load = useCallback(async () => {
     setLoading(true);
 
@@ -64,7 +64,7 @@ export function OrdensServico() {
         listOrdens(),
         listClientes(),
         listVeiculos(),
-        listMecanicos(),
+        listMecanico(),
       ]);
 
       const ordensComRelacionamento = o.map((os) => ({

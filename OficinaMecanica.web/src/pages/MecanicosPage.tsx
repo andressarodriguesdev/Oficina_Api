@@ -27,28 +27,28 @@ import {
 } from "../components/forms/MecanicoForm";
 
 import {
-  listMecanicos,
+  listMecanico,
   createMecanico,
   updateMecanico,
   inativarMecanico,
   reativarMecanico,
 } from "../services/mecanico";
 
-import type { mecanicos } from "../types";
+import type { Mecanico} from "../types";
 
 import { initials } from "../utils/format";
 
 export function Mecanicos() {
   const toast = useToast();
 
-  const [mecanicos, setMecanicos] = useState<mecanicos[]>([]);
+  const [mecanicos, setMecanicos] = useState<Mecanico[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("todos");
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<mecanicos | null>(null);
+  const [editing, setEditing] = useState<Mecanico | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -56,7 +56,7 @@ export function Mecanicos() {
     setLoading(true);
 
     try {
-      const data = await listMecanicos();
+      const data = await listMecanico();
 
       setMecanicos(data);
     } catch (err) {
@@ -119,7 +119,7 @@ export function Mecanicos() {
     }
   };
 
-  const handleInativar = async (mecanico: mecanicos) => {
+  const handleInativar = async (mecanico: Mecanico) => {
     try {
       await inativarMecanico(mecanico.id);
 
@@ -133,7 +133,7 @@ export function Mecanicos() {
     }
   };
 
-  const handleReativar = async (mecanico: mecanicos) => {
+  const handleReativar = async (mecanico: Mecanico) => {
     try {
       await reativarMecanico(mecanico.id);
 

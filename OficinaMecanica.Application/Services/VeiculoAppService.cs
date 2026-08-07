@@ -157,7 +157,20 @@ public class VeiculoAppService
             Ano = veiculo.Ano,
             ClienteId = veiculo.ClienteId,
             OficinaId = veiculo.OficinaId,
-            Ativo = veiculo.Ativo
+            Ativo = veiculo.Ativo,
+
+            
+               OrdensServico = veiculo.OrdensServico
+                .Select(o => new VeiculoOrdemServicoResumoDto
+                {
+                    OrdemServicoId = o.Id,
+                    ValorTotal = o.ValorTotal,
+                    StatusAtual = (int)o.Status,
+                    DataCriacao = o.DataCriacao,
+                    DataConclusao = o.DataConclusao
+                })
+                .ToList()
+                .ToList()
         };
     }
 }

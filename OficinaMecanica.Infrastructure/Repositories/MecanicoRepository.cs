@@ -27,6 +27,10 @@ namespace OficinaMecanica.Infrastructure.Repositories
         public async Task<Mecanico?> GetByIdAsync(Guid id)
         {
             return await _context.Mecanicos
+                .Include(m => m.OrdensServico)
+                .ThenInclude(o => o.Cliente)
+                .Include(m => m.OrdensServico)
+                .ThenInclude(o => o.Veiculo)
                 .Include(m => m.Oficina)
                 .FirstOrDefaultAsync(m => m.Id == id);
         }

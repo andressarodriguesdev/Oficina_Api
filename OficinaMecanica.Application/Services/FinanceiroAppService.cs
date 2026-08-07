@@ -1,4 +1,5 @@
 ﻿using OficinaMecanica.Application.DTOs;
+using OficinaMecanica.Application.DTOs.Financeiro;
 using OficinaMecanica.Domain.Enums;
 using OficinaMecanica.Infrastructure.Repositories;
 
@@ -76,17 +77,35 @@ public class FinanceiroAppService
 
             Veiculo = $"{o.Veiculo.Marca} {o.Veiculo.Modelo}",
 
+            Mecanico = o.Mecanico.Nome,
+
             MaoObra = o.ValorMaoObra,
 
             Pecas = o.Itens.Sum(i => i.Quantidade * i.ValorUnitario),
 
             Total = o.ValorTotal,
 
-            Status = (int)o.Status,
+            Status = o.Status,
 
             Data = o.DataCriacao
 
         }).ToList();
+
+        resultado.ProdutividadeMecanicos = ordens
+      .Where(o => o.Mecanico != null)
+      .GroupBy(o => o.Mecanico)
+      .Select(g => new ProdutividadeMecanicoDto
+      {
+          MecanicoId = g.Key.Id,
+          Nome = g.Key.Nome,
+          QuantidadeOrdens = g.Count(),
+          QuantidadeConcluidas = g.Count(o =>
+              o.Status == StatusOrdemServico.Concluida),
+          TotalMaoObra = g
+              .Where(o => o.Status == StatusOrdemServico.Concluida)
+              .Sum(o => o.ValorMaoObra)
+      })
+      .ToList();
 
 
         return resultado;

@@ -24,4 +24,6 @@ public class VeiculoResponseDto
 
     public Guid OficinaId { get; set; }
 
+    public List<VeiculoOrdemServicoResumoDto> OrdensServico { get; set; } = new();
+
 }

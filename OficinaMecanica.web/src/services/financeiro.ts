@@ -9,6 +9,14 @@ export interface FinanceiroOrdem {
   total: number;
   status: number;
   data: string;
+  mecanico: string;
+}
+
+export interface ProdutividadeMecanico {
+  nome: string;
+  quantidadeOrdens: number;
+  quantidadeConcluidas: number;
+  totalMaoObra: number;
 }
 
 export interface FinanceiroResponse {
@@ -24,9 +32,13 @@ export interface FinanceiroResponse {
   totalPrevisto: number;
 
   ordens: FinanceiroOrdem[];
+
+  produtividadeMecanicos: ProdutividadeMecanico[];
 }
 
 
 export async function obterFinanceiro(): Promise<FinanceiroResponse> {
   return api.get<FinanceiroResponse>('/financeiro');
 }
+
+

@@ -228,9 +228,9 @@ public class OrdemServicoAppService
         await _repository.AtualizarAsync(ordem);
 
         await RegistrarHistoricoAsync(
-            ordem,
-            statusAnterior,
-            motivo
+             ordem,
+             statusAnterior,
+             motivo
         );
     }
 

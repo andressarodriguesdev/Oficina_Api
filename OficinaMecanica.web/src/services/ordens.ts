@@ -1,8 +1,17 @@
 
 import { api } from './api';
-import type { Cliente, HistoricoOrdemServico, OrdemServico, OrdemServicoItem, Veiculo, mecanicos } from '../types';
+import type { Cliente, HistoricoOrdemServico, OrdemServico, OrdemServicoItem, Veiculo } from '../types';
 
-export type OrdemWithRelations = OrdemServico & { cliente: Cliente | null; veiculo: Veiculo | null };
+export type OrdemWithRelations = OrdemServico & {
+  cliente: Cliente | null;
+  veiculo: Veiculo | null;
+  mecanico: {
+    id: string;
+    nome: string;
+    telefone?: string;
+    especialidade?: string;
+  } | null;
+};
 
 export async function listOrdens(): Promise<OrdemWithRelations[]> {
   return api.get<OrdemWithRelations[]>('/ordens-servico');
@@ -71,10 +80,12 @@ export async function concluir(id: string): Promise<OrdemServico> {
 }
 
 
-export async function reabrir(id: string): Promise<OrdemServico> {
-  return api.post<OrdemServico>(`/ordens-servico/${id}/reabrir`);
+export async function reabrir(
+  id: string,
+  input: { motivo: string }
+): Promise<void> {
+  return api.post(`/ordens-servico/${id}/reabrir`, input);
 }
-
 export interface CancelarOrdemInput {
   motivo: string;
 }

@@ -159,8 +159,12 @@ public class OrdemServico
 
     public void Reabrir(string motivo)
     {
-        if (Status != StatusOrdemServico.Concluida)
-            throw new Exception("Somente ordens concluídas podem ser reabertas.");
+        if (Status != StatusOrdemServico.Concluida &&
+        Status != StatusOrdemServico.Cancelada &&
+        Status != StatusOrdemServico.Recusada)
+        {
+            throw new Exception("A ordem de serviço não pode ser reaberta.");
+        }
 
         if (string.IsNullOrWhiteSpace(motivo))
             throw new Exception("O motivo da reabertura é obrigatório.");
@@ -169,16 +173,17 @@ public class OrdemServico
 
         MotivoReabertura = motivo;
 
+        
         DataReabertura = DateTime.UtcNow;
     }
 
-    public void AtualizarDados(
-  Guid clienteId,
-  Guid veiculoId,
-  Guid mecanicoId,
-  string descricao,
-  decimal valorMaoObra
- )
+          public void AtualizarDados(
+          Guid clienteId,
+          Guid veiculoId,
+          Guid mecanicoId,
+          string descricao,
+          decimal valorMaoObra
+         )
     {
         ClienteId = clienteId;
         VeiculoId = veiculoId;

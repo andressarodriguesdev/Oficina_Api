@@ -29,10 +29,16 @@ import {
   updateCliente,
   inativarCliente,
   reativarCliente,
+  getHistoricoCliente,
 } from "../services/clientes";
-import type { ClienteDetalhado, VeiculoResumo, OrdemServico } from "../types";
+import type {
+  ClienteDetalhado,
+  VeiculoResumo,
+  ClienteHistorico,
+} from "../types";
 
 import { initials, formatCurrency } from "../utils/format";
+import { statusLabel } from "../utils/status";
 
 export function ClienteDetalhes() {
   const { id } = useParams<{ id: string }>();
@@ -40,7 +46,15 @@ export function ClienteDetalhes() {
 
   const [cliente, setCliente] = useState<ClienteDetalhado | null>(null);
   const [veiculos, setVeiculos] = useState<VeiculoResumo[]>([]);
-  const [ordens] = useState<OrdemServico[]>([]);
+  const [historico, setHistorico] = useState<ClienteHistorico[]>([]);
+  const quantidadeOS = historico.length;
+
+const totalPago = historico
+  .filter((os) => os.statusAtual === 4)
+  .reduce(
+    (total, os) => total + os.valorTotal,
+    0
+  );
 
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
@@ -54,6 +68,9 @@ export function ClienteDetalhes() {
 
         setCliente(detalhe);
         setVeiculos(detalhe?.veiculos ?? []);
+
+        const historicoCliente = await getHistoricoCliente(id);
+        setHistorico(historicoCliente);
       } catch (err) {
         toast.error("Erro ao carregar cliente");
         console.error(err);
@@ -222,7 +239,7 @@ export function ClienteDetalhes() {
                 Ordens de Serviço
               </p>
               <p className="font-display text-xl font-bold text-white">
-                {ordens.length}
+                {quantidadeOS}
               </p>
             </div>
           </div>
@@ -235,10 +252,10 @@ export function ClienteDetalhes() {
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
-                Total em OS
+                Total Pago
               </p>
               <p className="font-display text-xl font-bold text-white">
-                {formatCurrency(0)}
+                {formatCurrency(totalPago)}
               </p>
             </div>
           </div>
@@ -293,15 +310,55 @@ export function ClienteDetalhes() {
 
       <Card>
         <CardHeader
-          title="Histórico de Ordens de Serviço"
-          subtitle="Em breve"
+          title="Ordens de Serviço"
+          subtitle={`${historico.length} atendimento(s)`}
         />
 
-        <EmptyState
-          icon={<ClipboardList className="h-7 w-7" />}
-          title="Histórico será implementado"
-          description="A próxima etapa será integrar as ordens de serviço do cliente."
-        />
+        {historico.length === 0 ? (
+          <EmptyState
+            icon={<ClipboardList className="h-7 w-7" />}
+            title="Nenhuma ordem de serviço"
+            description="Este cliente ainda não possui ordens de serviço."
+          />
+        ) : (
+          <div className="grid gap-4 p-5 md:grid-cols-2">
+            {historico.map((os) => {
+              const ultimoHistorico = os.historicos[0];
+
+              const statusAtual = ultimoHistorico?.novoStatus ?? 0;
+
+              const dataUltimaAtualizacao = ultimoHistorico?.dataAlteracao;
+
+              return (
+                <Card key={os.ordemServicoId} className="bg-ink-800/40 p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-bold text-white">
+                        OS #{os.ordemServicoId.slice(-4)}
+                      </p>
+
+                      <p className="mt-2 text-sm text-ink-300">
+                        Status:{" "}
+                        <span className="font-semibold text-white">
+                          {statusLabel(statusAtual)}
+                        </span>
+                      </p>
+                    </div>
+
+                    <ClipboardList className="h-6 w-6 text-sky-400" />
+                  </div>
+
+                  {dataUltimaAtualizacao && (
+                    <p className="mt-4 text-xs text-ink-400">
+                      Última atualização:{" "}
+                      {new Date(dataUltimaAtualizacao).toLocaleDateString()}
+                    </p>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </Card>
 
       <Modal

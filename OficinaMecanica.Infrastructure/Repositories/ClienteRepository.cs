@@ -63,4 +63,12 @@ public class ClienteRepository
             .Include(c => c.Veiculos.Where(v => v.Ativo))
             .ToListAsync();
     }
+
+    public async Task<Cliente?> BuscarComHistoricoAsync(Guid id)
+    {
+        return await _context.Clientes
+            .Include(c => c.OrdensServico)
+                .ThenInclude(o => o.Historicos)
+            .FirstOrDefaultAsync(c => c.Id == id);
+    }
 }

@@ -1,13 +1,6 @@
 import { api } from "./api";
 
-export interface Mecanico {
-  id: string;
-  nome: string;
-  telefone?: string;
-  especialidade?: string;
-  ativo: boolean;
-  oficinaId: string;
-}
+import type { Mecanico } from "../types";
 
 export interface MecanicoRequest {
   nome: string;
@@ -16,7 +9,7 @@ export interface MecanicoRequest {
 
 }
 
-export async function listMecanicos() {
+export async function listMecanico() {
   return await api.get<Mecanico[]>("/Mecanico");
 }
 

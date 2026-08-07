@@ -1,7 +1,11 @@
 ﻿using OficinaMecanica.Application.Constants;
 using OficinaMecanica.Application.DTOs;
+using OficinaMecanica.Application.DTOs.Mecanico;
+using OficinaMecanica.Application.DTOs.Mecanicos;
 using OficinaMecanica.Domain.Entities;
+using OficinaMecanica.Domain.Enums;
 using OficinaMecanica.Infrastructure.Repositories;
+
 
 
 namespace OficinaMecanica.Application.Services;
@@ -20,9 +24,49 @@ public class MecanicoAppService
         return await _repository.GetAllAsync();
     }
 
-    public async Task<Mecanico?> GetByIdAsync(Guid id)
+    public async Task<MecanicoDetalhadoResponseDto?> GetByIdAsync(Guid id)
     {
-        return await _repository.GetByIdAsync(id);
+        var mecanico = await _repository.GetByIdAsync(id);
+
+        if (mecanico == null)
+            return null;
+
+
+        return new MecanicoDetalhadoResponseDto
+        {
+            Id = mecanico.Id,
+            Nome = mecanico.Nome,
+            Telefone = mecanico.Telefone,
+            Especialidade = mecanico.Especialidade,
+            Ativo = mecanico.Ativo,
+            OficinaId = mecanico.OficinaId,
+            Oficina = mecanico.Oficina,
+
+            QuantidadeOrdensServico = mecanico.OrdensServico.Count(),
+
+            QuantidadeConcluidas = mecanico.OrdensServico
+                .Count(o => o.Status == StatusOrdemServico.Concluida),
+
+            QuantidadeCanceladas = mecanico.OrdensServico
+                .Count(o => o.Status == StatusOrdemServico.Cancelada),
+
+            TotalMaoObra = mecanico.OrdensServico
+                .Where(o => o.Status == StatusOrdemServico.Concluida)
+                .Sum(o => o.ValorMaoObra),
+
+            OrdensServico = mecanico.OrdensServico
+                .Select(o => new MecanicoOrdemServicoResumoDto
+                {
+                    OrdemServicoId = o.Id,
+                    ClienteNome = o.Cliente.Nome,
+                    Veiculo = $"{o.Veiculo.Marca} {o.Veiculo.Modelo}",
+                    ValorMaoObra = o.ValorMaoObra,
+                    Status = o.Status,
+                    DataCriacao = o.DataCriacao,
+                    DataConclusao = o.DataConclusao
+                })
+                .ToList()
+        };
     }
 
     public async Task<MecanicoResponseDto> CreateAsync(MecanicoRequestDto dto)
@@ -104,4 +148,6 @@ public class MecanicoAppService
 
         return true;
     }
+
+
 }

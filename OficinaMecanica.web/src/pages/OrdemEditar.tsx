@@ -17,9 +17,9 @@ import {
 } from "../services/ordens";
 import { listClientes } from "../services/clientes";
 import { listVeiculos } from "../services/veiculos";
-import { listMecanicos } from "../services/mecanico";
+import { listMecanico } from "../services/mecanico";
 
-import type { Cliente, Veiculo, OrdemServicoItem, mecanicos } from "../types";
+import type { Cliente, Veiculo, OrdemServicoItem, Mecanico } from "../types";
 
 export function OrdemEditar() {
   const { id } = useParams<{ id: string }>();
@@ -27,7 +27,7 @@ export function OrdemEditar() {
   const toast = useToast();
   const [ordem, setOrdem] = useState<OrdemWithRelations | null>(null);
   const [itens, setItens] = useState<OrdemServicoItem[]>([]);
-  const [mecanicos, setMecanicos] = useState<mecanicos[]>([]);
+  const [mecanicos, setMecanicos] = useState<Mecanico[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +40,7 @@ export function OrdemEditar() {
         getOrdem(id),
         listClientes(),
         listVeiculos(),
-        listMecanicos(),
+        listMecanico(),
       ]);
 
       setOrdem(o);

@@ -92,11 +92,10 @@ public class OrdemServicoRepository
     public async Task<List<OrdemServico>> ListarFinanceiroAsync()
     {
         return await _context.OrdensServico
-            .Include(o => o.Cliente)
-            .Include(o => o.Veiculo)
-            .Include(o => o.Itens)
-            .Include(o => o.Mecanico)
-
-            .ToListAsync();
+        .Include(o => o.Cliente)
+        .Include(o => o.Veiculo)
+        .Include(o => o.Mecanico)
+        .Include(o => o.Itens)
+        .ToListAsync();
     }
 }

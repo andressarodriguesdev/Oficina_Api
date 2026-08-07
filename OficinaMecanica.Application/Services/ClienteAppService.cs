@@ -1,7 +1,8 @@
+using Microsoft.EntityFrameworkCore;
+using OficinaMecanica.Application.Constants;
 using OficinaMecanica.Application.DTOs;
 using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Infrastructure.Repositories;
-using OficinaMecanica.Application.Constants;
 
 namespace OficinaMecanica.Application.Services;
 
@@ -158,5 +159,39 @@ public class ClienteAppService
         }
 
         await _repository.RemoverAsync(cliente);
+    }
+
+    public async Task<List<ClienteHistoricoResponseDto>> BuscarHistoricoAsync(Guid clienteId)
+    {
+        var cliente = await _repository.BuscarComHistoricoAsync(clienteId);
+
+        if (cliente == null)
+            return new List<ClienteHistoricoResponseDto>();
+
+        return cliente.OrdensServico
+       .Select(o => new ClienteHistoricoResponseDto
+       {
+           OrdemServicoId = o.Id,
+
+           ValorTotal = o.ValorTotal,
+
+           StatusAtual = o.Status,
+
+           DataCriacao = o.DataCriacao,
+
+           Historicos = o.Historicos
+               .OrderByDescending(h => h.DataAlteracao)
+               .Select(h => new HistoricoOrdemServicoResponseDto
+               {
+                   Id = h.Id,
+                   OrdemServicoId = h.OrdemServicoId,
+                   StatusAnterior = h.StatusAnterior,
+                   NovoStatus = h.NovoStatus,
+                   Observacao = h.Observacao,
+                   DataAlteracao = h.DataAlteracao
+               })
+               .ToList()
+            })
+            .ToList();
     }
 }

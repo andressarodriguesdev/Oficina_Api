@@ -1,6 +1,11 @@
+import { Cliente } from './../types/index';
 import { api } from './api';
-import type { Cliente, OrdemServico, Veiculo ,ClienteDetalhado} from '../types';
-
+import type {
+  OrdemServico,
+  Veiculo,
+  ClienteDetalhado,
+  ClienteHistorico
+} from '../types';
 export async function listClientes(): Promise<Cliente[]> {
   return api.get<Cliente[]>('/clientes');
 }
@@ -25,6 +30,7 @@ export interface ClienteInput {
   endereco: string;
 }
 
+
 export async function createCliente(input: ClienteInput): Promise<Cliente> {
   return api.post<Cliente>('/clientes', input);
 }
@@ -48,3 +54,8 @@ export async function reativarCliente(id: string): Promise<void> {
   await api.patch(`/clientes/${id}/reativar`);
 }
 
+export async function getHistoricoCliente(
+  id: string
+): Promise<ClienteHistorico[]> {
+  return api.get<ClienteHistorico[]>(`/clientes/${id}/historico`);
+}

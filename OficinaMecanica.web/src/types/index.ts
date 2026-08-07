@@ -27,6 +27,14 @@ export interface Veiculo {
   clienteId: string;
   ativo: boolean;
   cliente?: Cliente | null;
+
+  ordensServico?: {
+  ordemServicoId: string;
+  valorTotal: number;
+  statusAtual: number;
+  dataCriacao: string;
+  dataConclusao?: string | null;
+}[];
 }
 export interface OrdemServicoItem {
   id: string;
@@ -80,7 +88,7 @@ export interface ClienteDetalhado {
 }
 
 
-export interface mecanicos {
+export interface Mecanico {
   id: string;
   nome: string;
   telefone?: string;
@@ -88,6 +96,23 @@ export interface mecanicos {
   ativo: boolean;
   oficinaId: string;
   oficina?: OficinaResumo;
+
+  quantidadeOrdensServico: number;
+  quantidadeConcluidas: number;
+  quantidadeCanceladas: number;
+  totalMaoObra: number;
+
+  ordensServico: MecanicoOrdemServicoResumo[];
+}
+
+export interface MecanicoOrdemServicoResumo {
+  ordemServicoId: string;
+  clienteNome: string;
+  veiculo: string;
+  valorMaoObra: number;
+  status: number;
+  dataCriacao: string;
+  dataConclusao?: string | null;
 }
 
 export interface OficinaResumo {
@@ -96,4 +121,12 @@ export interface OficinaResumo {
   telefone?: string;
   endereco?: string;
   logotipo?: string;
+}
+
+export interface ClienteHistorico {
+  ordemServicoId: string;
+  valorTotal: number;
+  statusAtual: number;
+  dataCriacao: string;
+  historicos: HistoricoOrdemServico[];
 }

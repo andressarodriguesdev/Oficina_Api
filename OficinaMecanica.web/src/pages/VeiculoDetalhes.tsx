@@ -9,8 +9,10 @@ import {
   Hash,
   UserX,
   UserCheck,
+  ClipboardList, CheckCircle, DollarSign
 } from "lucide-react";
 import { Card } from "../components/ui/Card";
+import { formatCurrency } from "../utils/format";
 import { Button } from "../components/ui/Button";
 import { PageLoader } from "../components/ui/Spinner";
 import { EmptyState } from "../components/ui/EmptyState";
@@ -28,6 +30,7 @@ import {
 } from "../services/veiculos";
 import { listClientes } from "../services/clientes";
 import type { Cliente, Veiculo } from "../types";
+
 
 export function VeiculoDetalhes() {
   const { id } = useParams<{ id: string }>();
@@ -114,6 +117,52 @@ export function VeiculoDetalhes() {
     }
   };
 
+
+  const ordensServico = veiculo?.ordensServico ?? [];
+
+const ordensConcluidas = ordensServico.filter(
+  (os) => os.statusAtual === 4
+);
+
+
+
+const ultimaVisita = ordensConcluidas
+  .sort(
+    (a, b) =>
+      new Date(b.dataConclusao ?? b.dataCriacao).getTime() -
+      new Date(a.dataConclusao ?? a.dataCriacao).getTime()
+  )[0];
+
+const diasSemVisita = ultimaVisita
+  ? Math.floor(
+      (Date.now() -
+        new Date(
+          ultimaVisita.dataConclusao ?? ultimaVisita.dataCriacao
+        ).getTime()) /
+        (1000 * 60 * 60 * 24)
+    )
+  : null;
+
+
+// loading depois dos cálculos
+if (loading) return <PageLoader />;
+
+if (!veiculo) {
+  return (
+    <EmptyState
+      icon={<Car className="h-7 w-7" />}
+      title="Veículo não encontrado"
+      action={
+        <Link to="/veiculos">
+          <Button variant="outline" size="sm">
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
+        </Link>
+      }
+    />
+  );
+}
   if (loading) return <PageLoader label="Carregando veículo..." />;
   if (!veiculo)
     return (
@@ -202,7 +251,43 @@ export function VeiculoDetalhes() {
           </div>
         </div>
       </Card>
+<Card className="p-5">
+  <div className="flex items-start gap-3">
+    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ink-800 text-amber-400">
+      <Calendar className="h-5 w-5" />
+    </div>
 
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+        Última visita
+      </p>
+
+      {ultimaVisita ? (
+        <>
+          <p className="mt-1 font-display text-lg font-bold text-white">
+            {diasSemVisita === 0
+              ? "Hoje"
+              : `Há ${diasSemVisita} dias`}
+          </p>
+
+          <p className="mt-1 text-sm text-ink-300">
+            Última OS concluída em{" "}
+            {new Date(
+              ultimaVisita.dataConclusao ?? ultimaVisita.dataCriacao
+            ).toLocaleDateString("pt-BR")}
+          </p>
+        </>
+      ) : (
+        <p className="mt-1 text-sm text-ink-400">
+          Nenhuma OS concluída encontrada.
+        </p>
+      )}
+    </div>
+  </div>
+
+
+   
+</Card>
       <Card className="p-5">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-800 text-sky-400">
@@ -231,7 +316,68 @@ export function VeiculoDetalhes() {
           </div>
         </div>
       </Card>
+            <Card className="p-5">
+  <div className="grid gap-4 sm:grid-cols-3">
 
+    <div className="flex items-center gap-3">
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-800 text-sky-400">
+        <ClipboardList className="h-5 w-5" />
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+          Ordens de Serviço
+        </p>
+
+        <p className="font-display text-xl font-bold text-white">
+          {veiculo.ordensServico?.length ?? 0}
+        </p>
+      </div>
+    </div>
+
+
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-800 text-emerald-400">
+                <CheckCircle className="h-5 w-5" />
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+                  Concluídas
+                </p>
+
+                <p className="font-display text-xl font-bold text-white">
+                  {veiculo.ordensServico?.filter(
+                    (os) => os.statusAtual === 4
+                  ).length ?? 0}
+                </p>
+              </div>
+            </div>
+
+
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-800 text-emerald-400">
+                <DollarSign className="h-5 w-5" />
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+                  Total gasto
+                </p>
+
+                <p className="font-display text-xl font-bold text-white">
+                  {formatCurrency(
+                    veiculo.ordensServico
+                      ?.filter((os) => os.statusAtual === 4)
+                      .reduce((total, os) => total + os.valorTotal, 0) ?? 0
+                  )}
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </Card>
+      
       <Modal
         open={editOpen}
         onClose={() => setEditOpen(false)}

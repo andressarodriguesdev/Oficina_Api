@@ -1,4 +1,8 @@
-﻿namespace OficinaMecanica.Application.DTOs;
+﻿using OficinaMecanica.Application.DTOs.Financeiro;
+using OficinaMecanica.Domain.Enums;
+
+namespace OficinaMecanica.Application.DTOs;
+
 
 public class FinanceiroResponseDto
 {
@@ -19,8 +23,9 @@ public class FinanceiroResponseDto
     public decimal TotalPrevisto { get; set; }
 
     public List<FinanceiroOrdemDto> Ordens { get; set; } = new();
-}
 
+    public List<ProdutividadeMecanicoDto> ProdutividadeMecanicos { get; set; } = new();
+}
 
 
 public class FinanceiroOrdemDto
@@ -31,13 +36,15 @@ public class FinanceiroOrdemDto
 
     public string Veiculo { get; set; } = string.Empty;
 
+    public string Mecanico { get; set; } = string.Empty;
+
     public decimal MaoObra { get; set; }
 
     public decimal Pecas { get; set; }
 
     public decimal Total { get; set; }
 
-    public int Status { get; set; } 
+    public StatusOrdemServico Status { get; set; }
 
     public DateTime Data { get; set; }
 }

@@ -86,4 +86,12 @@ public class ClienteController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpGet("{id}/historico")]
+    public async Task<IActionResult> Historico(Guid id)
+    {
+        var historico = await _service.BuscarHistoricoAsync(id);
+
+        return Ok(historico);
+    }
 }

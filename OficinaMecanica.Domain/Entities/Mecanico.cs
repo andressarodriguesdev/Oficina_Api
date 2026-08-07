@@ -19,5 +19,7 @@ namespace OficinaMecanica.Domain.Entities
         public Guid OficinaId { get; set; }
 
         public Oficina Oficina { get; set; } = null!;
+
+        public ICollection<OrdemServico> OrdensServico { get; private set; } = new List<OrdemServico>();
     }
 }
