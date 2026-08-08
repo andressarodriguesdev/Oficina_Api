@@ -1,5 +1,7 @@
 # 🚗 OficinaMecânica
 
+<img width="1913" height="920" alt="Image" src="https://github.com/user-attachments/assets/089d09a0-7ade-451f-aea4-dac0434af256" />
+
 Sistema Full Stack de gerenciamento para oficinas mecânicas, desenvolvido para centralizar o controle de clientes, veículos, mecânicos, ordens de serviço, histórico de atendimentos e indicadores operacionais.
 
 O projeto evoluiu de uma aplicação de gerenciamento de ordens de serviço para uma solução de gestão da operação da oficina, permitindo acompanhar atendimentos, valores, produtividade, histórico dos veículos e desempenho das ordens de serviço.
