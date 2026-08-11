@@ -1,10 +1,10 @@
-
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { ArrowLeft } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { PageLoader } from "../components/ui/Spinner";
 import { Select } from "../components/ui/Select";
+import { Button } from '../components/ui/Button';
 
 import {
   obterFinanceiro,
@@ -47,9 +47,7 @@ export function Financeiro() {
       case "recentes":
       default:
         return ordens.sort(
-          (a, b) =>
-            new Date(b.data).getTime() -
-            new Date(a.data).getTime(),
+          (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime(),
         );
     }
   }, [dados, ordenacao]);
@@ -60,6 +58,12 @@ export function Financeiro() {
 
   return (
     <div className="space-y-5">
+      <div className="flex items-center">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/painel")}>
+          <ArrowLeft className="h-4 w-4" />
+          Voltar
+        </Button>
+      </div>
       {/* INDICADORES */}
 
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
@@ -94,9 +98,7 @@ export function Financeiro() {
             {dados.quantidadeCanceladas}
           </strong>
 
-          <p className="mt-2 text-xs text-ink-400">
-            Ordens canceladas
-          </p>
+          <p className="mt-2 text-xs text-ink-400">Ordens canceladas</p>
         </Card>
 
         <Card className="p-5">
@@ -136,17 +138,11 @@ export function Financeiro() {
                 value={ordenacao}
                 onChange={(e) => setOrdenacao(e.target.value)}
               >
-                <option value="recentes">
-                  Mais recentes
-                </option>
+                <option value="recentes">Mais recentes</option>
 
-                <option value="maiorValor">
-                  Maior valor
-                </option>
+                <option value="maiorValor">Maior valor</option>
 
-                <option value="menorValor">
-                  Menor valor
-                </option>
+                <option value="menorValor">Menor valor</option>
               </Select>
             </div>
           )}
@@ -170,9 +166,7 @@ export function Financeiro() {
                   hover:border-flame-500/40
                   hover:bg-ink-800/40
                 "
-                onClick={() =>
-                  navigate(`/ordens-servico/${ordem.id}`)
-                }
+                onClick={() => navigate(`/ordens-servico/${ordem.id}`)}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -190,9 +184,7 @@ export function Financeiro() {
 
                 <div className="mt-5 space-y-3">
                   <div>
-                    <p className="text-xs uppercase text-ink-400">
-                      Cliente
-                    </p>
+                    <p className="text-xs uppercase text-ink-400">Cliente</p>
 
                     <p className="text-sm font-semibold text-white">
                       {ordem.cliente}
@@ -200,13 +192,9 @@ export function Financeiro() {
                   </div>
 
                   <div>
-                    <p className="text-xs uppercase text-ink-400">
-                      Veículo
-                    </p>
+                    <p className="text-xs uppercase text-ink-400">Veículo</p>
 
-                    <p className="text-sm text-ink-200">
-                      {ordem.veiculo}
-                    </p>
+                    <p className="text-sm text-ink-200">{ordem.veiculo}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 border-t border-ink-700/50 pt-3">
@@ -221,9 +209,7 @@ export function Financeiro() {
                     </div>
 
                     <div>
-                      <p className="text-xs uppercase text-ink-400">
-                        Peças
-                      </p>
+                      <p className="text-xs uppercase text-ink-400">Peças</p>
 
                       <p className="text-sm font-semibold text-white">
                         {formatCurrency(ordem.pecas)}
@@ -242,9 +228,7 @@ export function Financeiro() {
                       py-3
                     "
                   >
-                    <span className="text-sm text-ink-300">
-                      Total
-                    </span>
+                    <span className="text-sm text-ink-300">Total</span>
 
                     <span className="font-display text-lg font-bold text-flame-400">
                       {formatCurrency(ordem.total)}
@@ -305,14 +289,10 @@ export function Financeiro() {
                   hover:border-flame-500/40
                   hover:bg-ink-800/40
                 "
-                onClick={() =>
-                  navigate(`/mecanicos/${mecanico.mecanicoId}`)
-                }
+                onClick={() => navigate(`/mecanicos/${mecanico.mecanicoId}`)}
               >
                 <div>
-                  <p className="text-xs uppercase text-ink-400">
-                    Mecânico
-                  </p>
+                  <p className="text-xs uppercase text-ink-400">Mecânico</p>
 
                   <h3 className="mt-1 font-display text-lg font-bold text-white">
                     {mecanico.nome}
@@ -321,9 +301,7 @@ export function Financeiro() {
 
                 <div className="mt-5 grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs uppercase text-ink-400">
-                      Ordens
-                    </p>
+                    <p className="text-xs uppercase text-ink-400">Ordens</p>
 
                     <p className="text-xl font-bold text-white">
                       {mecanico.quantidadeOrdens}
@@ -331,9 +309,7 @@ export function Financeiro() {
                   </div>
 
                   <div>
-                    <p className="text-xs uppercase text-ink-400">
-                      Concluídas
-                    </p>
+                    <p className="text-xs uppercase text-ink-400">Concluídas</p>
 
                     <p className="text-xl font-bold text-white">
                       {mecanico.quantidadeConcluidas}
@@ -372,4 +348,3 @@ export function Financeiro() {
     </div>
   );
 }
-

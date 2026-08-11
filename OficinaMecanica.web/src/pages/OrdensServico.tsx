@@ -8,6 +8,7 @@ import {
   Trash2,
   Eye,
   FileText,
+  ArrowLeft,
 } from "lucide-react";
 
 import { Card } from "../components/ui/Card";
@@ -136,7 +137,9 @@ export function OrdensServico() {
         0,
       );
 
-      const valorTotal = Number((values.valorMaoObra + totalItens).toFixed(2));
+      const valorTotal = Number(
+        (values.valorMaoObra + totalItens).toFixed(2),
+      );
 
       await createOrdem({
         clienteId: values.clienteId,
@@ -192,11 +195,19 @@ export function OrdensServico() {
       await load();
 
       if (os.cliente?.telefone) {
-        const fresh = (await listOrdens()).find((o) => o.id === os.id) ?? os;
+        const fresh =
+          (await listOrdens()).find((o) => o.id === os.id) ?? os;
 
-        const msg = buildWhatsAppMessage(fresh, os.cliente, os.veiculo);
+        const msg = buildWhatsAppMessage(
+          fresh,
+          os.cliente,
+          os.veiculo,
+        );
 
-        window.open(whatsappUrl(os.cliente.telefone, msg), "_blank");
+        window.open(
+          whatsappUrl(os.cliente.telefone, msg),
+          "_blank",
+        );
       }
     } catch (err) {
       toast.error("Erro ao enviar para aprovação");
@@ -206,6 +217,18 @@ export function OrdensServico() {
 
   return (
     <div className="space-y-5">
+      {/* CABEÇALHO */}
+      <div className="flex items-center">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/painel")}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Voltar
+        </Button>
+      </div>
+
       {/* FILTROS */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 flex-col gap-3 sm:flex-row">
@@ -228,7 +251,10 @@ export function OrdensServico() {
             <option value="">Todos os status</option>
 
             {ALL_STATUSES.map((s) => (
-              <option key={s} value={STATUS_TEXT_TO_NUMBER[s]}>
+              <option
+                key={s}
+                value={STATUS_TEXT_TO_NUMBER[s]}
+              >
                 {STATUS_LABEL[s]}
               </option>
             ))}
@@ -279,18 +305,16 @@ export function OrdensServico() {
                   <thead>
                     <tr className="border-b border-ink-700/60 text-left text-xs font-semibold uppercase tracking-wide text-ink-400">
                       <th className="px-5 py-3.5">OS</th>
-
                       <th className="px-5 py-3.5">Cliente</th>
-
                       <th className="px-5 py-3.5">Veículo</th>
-
                       <th className="px-5 py-3.5">Status</th>
-
                       <th className="px-5 py-3.5">Data</th>
-
-                      <th className="px-5 py-3.5 text-right">Valor</th>
-
-                      <th className="px-5 py-3.5 text-right">Ações</th>
+                      <th className="px-5 py-3.5 text-right">
+                        Valor
+                      </th>
+                      <th className="px-5 py-3.5 text-right">
+                        Ações
+                      </th>
                     </tr>
                   </thead>
 
@@ -298,7 +322,9 @@ export function OrdensServico() {
                     {filtered.map((os) => (
                       <tr
                         key={os.id}
-                        onClick={() => navigate(`/ordens-servico/${os.id}`)}
+                        onClick={() =>
+                          navigate(`/ordens-servico/${os.id}`)
+                        }
                         className="cursor-pointer transition hover:bg-ink-800/30"
                       >
                         <td className="px-5 py-3.5">
@@ -348,7 +374,9 @@ export function OrdensServico() {
                           <div className="flex items-center justify-end gap-1">
                             <Link
                               to={`/ordens-servico/${os.id}`}
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e) =>
+                                e.stopPropagation()
+                              }
                               className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-700 hover:text-sky-400"
                               title="Visualizar"
                             >
@@ -358,7 +386,9 @@ export function OrdensServico() {
                             {os.status === 0 && (
                               <Link
                                 to={`/ordens-servico/${os.id}/editar`}
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={(e) =>
+                                  e.stopPropagation()
+                                }
                                 className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-700 hover:text-flame-400"
                                 title="Editar"
                               >
@@ -406,7 +436,9 @@ export function OrdensServico() {
                 key={os.id}
                 hover
                 className="cursor-pointer p-4"
-                onClick={() => navigate(`/ordens-servico/${os.id}`)}
+                onClick={() =>
+                  navigate(`/ordens-servico/${os.id}`)
+                }
               >
                 <div className="flex items-start justify-between gap-3">
                   <Link
@@ -419,7 +451,8 @@ export function OrdensServico() {
                     </p>
 
                     <p className="mt-1 truncate text-sm font-semibold text-white">
-                      {os.cliente?.nome ?? "Cliente não informado"}
+                      {os.cliente?.nome ??
+                        "Cliente não informado"}
                     </p>
                   </Link>
 
@@ -428,7 +461,9 @@ export function OrdensServico() {
 
                 <div className="mt-4 space-y-2 border-t border-ink-700/40 pt-3">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs text-ink-400">Veículo</span>
+                    <span className="text-xs text-ink-400">
+                      Veículo
+                    </span>
 
                     <div className="min-w-0 text-right">
                       <p className="truncate text-sm text-ink-200">
@@ -446,7 +481,9 @@ export function OrdensServico() {
                   </div>
 
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs text-ink-400">Data</span>
+                    <span className="text-xs text-ink-400">
+                      Data
+                    </span>
 
                     <span className="text-sm text-ink-300">
                       {formatDate(os.dataCriacao)}
@@ -454,7 +491,9 @@ export function OrdensServico() {
                   </div>
 
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs text-ink-400">Valor</span>
+                    <span className="text-xs text-ink-400">
+                      Valor
+                    </span>
 
                     <span className="text-sm font-bold text-white">
                       {formatCurrency(os.valorTotal)}

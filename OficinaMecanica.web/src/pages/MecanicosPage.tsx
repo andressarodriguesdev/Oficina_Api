@@ -9,6 +9,7 @@ import {
   UserCheck,
   UserCog,
   Eye,
+  ArrowLeft
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -111,9 +112,7 @@ export function Mecanicos() {
       await load();
     } catch (err) {
       toast.error(
-        editing
-          ? "Erro ao atualizar mecânico"
-          : "Erro ao cadastrar mecânico",
+        editing ? "Erro ao atualizar mecânico" : "Erro ao cadastrar mecânico",
       );
 
       console.error(err);
@@ -152,48 +151,61 @@ export function Mecanicos() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-xs">
-          <Search
-            className="
-              pointer-events-none
-              absolute left-3 top-1/2
-              h-4 w-4
-              -translate-y-1/2
-              text-ink-400
-            "
-          />
-
-          <Input
-            placeholder="Buscar por nome, telefone ou especialidade..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-
-        <Select
-          value={filtroStatus}
-          onChange={(e) => setFiltroStatus(e.target.value)}
-          className="sm:w-56"
-        >
-          <option value="todos">Todos os mecânicos</option>
-          <option value="ativos">Mecânicos ativos</option>
-          <option value="inativos">Mecânicos inativos</option>
-        </Select>
-
-        <Button
-          className="whitespace-nowrap"
-          onClick={() => {
-            setEditing(null);
-            setModalOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4" />
-          Novo mecânico
+      <div className="flex items-center">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/painel")}>
+          <ArrowLeft className="h-4 w-4" />
+          Voltar
         </Button>
       </div>
+      {/* FILTROS / AÇÕES */}
+      <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:items-center">
+          {/* Busca */}
+          <div className="relative min-w-0 lg:flex-1 lg:max-w-md">
+            <Search
+              className="
+                pointer-events-none
+                absolute left-3 top-1/2
+                h-4 w-4
+                -translate-y-1/2
+                text-ink-400
+              "
+            />
 
+            <Input
+              placeholder="Buscar por nome, telefone ou especialidade..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9"
+            />
+          </div>
+
+          {/* Filtro */}
+          <Select
+            value={filtroStatus}
+            onChange={(e) => setFiltroStatus(e.target.value)}
+            className="w-full lg:w-56"
+          >
+            <option value="todos">Todos os mecânicos</option>
+            <option value="ativos">Mecânicos ativos</option>
+            <option value="inativos">Mecânicos inativos</option>
+          </Select>
+
+          {/* Novo mecânico */}
+          <Button
+            className="w-full whitespace-nowrap sm:w-auto lg:ml-auto"
+            onClick={() => {
+              setEditing(null);
+              setModalOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4" />
+            Novo mecânico
+          </Button>
+        </div>
+      </div>
+
+      {/* CONTEÚDO */}
       {loading ? (
         <PageLoader label="Carregando mecânicos..." />
       ) : filtered.length === 0 ? (
@@ -226,115 +238,152 @@ export function Mecanicos() {
           />
         </Card>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((m) => (
             <Card
               key={m.id}
               hover
-              className="cursor-pointer p-5"
+              className="cursor-pointer p-4 sm:p-5"
               onClick={() => navigate(`/mecanicos/${m.id}`)}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div
-                    className="
-                      flex h-11 w-11
-                      shrink-0
-                      items-center justify-center
-                      rounded-full
-                      bg-gradient-to-br
-                      from-ink-700
-                      to-ink-800
-                      text-sm
-                      font-bold
-                      text-flame-400
-                    "
-                  >
-                    {initials(m.nome)}
-                  </div>
-
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p
-                        className="
-                          truncate
-                          font-display
-                          text-sm
-                          font-bold
-                          text-white
-                        "
-                      >
-                        {m.nome}
-                      </p>
-
-                      {m.ativo ? (
-                        <span
-                          className="
-                            rounded-full
-                            bg-green-500/20
-                            px-2 py-0.5
-                            text-[10px]
-                            font-semibold
-                            text-green-400
-                          "
-                        >
-                          Ativo
-                        </span>
-                      ) : (
-                        <span
-                          className="
-                            rounded-full
-                            bg-red-500/20
-                            px-2 py-0.5
-                            text-[10px]
-                            font-semibold
-                            text-red-400
-                          "
-                        >
-                          Inativo
-                        </span>
-                      )}
-                    </div>
-
-                    <p
-                      className="
-                        mt-0.5
-                        flex
-                        items-center
-                        gap-1
-                        truncate
-                        text-xs
-                        text-ink-400
-                      "
-                    >
-                      <Phone className="h-3 w-3" />
-                      {m.telefone || "—"}
-                    </p>
-                  </div>
+              {/* CABEÇALHO DO CARD */}
+              <div className="flex items-start gap-3">
+                {/* Avatar */}
+                <div
+                  className="
+                    flex h-11 w-11
+                    shrink-0
+                    items-center justify-center
+                    rounded-full
+                    bg-gradient-to-br
+                    from-ink-700
+                    to-ink-800
+                    text-sm
+                    font-bold
+                    text-flame-400
+                  "
+                >
+                  {initials(m.nome)}
                 </div>
 
-                <div className="flex shrink-0 gap-1">
-                  <Link
-                    to={`/mecanicos/${m.id}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="
-                      rounded-lg
-                      p-2
-                      text-ink-400
-                      transition
-                      hover:bg-ink-800
-                      hover:text-sky-400
-                    "
-                    title="Visualizar"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Link>
+                {/* Nome / telefone */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <p
+                      className="
+                        min-w-0
+                        max-w-full
+                        truncate
+                        font-display
+                        text-sm
+                        font-bold
+                        text-white
+                      "
+                    >
+                      {m.nome}
+                    </p>
 
+                    {m.ativo ? (
+                      <span
+                        className="
+                          shrink-0
+                          rounded-full
+                          bg-green-500/20
+                          px-2 py-0.5
+                          text-[10px]
+                          font-semibold
+                          text-green-400
+                        "
+                      >
+                        Ativo
+                      </span>
+                    ) : (
+                      <span
+                        className="
+                          shrink-0
+                          rounded-full
+                          bg-red-500/20
+                          px-2 py-0.5
+                          text-[10px]
+                          font-semibold
+                          text-red-400
+                        "
+                      >
+                        Inativo
+                      </span>
+                    )}
+                  </div>
+
+                  <p
+                    className="
+                      mt-0.5
+                      flex
+                      min-w-0
+                      items-center
+                      gap-1
+                      truncate
+                      text-xs
+                      text-ink-400
+                    "
+                  >
+                    <Phone className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{m.telefone || "—"}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* AÇÕES */}
+              <div
+                className="
+                  mt-3
+                  flex
+                  justify-end
+                  gap-1
+                  border-t
+                  border-ink-700/40
+                  pt-3
+                "
+              >
+                <Link
+                  to={`/mecanicos/${m.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="
+                    rounded-lg
+                    p-2
+                    text-ink-400
+                    transition
+                    hover:bg-ink-800
+                    hover:text-sky-400
+                  "
+                  title="Visualizar"
+                >
+                  <Eye className="h-4 w-4" />
+                </Link>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditing(m);
+                    setModalOpen(true);
+                  }}
+                  className="
+                    rounded-lg
+                    p-2
+                    text-ink-400
+                    transition
+                    hover:bg-ink-800
+                    hover:text-flame-400
+                  "
+                  title="Editar"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+
+                {m.ativo ? (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setEditing(m);
-                      setModalOpen(true);
+                      handleInativar(m);
                     }}
                     className="
                       rounded-lg
@@ -342,53 +391,34 @@ export function Mecanicos() {
                       text-ink-400
                       transition
                       hover:bg-ink-800
-                      hover:text-flame-400
+                      hover:text-red-400
                     "
-                    title="Editar"
+                    title="Inativar mecânico"
                   >
-                    <Pencil className="h-4 w-4" />
+                    <UserX className="h-4 w-4" />
                   </button>
-
-                  {m.ativo ? (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleInativar(m);
-                      }}
-                      className="
-                        rounded-lg
-                        p-2
-                        text-ink-400
-                        transition
-                        hover:bg-ink-800
-                        hover:text-red-400
-                      "
-                      title="Inativar mecânico"
-                    >
-                      <UserX className="h-4 w-4" />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleReativar(m);
-                      }}
-                      className="
-                        rounded-lg
-                        p-2
-                        text-ink-400
-                        transition
-                        hover:bg-ink-800
-                        hover:text-green-400
-                      "
-                      title="Reativar mecânico"
-                    >
-                      <UserCheck className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleReativar(m);
+                    }}
+                    className="
+                      rounded-lg
+                      p-2
+                      text-ink-400
+                      transition
+                      hover:bg-ink-800
+                      hover:text-green-400
+                    "
+                    title="Reativar mecânico"
+                  >
+                    <UserCheck className="h-4 w-4" />
+                  </button>
+                )}
               </div>
 
+              {/* ESPECIALIDADE */}
               <div
                 className="
                   mt-3
@@ -400,9 +430,12 @@ export function Mecanicos() {
                   text-ink-400
                 "
               >
-                <p className="flex items-center gap-1.5">
-                  <Wrench className="h-3 w-3" />
-                  {m.especialidade || "Sem especialidade"}
+                <p className="flex min-w-0 items-center gap-1.5">
+                  <Wrench className="h-3 w-3 shrink-0" />
+
+                  <span className="truncate">
+                    {m.especialidade || "Sem especialidade"}
+                  </span>
                 </p>
               </div>
             </Card>
@@ -410,6 +443,7 @@ export function Mecanicos() {
         </div>
       )}
 
+      {/* MODAL */}
       <Modal
         open={modalOpen}
         onClose={() => {

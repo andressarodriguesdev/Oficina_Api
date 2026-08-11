@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Select } from "../components/ui/Select";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Car, Search, Pencil, Eye, User } from "lucide-react";
+import { Plus, Car, Search, Pencil, Eye, User, ArrowLeft } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
@@ -139,6 +139,12 @@ export function Veiculos() {
 
   return (
     <div className="space-y-5">
+      <div className="flex items-center">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/painel")}>
+          <ArrowLeft className="h-4 w-4" />
+          Voltar
+        </Button>
+      </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full sm:max-w-xs">
           <Search
