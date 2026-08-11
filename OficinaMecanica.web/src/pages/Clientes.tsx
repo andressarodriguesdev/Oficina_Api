@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Select } from "../components/ui/Select";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Plus,
   Users,
@@ -41,6 +41,7 @@ import { initials } from "../utils/format";
 
 export function Clientes() {
   const toast = useToast();
+  const navigate = useNavigate();
 
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
@@ -225,7 +226,14 @@ export function Clientes() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((c) => (
-            <Card key={c.id} hover className="p-5">
+            <Card
+              key={c.id}
+              hover
+              className="p-5 cursor-pointer"
+              onClick={() => {
+                navigate(`/clientes/${c.id}`);
+              }}
+            >
               <div className="flex items-start justify-between gap-3">
                 <Link
                   to={`/clientes/${c.id}`}

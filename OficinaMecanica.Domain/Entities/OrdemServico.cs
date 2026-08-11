@@ -95,6 +95,39 @@ public class OrdemServico
         Itens.Add(item);
     }
 
+    
+
+
+    public OrdemServicoItem? ObterItem(Guid itemId)
+    {
+        return Itens.FirstOrDefault(i => i.Id == itemId);
+  }
+
+
+    public void AtualizarItem(Guid itemId, string descricao, int quantidade, decimal valorUnitario)
+    {
+        if (Status != StatusOrdemServico.Aberta)
+            throw new Exception("Somente ordens abertas podem ter itens editados.");
+
+        var item = Itens.FirstOrDefault(i => i.Id == itemId)
+            ?? throw new Exception("Item não encontrado.");
+
+        item.Atualizar(descricao, quantidade, valorUnitario);
+    }
+
+    public void RemoverItem(Guid itemId)
+    {
+        if (Status != StatusOrdemServico.Aberta)
+            throw new Exception("Somente ordens abertas podem ter itens removidos.");
+
+        var item = Itens.FirstOrDefault(i => i.Id == itemId)
+            ?? throw new Exception("Item não encontrado.");
+
+        Itens.Remove(item);
+    }
+
+
+
 
     public void EnviarParaAprovacao()
     {
@@ -177,13 +210,13 @@ public class OrdemServico
         DataReabertura = DateTime.UtcNow;
     }
 
-          public void AtualizarDados(
-          Guid clienteId,
-          Guid veiculoId,
-          Guid mecanicoId,
-          string descricao,
-          decimal valorMaoObra
-         )
+  
+public void AtualizarDados(
+    Guid clienteId,
+    Guid veiculoId,
+    Guid mecanicoId,
+    string descricao,
+    decimal valorMaoObra)
     {
         ClienteId = clienteId;
         VeiculoId = veiculoId;
@@ -191,4 +224,6 @@ public class OrdemServico
         Descricao = descricao;
         ValorMaoObra = valorMaoObra;
     }
+
+
 }

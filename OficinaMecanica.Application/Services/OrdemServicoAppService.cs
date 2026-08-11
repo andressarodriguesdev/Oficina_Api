@@ -332,6 +332,7 @@ public class OrdemServicoAppService
             Itens = ordem.Itens
                 .Select(i => new OrdemServicoItemDto
                 {
+                    Id = i.Id,
                     Descricao = i.Descricao,
                     Quantidade = i.Quantidade,
                     ValorUnitario = i.ValorUnitario
@@ -352,8 +353,6 @@ public class OrdemServicoAppService
         };
     }
 
-
-
     public async Task AdicionarItemAsync(Guid ordemId, OrdemServicoItemDto dto)
     {
         var ordem = await _repository.ObterPorIdAsync(ordemId);
@@ -361,18 +360,37 @@ public class OrdemServicoAppService
         if (ordem == null)
             throw new Exception("Ordem não encontrada.");
 
-
         var item = new OrdemServicoItem(
             dto.Descricao,
             dto.Quantidade,
             dto.ValorUnitario
         );
 
+        await _repository.AdicionarItemAsync(ordem, item); // agora passa ordem + item
+    }
 
-        ordem.AdicionarItem(item);
+    public async Task AtualizarItemAsync(Guid ordemId, Guid itemId, OrdemServicoItemDto dto)
+    {
+        var ordem = await _repository.ObterPorIdAsync(ordemId);
 
+        if (ordem == null)
+            throw new Exception("Ordem não encontrada.");
 
-        await _repository.AtualizarAsync(ordem);
+        ordem.AtualizarItem(itemId, dto.Descricao, dto.Quantidade, dto.ValorUnitario);
+
+        await _repository.SalvarAsync();
+    }
+
+    public async Task RemoverItemAsync(Guid ordemId, Guid itemId)
+    {
+        var ordem = await _repository.ObterPorIdAsync(ordemId);
+
+        if (ordem == null)
+            throw new Exception("Ordem não encontrada.");
+
+        ordem.RemoverItem(itemId);
+
+        await _repository.SalvarAsync();
     }
 
     public async Task AtualizarAsync(

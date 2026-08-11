@@ -188,4 +188,18 @@ public class OrdemServicoController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpPut("{id}/itens/{itemId}")]
+    public async Task<IActionResult> AtualizarItem(Guid id, Guid itemId, OrdemServicoItemDto dto)
+    {
+        await _service.AtualizarItemAsync(id, itemId, dto);
+        return NoContent();
+    }
+
+    [HttpDelete("{id}/itens/{itemId}")]
+    public async Task<IActionResult> RemoverItem(Guid id, Guid itemId)
+    {
+        await _service.RemoverItemAsync(id, itemId);
+        return NoContent();
+    }
 }

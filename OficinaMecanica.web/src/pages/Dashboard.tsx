@@ -106,12 +106,12 @@ export function Dashboard() {
     .filter((o) => o.status === 4)
     .reduce((sum, o) => sum + (Number(o.valorTotal) || 0), 0);
 
-const recentes = [...ordensFiltradas]
-  .sort(
-    (a, b) =>
-      new Date(b.dataCriacao).getTime() - new Date(a.dataCriacao).getTime(),
-  )
-  .slice(0, 6);
+  const recentes = [...ordensFiltradas]
+    .sort(
+      (a, b) =>
+        new Date(b.dataCriacao).getTime() - new Date(a.dataCriacao).getTime(),
+    )
+    .slice(0, 6);
 
   const stats = [
     {
@@ -120,6 +120,7 @@ const recentes = [...ordensFiltradas]
       icon: ClipboardList,
       tone: "text-flame-400",
       bg: "bg-flame-500/10",
+      to: "/ordens-servico",
     },
     {
       label: "Aguardando Aprovação",
@@ -127,6 +128,7 @@ const recentes = [...ordensFiltradas]
       icon: Clock,
       tone: "text-amber-400",
       bg: "bg-amber-500/10",
+      to: "/ordens-servico",
     },
     {
       label: "Concluídas",
@@ -134,6 +136,7 @@ const recentes = [...ordensFiltradas]
       icon: CheckCircle2,
       tone: "text-emerald-400",
       bg: "bg-emerald-500/10",
+      to: "/ordens-servico",
     },
     {
       label: "Faturamento",
@@ -141,6 +144,7 @@ const recentes = [...ordensFiltradas]
       icon: DollarSign,
       tone: "text-sky-400",
       bg: "bg-sky-500/10",
+      to: "/financeiro",
     },
   ];
 
@@ -149,24 +153,27 @@ const recentes = [...ordensFiltradas]
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((s) => {
           const Icon = s.icon;
+
           return (
-            <Card key={s.label} hover className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
-                    {s.label}
-                  </p>
-                  <p className="mt-2 font-display text-2xl font-bold text-white">
-                    {s.value}
-                  </p>
+            <Link key={s.label} to={s.to} className="block">
+              <Card hover className="p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+                      {s.label}
+                    </p>
+                    <p className="mt-2 font-display text-2xl font-bold text-white">
+                      {s.value}
+                    </p>
+                  </div>
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-xl ${s.bg}`}
+                  >
+                    <Icon className={`h-6 w-6 ${s.tone}`} />
+                  </div>
                 </div>
-                <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-xl ${s.bg}`}
-                >
-                  <Icon className={`h-6 w-6 ${s.tone}`} />
-                </div>
-              </div>
-            </Card>
+              </Card>
+            </Link>
           );
         })}
       </div>
@@ -177,37 +184,44 @@ const recentes = [...ordensFiltradas]
             value: clientesCount,
             icon: Users,
             tone: "text-ink-300",
+            to: "/clientes",
           },
           {
             label: "Veículos",
             value: veiculosCount,
             icon: Car,
             tone: "text-ink-300",
+            to: "/veiculos",
           },
           {
             label: "Total de OS",
             value: ordensFiltradas.length,
             icon: TrendingUp,
+            tone: "text-ink-300",
+            to: "/ordens-servico",
           },
-          
         ].map((s) => {
           const Icon = s.icon;
           return (
-            <Card key={s.label} className="p-5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-800 text-ink-300">
-                  <Icon className="h-5 w-5" />
+            <Link key={s.label} to={s.to} className="block">
+              <Card hover className="p-5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-800 text-ink-300">
+                    <Icon className="h-5 w-5" />
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+                      {s.label}
+                    </p>
+
+                    <p className="font-display text-xl font-bold text-white">
+                      {s.value}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
-                    {s.label}
-                  </p>
-                  <p className="font-display text-xl font-bold text-white">
-                    {s.value}
-                  </p>
-                </div>
-              </div>
-            </Card>
+              </Card>
+            </Link>
           );
         })}
       </div>

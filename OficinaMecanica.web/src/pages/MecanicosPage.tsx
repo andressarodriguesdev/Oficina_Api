@@ -10,7 +10,7 @@ import {
   UserCog,
   Eye,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
@@ -34,11 +34,12 @@ import {
   reativarMecanico,
 } from "../services/mecanico";
 
-import type { Mecanico} from "../types";
+import type { Mecanico } from "../types";
 
 import { initials } from "../utils/format";
 
 export function Mecanicos() {
+  const navigate = useNavigate();
   const toast = useToast();
 
   const [mecanicos, setMecanicos] = useState<Mecanico[]>([]);
@@ -110,7 +111,9 @@ export function Mecanicos() {
       await load();
     } catch (err) {
       toast.error(
-        editing ? "Erro ao atualizar mecânico" : "Erro ao cadastrar mecânico",
+        editing
+          ? "Erro ao atualizar mecânico"
+          : "Erro ao cadastrar mecânico",
       );
 
       console.error(err);
@@ -153,11 +156,11 @@ export function Mecanicos() {
         <div className="relative w-full sm:max-w-xs">
           <Search
             className="
-            pointer-events-none
-            absolute left-3 top-1/2
-            h-4 w-4
-            -translate-y-1/2
-            text-ink-400
+              pointer-events-none
+              absolute left-3 top-1/2
+              h-4 w-4
+              -translate-y-1/2
+              text-ink-400
             "
           />
 
@@ -175,9 +178,7 @@ export function Mecanicos() {
           className="sm:w-56"
         >
           <option value="todos">Todos os mecânicos</option>
-
           <option value="ativos">Mecânicos ativos</option>
-
           <option value="inativos">Mecânicos inativos</option>
         </Select>
 
@@ -227,21 +228,26 @@ export function Mecanicos() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((m) => (
-            <Card key={m.id} hover className="p-5">
+            <Card
+              key={m.id}
+              hover
+              className="cursor-pointer p-5"
+              onClick={() => navigate(`/mecanicos/${m.id}`)}
+            >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
                   <div
                     className="
-                    flex h-11 w-11
-                    shrink-0
-                    items-center justify-center
-                    rounded-full
-                    bg-gradient-to-br
-                    from-ink-700
-                    to-ink-800
-                    text-sm
-                    font-bold
-                    text-flame-400
+                      flex h-11 w-11
+                      shrink-0
+                      items-center justify-center
+                      rounded-full
+                      bg-gradient-to-br
+                      from-ink-700
+                      to-ink-800
+                      text-sm
+                      font-bold
+                      text-flame-400
                     "
                   >
                     {initials(m.nome)}
@@ -251,12 +257,12 @@ export function Mecanicos() {
                     <div className="flex items-center gap-2">
                       <p
                         className="
-                      truncate
-                      font-display
-                      text-sm
-                      font-bold
-                      text-white
-                      "
+                          truncate
+                          font-display
+                          text-sm
+                          font-bold
+                          text-white
+                        "
                       >
                         {m.nome}
                       </p>
@@ -264,26 +270,26 @@ export function Mecanicos() {
                       {m.ativo ? (
                         <span
                           className="
-                        rounded-full
-                        bg-green-500/20
-                        px-2 py-0.5
-                        text-[10px]
-                        font-semibold
-                        text-green-400
-                        "
+                            rounded-full
+                            bg-green-500/20
+                            px-2 py-0.5
+                            text-[10px]
+                            font-semibold
+                            text-green-400
+                          "
                         >
                           Ativo
                         </span>
                       ) : (
                         <span
                           className="
-                        rounded-full
-                        bg-red-500/20
-                        px-2 py-0.5
-                        text-[10px]
-                        font-semibold
-                        text-red-400
-                        "
+                            rounded-full
+                            bg-red-500/20
+                            px-2 py-0.5
+                            text-[10px]
+                            font-semibold
+                            text-red-400
+                          "
                         >
                           Inativo
                         </span>
@@ -292,17 +298,16 @@ export function Mecanicos() {
 
                     <p
                       className="
-                    mt-0.5
-                    flex
-                    items-center
-                    gap-1
-                    truncate
-                    text-xs
-                    text-ink-400
-                    "
+                        mt-0.5
+                        flex
+                        items-center
+                        gap-1
+                        truncate
+                        text-xs
+                        text-ink-400
+                      "
                     >
                       <Phone className="h-3 w-3" />
-
                       {m.telefone || "—"}
                     </p>
                   </div>
@@ -311,31 +316,33 @@ export function Mecanicos() {
                 <div className="flex shrink-0 gap-1">
                   <Link
                     to={`/mecanicos/${m.id}`}
-                                        className="
-                        rounded-lg
-                        p-2
-                        text-ink-400
-                        transition
-                        hover:bg-ink-800
-                        hover:text-sky-400
-                        "
+                    onClick={(e) => e.stopPropagation()}
+                    className="
+                      rounded-lg
+                      p-2
+                      text-ink-400
+                      transition
+                      hover:bg-ink-800
+                      hover:text-sky-400
+                    "
                     title="Visualizar"
                   >
                     <Eye className="h-4 w-4" />
                   </Link>
 
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setEditing(m);
                       setModalOpen(true);
                     }}
-                                    className="
-                    rounded-lg
-                    p-2
-                    text-ink-400
-                    transition
-                    hover:bg-ink-800
-                    hover:text-flame-400
+                    className="
+                      rounded-lg
+                      p-2
+                      text-ink-400
+                      transition
+                      hover:bg-ink-800
+                      hover:text-flame-400
                     "
                     title="Editar"
                   >
@@ -344,30 +351,36 @@ export function Mecanicos() {
 
                   {m.ativo ? (
                     <button
-                      onClick={() => handleInativar(m)}
-                                        className="
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleInativar(m);
+                      }}
+                      className="
                         rounded-lg
                         p-2
                         text-ink-400
                         transition
                         hover:bg-ink-800
                         hover:text-red-400
-      "
+                      "
                       title="Inativar mecânico"
                     >
                       <UserX className="h-4 w-4" />
                     </button>
                   ) : (
                     <button
-                      onClick={() => handleReativar(m)}
-                                        className="
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleReativar(m);
+                      }}
+                      className="
                         rounded-lg
                         p-2
                         text-ink-400
                         transition
                         hover:bg-ink-800
                         hover:text-green-400
-                        "
+                      "
                       title="Reativar mecânico"
                     >
                       <UserCheck className="h-4 w-4" />
@@ -378,18 +391,17 @@ export function Mecanicos() {
 
               <div
                 className="
-              mt-3
-              space-y-1.5
-              border-t
-              border-ink-700/40
-              pt-3
-              text-xs
-              text-ink-400
-              "
+                  mt-3
+                  space-y-1.5
+                  border-t
+                  border-ink-700/40
+                  pt-3
+                  text-xs
+                  text-ink-400
+                "
               >
                 <p className="flex items-center gap-1.5">
                   <Wrench className="h-3 w-3" />
-
                   {m.especialidade || "Sem especialidade"}
                 </p>
               </div>

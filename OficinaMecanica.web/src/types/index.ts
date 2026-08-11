@@ -55,9 +55,10 @@ export interface HistoricoOrdemServico {
 }
 
 export interface OrdemServico {
-  id: string;
+   id: string;
   clienteId: string;
   veiculoId: string;
+  mecanicoId: string;
   descricao: string;
   valorMaoObra: number;
   valorTotal: number;
@@ -68,7 +69,6 @@ export interface OrdemServico {
   observacao?: string | null;
   itens?: OrdemServicoItem[];
   historicos?: HistoricoOrdemServico[];
-  mecanicosId:string;
 }
 export interface VeiculoResumo {
   id: string;
@@ -115,6 +115,15 @@ export interface MecanicoOrdemServicoResumo {
   dataConclusao?: string | null;
 }
 
+export interface ProdutividadeMecanico {
+  mecanicoId: string;
+  nome: string;
+  quantidadeOrdens: number;
+  quantidadeConcluidas: number;
+  totalMaoObra: number;
+  ticketMedio: number;
+}
+
 export interface OficinaResumo {
   id: string;
   nome: string;
@@ -130,3 +139,4 @@ export interface ClienteHistorico {
   dataCriacao: string;
   historicos: HistoricoOrdemServico[];
 }
+

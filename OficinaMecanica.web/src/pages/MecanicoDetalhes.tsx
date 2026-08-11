@@ -9,7 +9,7 @@ import {
   Building2,
 } from "lucide-react";
 
-import { Card ,  CardHeader } from "../components/ui/Card";
+import { Card, CardHeader } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/EmptyState";
 import { PageLoader } from "../components/ui/Spinner";
@@ -20,7 +20,7 @@ import type { Mecanico } from "../types";
 
 import { statusLabel } from "../utils/status";
 
-import { initials, formatCurrency} from "../utils/format";
+import { initials, formatCurrency } from "../utils/format";
 
 export function MecanicoDetalhes() {
   const { id } = useParams<{ id?: string }>();
@@ -202,170 +202,149 @@ export function MecanicoDetalhes() {
 
       {/* Resumo */}
 
-{/* Resumo */}
+      {/* Resumo */}
 
-<div className="grid gap-4 lg:grid-cols-4">
-
-  <Card className="p-5">
-    <div className="flex items-center gap-3">
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-800 text-flame-400">
-        <ClipboardList className="h-5 w-5" />
-      </div>
-
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
-          Ordens realizadas
-        </p>
-
-        <p className="font-display text-xl font-bold text-white">
-          {mecanico.quantidadeOrdensServico}
-        </p>
-      </div>
-    </div>
-  </Card>
-
-
-  <Card className="p-5">
-    <div className="flex items-center gap-3">
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-800 text-emerald-400">
-        <ClipboardList className="h-5 w-5" />
-      </div>
-
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
-          Concluídas
-        </p>
-
-        <p className="font-display text-xl font-bold text-white">
-          {mecanico.quantidadeConcluidas}
-        </p>
-      </div>
-    </div>
-  </Card>
-
-
-  <Card className="p-5">
-    <div className="flex items-center gap-3">
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-800 text-red-400">
-        <ClipboardList className="h-5 w-5" />
-      </div>
-
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
-          Canceladas
-        </p>
-
-        <p className="font-display text-xl font-bold text-white">
-          {mecanico.quantidadeCanceladas}
-        </p>
-      </div>
-    </div>
-  </Card>
-
-
-  <Card className="p-5">
-    <div className="flex items-center gap-3">
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-800 text-sky-400">
-        <Wrench className="h-5 w-5" />
-      </div>
-
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
-          Mão de obra
-        </p>
-
-        <p className="font-display text-xl font-bold text-white">
-          {formatCurrency(mecanico.totalMaoObra)}
-        </p>
-      </div>
-    </div>
-  </Card>
-
-</div>
-
-
-{/* Histórico de OS */}
-
-<Card>
-
-  <CardHeader
-    title="Histórico de ordens de serviço"
-    subtitle={`${mecanico.ordensServico?.length ?? 0} ordem(ns)`}
-  />
-
-
-  {!mecanico.ordensServico || mecanico.ordensServico.length === 0 ? (
-
-    <EmptyState
-      icon={<ClipboardList className="h-7 w-7" />}
-      title="Nenhuma ordem de serviço"
-      description="Este mecânico ainda não possui serviços vinculados."
-    />
-
-  ) : (
-
-    <div className="divide-y divide-ink-700/40">
-
-      {[...mecanico.ordensServico]
-        .sort(
-          (a, b) =>
-            new Date(b.dataCriacao).getTime() -
-            new Date(a.dataCriacao).getTime()
-        )
-        .map((os) => (
-
-          <div
-            key={os.ordemServicoId}
-            className="p-5"
-          >
-
-            <div className="flex items-start justify-between gap-4">
-
-              <div>
-
-                <p className="font-semibold text-white">
-                  {os.veiculo}
-                </p>
-
-                <p className="text-sm text-ink-400">
-                  Cliente: {os.clienteNome}
-                </p>
-
-              </div>
-
-
-              <span className="font-display font-bold text-white">
-                {formatCurrency(os.valorMaoObra)}
-              </span>
-
+      <div className="grid gap-4 lg:grid-cols-4">
+        <Card className="p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-800 text-flame-400">
+              <ClipboardList className="h-5 w-5" />
             </div>
 
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+                Ordens realizadas
+              </p>
 
-            <div className="mt-3 flex flex-wrap gap-3 text-xs text-ink-400">
-
-              <span>
-                OS #{os.ordemServicoId.slice(0, 4)}
-              </span>
-
-              <span>
-                {new Date(os.dataCriacao).toLocaleDateString()}
-              </span>
-
-              <span>
-                {statusLabel(os.status)}
-              </span>
-
+              <p className="font-display text-xl font-bold text-white">
+                {mecanico.quantidadeOrdensServico}
+              </p>
             </div>
-
           </div>
+        </Card>
 
-        ))}
+        <Card className="p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-800 text-emerald-400">
+              <ClipboardList className="h-5 w-5" />
+            </div>
 
-    </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+                Concluídas
+              </p>
 
-  )}
+              <p className="font-display text-xl font-bold text-white">
+                {mecanico.quantidadeConcluidas}
+              </p>
+            </div>
+          </div>
+        </Card>
 
-</Card>
+        <Card className="p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-800 text-red-400">
+              <ClipboardList className="h-5 w-5" />
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+                Canceladas
+              </p>
+
+              <p className="font-display text-xl font-bold text-white">
+                {mecanico.quantidadeCanceladas}
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-800 text-sky-400">
+              <Wrench className="h-5 w-5" />
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+                Mão de obra
+              </p>
+
+              <p className="font-display text-xl font-bold text-white">
+                {formatCurrency(mecanico.totalMaoObra)}
+              </p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Histórico de OS */}
+
+      {/* Histórico de OS */}
+
+      <Card>
+        <CardHeader
+          title="Histórico de ordens de serviço"
+          subtitle={`${mecanico.ordensServico?.length ?? 0} ordem(ns)`}
+        />
+
+        {!mecanico.ordensServico || mecanico.ordensServico.length === 0 ? (
+          <EmptyState
+            icon={<ClipboardList className="h-7 w-7" />}
+            title="Nenhuma ordem de serviço"
+            description="Este mecânico ainda não possui serviços vinculados."
+          />
+        ) : (
+          <div className="divide-y divide-ink-700/40">
+            {[...mecanico.ordensServico]
+              .sort(
+                (a, b) =>
+                  new Date(b.dataCriacao).getTime() -
+                  new Date(a.dataCriacao).getTime(),
+              )
+              .map((os) => (
+                <Link
+                  key={os.ordemServicoId}
+                  to={`/ordens-servico/${os.ordemServicoId}`}
+                  className="
+              block
+              p-5
+              transition
+              hover:bg-ink-800/40
+            "
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-semibold text-white transition hover:text-flame-400">
+                        {os.veiculo}
+                      </p>
+
+                      <p className="text-sm text-ink-400">
+                        Cliente: {os.clienteNome}
+                      </p>
+                    </div>
+
+                    <span className="font-display font-bold text-white">
+                      {formatCurrency(os.valorMaoObra)}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-ink-400">
+                    <span>OS #{os.ordemServicoId.slice(0, 4)}</span>
+
+                    <span>{new Date(os.dataCriacao).toLocaleDateString()}</span>
+
+                    <span>{statusLabel(os.status)}</span>
+
+                    <span className="ml-auto font-semibold text-flame-400">
+                      Ver OS →
+                    </span>
+                  </div>
+                </Link>
+              ))}
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Plus,
   ClipboardList,
@@ -9,6 +9,7 @@ import {
   Eye,
   FileText,
 } from "lucide-react";
+
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
@@ -19,10 +20,12 @@ import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { EmptyState } from "../components/ui/EmptyState";
 import { PageLoader } from "../components/ui/Spinner";
 import { useToast } from "../components/ui/Toast";
+
 import {
   OrdemServicoForm,
   type OrdemFormValues,
 } from "../components/forms/OrdemServicoForm";
+
 import {
   listOrdens,
   createOrdem,
@@ -30,37 +33,48 @@ import {
   enviarAprovacao,
   type OrdemWithRelations,
 } from "../services/ordens";
+
 import { listClientes } from "../services/clientes";
 import { listVeiculos } from "../services/veiculos";
 import { listMecanico } from "../services/mecanico";
-import type { Cliente, Veiculo } from "../types";
+
+import type { Cliente, Veiculo, Mecanico } from "../types";
+
 import { formatDate, formatCurrency } from "../utils/format";
+
 import {
   ALL_STATUSES,
   STATUS_LABEL,
   STATUS_TEXT_TO_NUMBER,
 } from "../utils/status";
+
 import { buildWhatsAppMessage, whatsappUrl } from "../utils/whatsapp";
-import { Mecanico } from "../types";
 
 export function OrdensServico() {
   const toast = useToast();
+  const navigate = useNavigate();
+
   const [ordens, setOrdens] = useState<OrdemWithRelations[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
+  const [mecanicos, setMecanicos] = useState<Mecanico[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+
   const [modalOpen, setModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
   const [toDelete, setToDelete] = useState<OrdemWithRelations | null>(null);
+
   const [deleting, setDeleting] = useState(false);
-  const [mecanicos, setMecanicos] = useState<Mecanico[]>([]);
+
   const load = useCallback(async () => {
     setLoading(true);
 
     try {
-      const [o, c, v, m,] = await Promise.all([
+      const [o, c, v, m] = await Promise.all([
         listOrdens(),
         listClientes(),
         listVeiculos(),
@@ -71,13 +85,13 @@ export function OrdensServico() {
         ...os,
         cliente: c.find((cliente) => cliente.id === os.clienteId) ?? null,
         veiculo: v.find((veiculo) => veiculo.id === os.veiculoId) ?? null,
-       mecanico: m.find((mecanico) => mecanico.id === os.mecanicosId) ?? null,
+        mecanico: m.find((mecanico) => mecanico.id === os.mecanicoId) ?? null,
       }));
 
       setOrdens(ordensComRelacionamento);
       setClientes(c);
       setVeiculos(v);
-      setMecanicos(m)
+      setMecanicos(m);
     } catch (err) {
       toast.error("Erro ao carregar ordens de serviço");
       console.error(err);
@@ -92,9 +106,16 @@ export function OrdensServico() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
+
     return ordens.filter((o) => {
-      if (statusFilter && o.status !== Number(statusFilter)) return false;
-      if (!q) return true;
+      if (statusFilter && o.status !== Number(statusFilter)) {
+        return false;
+      }
+
+      if (!q) {
+        return true;
+      }
+
       return (
         o.descricao.toLowerCase().includes(q) ||
         (o.cliente?.nome ?? "").toLowerCase().includes(q) ||
@@ -108,24 +129,30 @@ export function OrdensServico() {
 
   const handleCreate = async (values: OrdemFormValues) => {
     setSubmitting(true);
+
     try {
       const totalItens = values.itens.reduce(
         (s, it) => s + (it.valorTotal || 0),
         0,
       );
+
       const valorTotal = Number((values.valorMaoObra + totalItens).toFixed(2));
-        await createOrdem({
-      clienteId: values.clienteId,
-      veiculoId: values.veiculoId,
-      mecanicoId: values.mecanicoId, // <-- adicionar aqui
-      descricao: values.descricao,
-      valorMaoObra: values.valorMaoObra,
-      valorTotal: valorTotal,
-      observacao: values.observacao || null,
-      itens: values.itens.filter((it) => it.descricao.trim() !== ""),
-    });
+
+      await createOrdem({
+        clienteId: values.clienteId,
+        veiculoId: values.veiculoId,
+        mecanicoId: values.mecanicoId,
+        descricao: values.descricao,
+        valorMaoObra: values.valorMaoObra,
+        valorTotal,
+        observacao: values.observacao || null,
+        itens: values.itens.filter((it) => it.descricao.trim() !== ""),
+      });
+
       toast.success("Ordem de serviço criada com sucesso");
+
       setModalOpen(false);
+
       await load();
     } catch (err) {
       toast.error("Erro ao criar ordem de serviço");
@@ -137,11 +164,16 @@ export function OrdensServico() {
 
   const handleDelete = async () => {
     if (!toDelete) return;
+
     setDeleting(true);
+
     try {
       await deleteOrdem(toDelete.id);
+
       toast.success("Ordem de serviço excluída com sucesso");
+
       setToDelete(null);
+
       await load();
     } catch (err) {
       toast.error("Erro ao excluir ordem de serviço");
@@ -154,11 +186,16 @@ export function OrdensServico() {
   const handleEnviarAprovacao = async (os: OrdemWithRelations) => {
     try {
       await enviarAprovacao(os.id);
+
       toast.success("OS enviada para aprovação");
+
       await load();
+
       if (os.cliente?.telefone) {
         const fresh = (await listOrdens()).find((o) => o.id === os.id) ?? os;
+
         const msg = buildWhatsAppMessage(fresh, os.cliente, os.veiculo);
+
         window.open(whatsappUrl(os.cliente.telefone, msg), "_blank");
       }
     } catch (err) {
@@ -169,10 +206,12 @@ export function OrdensServico() {
 
   return (
     <div className="space-y-5">
+      {/* FILTROS */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 flex-col gap-3 sm:flex-row">
           <div className="relative w-full sm:max-w-xs">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+
             <Input
               placeholder="Buscar OS..."
               value={search}
@@ -180,12 +219,14 @@ export function OrdensServico() {
               className="pl-9"
             />
           </div>
+
           <Select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="sm:w-52"
           >
             <option value="">Todos os status</option>
+
             {ALL_STATUSES.map((s) => (
               <option key={s} value={STATUS_TEXT_TO_NUMBER[s]}>
                 {STATUS_LABEL[s]}
@@ -193,12 +234,14 @@ export function OrdensServico() {
             ))}
           </Select>
         </div>
+
         <Button onClick={() => setModalOpen(true)}>
           <Plus className="h-4 w-4" />
           Nova OS
         </Button>
       </div>
 
+      {/* CONTEÚDO */}
       {loading ? (
         <PageLoader label="Carregando ordens de serviço..." />
       ) : filtered.length === 0 ? (
@@ -227,102 +270,248 @@ export function OrdensServico() {
           />
         </Card>
       ) : (
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-ink-700/60 text-left text-xs font-semibold uppercase tracking-wide text-ink-400">
-                  <th className="px-5 py-3.5">OS</th>
-                  <th className="px-5 py-3.5">Cliente</th>
-                  <th className="px-5 py-3.5">Veículo</th>
-                  <th className="px-5 py-3.5">Status</th>
-                  <th className="px-5 py-3.5">Data</th>
-                  <th className="px-5 py-3.5 text-right">Valor</th>
-                  <th className="px-5 py-3.5 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-ink-700/40">
-                {filtered.map((os) => (
-                  <tr key={os.id} className="transition hover:bg-ink-800/30">
-                    <td className="px-5 py-3.5">
-                      <Link
-                        to={`/ordens-servico/${os.id}`}
-                        className="font-mono text-xs font-semibold text-flame-400 hover:text-flame-300"
+        <>
+          {/* DESKTOP */}
+          <div className="hidden lg:block">
+            <Card className="overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-ink-700/60 text-left text-xs font-semibold uppercase tracking-wide text-ink-400">
+                      <th className="px-5 py-3.5">OS</th>
+
+                      <th className="px-5 py-3.5">Cliente</th>
+
+                      <th className="px-5 py-3.5">Veículo</th>
+
+                      <th className="px-5 py-3.5">Status</th>
+
+                      <th className="px-5 py-3.5">Data</th>
+
+                      <th className="px-5 py-3.5 text-right">Valor</th>
+
+                      <th className="px-5 py-3.5 text-right">Ações</th>
+                    </tr>
+                  </thead>
+
+                  <tbody className="divide-y divide-ink-700/40">
+                    {filtered.map((os) => (
+                      <tr
+                        key={os.id}
+                        onClick={() => navigate(`/ordens-servico/${os.id}`)}
+                        className="cursor-pointer transition hover:bg-ink-800/30"
                       >
-                        #{os.id.slice(0, 8).toUpperCase()}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <p className="text-sm font-medium text-white">
-                        {os.cliente?.nome ?? "—"}
-                      </p>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <p className="text-sm text-ink-200">
+                        <td className="px-5 py-3.5">
+                          <Link
+                            to={`/ordens-servico/${os.id}`}
+                            className="font-mono text-xs font-semibold text-flame-400 hover:text-flame-300"
+                          >
+                            #{os.id.slice(0, 8).toUpperCase()}
+                          </Link>
+                        </td>
+
+                        <td className="px-5 py-3.5">
+                          <p className="text-sm font-medium text-white">
+                            {os.cliente?.nome ?? "—"}
+                          </p>
+                        </td>
+
+                        <td className="px-5 py-3.5">
+                          <p className="text-sm text-ink-200">
+                            {os.veiculo
+                              ? `${os.veiculo.marca} ${os.veiculo.modelo}`
+                              : "—"}
+                          </p>
+
+                          <p className="text-xs text-ink-400">
+                            {os.veiculo?.placa ?? ""}
+                          </p>
+                        </td>
+
+                        <td className="px-5 py-3.5">
+                          <StatusBadge status={os.status} />
+                        </td>
+
+                        <td className="px-5 py-3.5">
+                          <p className="text-sm text-ink-300">
+                            {formatDate(os.dataCriacao)}
+                          </p>
+                        </td>
+
+                        <td className="px-5 py-3.5 text-right">
+                          <p className="text-sm font-semibold text-white">
+                            {formatCurrency(os.valorTotal)}
+                          </p>
+                        </td>
+
+                        <td className="px-5 py-3.5">
+                          <div className="flex items-center justify-end gap-1">
+                            <Link
+                              to={`/ordens-servico/${os.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-700 hover:text-sky-400"
+                              title="Visualizar"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Link>
+
+                            {os.status === 0 && (
+                              <Link
+                                to={`/ordens-servico/${os.id}/editar`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-700 hover:text-flame-400"
+                                title="Editar"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Link>
+                            )}
+
+                            {os.status === 0 && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEnviarAprovacao(os);
+                                }}
+                                className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-700 hover:text-emerald-400"
+                                title="Enviar para aprovação"
+                              >
+                                <FileText className="h-4 w-4" />
+                              </button>
+                            )}
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setToDelete(os);
+                              }}
+                              className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-700 hover:text-red-400"
+                              title="Excluir"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </div>
+
+          {/* MOBILE / TABLET */}
+          <div className="grid gap-3 sm:grid-cols-2 lg:hidden">
+            {filtered.map((os) => (
+              <Card
+                key={os.id}
+                hover
+                className="cursor-pointer p-4"
+                onClick={() => navigate(`/ordens-servico/${os.id}`)}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <Link
+                    to={`/ordens-servico/${os.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="min-w-0"
+                  >
+                    <p className="font-mono text-xs font-bold text-flame-400">
+                      #{os.id.slice(0, 8).toUpperCase()}
+                    </p>
+
+                    <p className="mt-1 truncate text-sm font-semibold text-white">
+                      {os.cliente?.nome ?? "Cliente não informado"}
+                    </p>
+                  </Link>
+
+                  <StatusBadge status={os.status} />
+                </div>
+
+                <div className="mt-4 space-y-2 border-t border-ink-700/40 pt-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs text-ink-400">Veículo</span>
+
+                    <div className="min-w-0 text-right">
+                      <p className="truncate text-sm text-ink-200">
                         {os.veiculo
                           ? `${os.veiculo.marca} ${os.veiculo.modelo}`
                           : "—"}
                       </p>
-                      <p className="text-xs text-ink-400">
-                        {os.veiculo?.placa ?? ""}
-                      </p>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <StatusBadge status={os.status} />
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <p className="text-sm text-ink-300">
-                        {formatDate(os.dataCriacao)}
-                      </p>
-                    </td>
-                    <td className="px-5 py-3.5 text-right">
-                      <p className="text-sm font-semibold text-white">
-                        {formatCurrency(os.valorTotal)}
-                      </p>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center justify-end gap-1">
-                        <Link
-                          to={`/ordens-servico/${os.id}`}
-                          className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-700 hover:text-sky-400"
-                          title="Visualizar"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Link>
 
-                       {os.status === 0 && (
-                        <Link to={`/ordens-servico/${os.id}/editar`}>
-                          <Button variant="ghost">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        </Link>
+                      {os.veiculo?.placa && (
+                        <p className="text-xs text-ink-400">
+                          {os.veiculo.placa}
+                        </p>
                       )}
-                        {os.status === 0 && (
-                          <button
-                            onClick={() => handleEnviarAprovacao(os)}
-                            className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-700 hover:text-emerald-400"
-                            title="Enviar para aprovação"
-                          >
-                            <FileText className="h-4 w-4" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setToDelete(os)}
-                          className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-700 hover:text-red-400"
-                          title="Excluir"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs text-ink-400">Data</span>
+
+                    <span className="text-sm text-ink-300">
+                      {formatDate(os.dataCriacao)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs text-ink-400">Valor</span>
+
+                    <span className="text-sm font-bold text-white">
+                      {formatCurrency(os.valorTotal)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-end gap-1 border-t border-ink-700/40 pt-3">
+                  <Link
+                    to={`/ordens-servico/${os.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-800 hover:text-sky-400"
+                    title="Visualizar"
+                  ></Link>
+
+                  {os.status === 0 && (
+                    <Link
+                      to={`/ordens-servico/${os.id}/editar`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-800 hover:text-flame-400"
+                      title="Editar"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Link>
+                  )}
+
+                  {os.status === 0 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEnviarAprovacao(os);
+                      }}
+                      className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-800 hover:text-emerald-400"
+                      title="Enviar para aprovação"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </button>
+                  )}
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setToDelete(os);
+                    }}
+                    className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-800 hover:text-red-400"
+                    title="Excluir"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </Card>
+            ))}
           </div>
-        </Card>
+        </>
       )}
 
+      {/* MODAL NOVA OS */}
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -333,12 +522,14 @@ export function OrdensServico() {
         <OrdemServicoForm
           clientes={clientes}
           veiculos={veiculos}
-          mecanico= {mecanicos}
+          mecanico={mecanicos}
           onSubmit={handleCreate}
           onCancel={() => setModalOpen(false)}
           submitting={submitting}
         />
       </Modal>
+
+      {/* CONFIRMAÇÃO DE EXCLUSÃO */}
       <ConfirmDialog
         open={!!toDelete}
         onClose={() => setToDelete(null)}

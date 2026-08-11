@@ -1,15 +1,15 @@
 import { api } from './api';
 
 export interface FinanceiroOrdem {
-  id: string;
+   id: string;
   cliente: string;
   veiculo: string;
+  mecanico: string;
   maoObra: number;
   pecas: number;
   total: number;
   status: number;
   data: string;
-  mecanico: string;
 }
 
 export interface ProdutividadeMecanico {

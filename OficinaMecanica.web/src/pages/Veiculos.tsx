@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Select } from "../components/ui/Select";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Plus, Car, Search, Pencil, Eye, User } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
@@ -28,6 +28,7 @@ import type { Cliente, Veiculo } from "../types";
 
 export function Veiculos() {
   const toast = useToast();
+  const navigate = useNavigate();
 
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -205,7 +206,14 @@ export function Veiculos() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((v) => (
-            <Card key={v.id} hover className="p-5">
+            <Card
+              key={v.id}
+              hover
+              className="p-5 cursor-pointer"
+              onClick={() => {
+                navigate(`/veiculos/${v.id}`);
+              }}
+            >
               <div className="flex items-start justify-between gap-3">
                 <Link
                   to={`/veiculos/${v.id}`}
@@ -258,7 +266,8 @@ export function Veiculos() {
                   </Link>
 
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setEditing(v);
                       setModalOpen(true);
                     }}

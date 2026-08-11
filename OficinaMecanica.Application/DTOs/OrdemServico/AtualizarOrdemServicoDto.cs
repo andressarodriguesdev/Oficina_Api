@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace OficinaMecanica.Application.DTOs;
 
@@ -19,4 +18,6 @@ public class AtualizarOrdemServicoDto
     public string? Observacao { get; set; }
 
     public Guid MecanicoId { get; set; }
+
+    public List<OrdemServicoItemDto> Itens { get; set; } = new();
 }

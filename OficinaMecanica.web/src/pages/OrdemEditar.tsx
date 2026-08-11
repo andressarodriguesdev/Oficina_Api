@@ -61,32 +61,56 @@ export function OrdemEditar() {
   }, [load]);
 
   const handleSubmit = async (values: OrdemFormValues) => {
-    if (!id) return;
-    setSubmitting(true);
-    try {
-      const totalItens = values.itens.reduce(
-        (s, it) => s + (it.valorTotal || 0),
-        0,
-      );
-      const valorTotal = Number((values.valorMaoObra + totalItens).toFixed(2));
-      await updateOrdem(id, {
-        clienteId: values.clienteId,
-        veiculoId: values.veiculoId,
-        mecanicoId: values.mecanicoId,
-        descricao: values.descricao,
-        valorMaoObra: values.valorMaoObra,
-        valorTotal: valorTotal,
-        observacao: values.observacao || null,
-      });
-      toast.success("Ordem de serviço atualizada com sucesso");
-      navigate(`/ordens-servico/${id}`);
-    } catch (err) {
-      toast.error("Erro ao atualizar ordem de serviço");
-      console.error(err);
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  if (!id) return;
+
+  setSubmitting(true);
+
+  try {
+    const totalItens = values.itens.reduce(
+      (s, i) =>
+        s +
+        Number(i.quantidade || 0) * Number(i.valorUnitario || 0),
+      0,
+    );
+
+    const valorTotal = Number(
+      (values.valorMaoObra + totalItens).toFixed(2),
+    );
+
+    await updateOrdem(id, {
+      clienteId: values.clienteId,
+      veiculoId: values.veiculoId,
+      mecanicoId: values.mecanicoId,
+      descricao: values.descricao,
+      valorMaoObra: values.valorMaoObra,
+      valorTotal: valorTotal,
+      observacao: values.observacao || null,
+
+      itens: values.itens
+        .filter((item) => item.descricao.trim() !== "")
+        .map((item) => ({
+          id: item.id,
+          descricao: item.descricao,
+          quantidade: Number(item.quantidade),
+          valorUnitario: Number(item.valorUnitario),
+          valorTotal: Number(
+            (
+              Number(item.quantidade) *
+              Number(item.valorUnitario)
+            ).toFixed(2),
+          ),
+        })),
+    });
+
+    toast.success("Ordem de serviço atualizada com sucesso");
+    navigate(`/ordens-servico/${id}`);
+  } catch (err) {
+    toast.error("Erro ao atualizar ordem de serviço");
+    console.error(err);
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   if (loading) return <PageLoader label="Carregando ordem de serviço..." />;
   if (!ordem)
@@ -127,7 +151,7 @@ export function OrdemEditar() {
             id: ordem.id,
             clienteId: ordem.clienteId,
             veiculoId: ordem.veiculoId,
-            mecanicoId: ordem.mecanicosId,
+            mecanicoId: ordem.mecanicoId,
             descricao: ordem.descricao,
             valorMaoObra: ordem.valorMaoObra,
             observacao: ordem.observacao ?? "",

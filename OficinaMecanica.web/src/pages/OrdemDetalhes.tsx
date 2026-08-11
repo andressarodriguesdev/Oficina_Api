@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { Card, CardHeader } from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
+import { StatusBadge } from "../components/ui/StatusBadge";
+import { PageLoader } from "../components/ui/Spinner";
+import { EmptyState } from "../components/ui/EmptyState";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { useToast } from "../components/ui/Toast";
 import {
   ArrowLeft,
   Pencil,
@@ -17,14 +24,9 @@ import {
   Wrench,
   Package,
   Clock,
+  Plus,
+  Trash2,
 } from "lucide-react";
-import { Card, CardHeader } from "../components/ui/Card";
-import { Button } from "../components/ui/Button";
-import { StatusBadge } from "../components/ui/StatusBadge";
-import { PageLoader } from "../components/ui/Spinner";
-import { EmptyState } from "../components/ui/EmptyState";
-import { ConfirmDialog } from "../components/ui/ConfirmDialog";
-import { useToast } from "../components/ui/Toast";
 import {
   getOrdem,
   getOrdemHistorico,
@@ -37,6 +39,9 @@ import {
   deleteOrdem,
   baixarPdf,
   gerarWhatsApp,
+  adicionarItem,
+  atualizarItem,
+  removerItem,
   type OrdemWithRelations,
 } from "../services/ordens";
 import type { OrdemServicoItem, HistoricoOrdemServico } from "../types";
@@ -55,6 +60,14 @@ export function OrdemDetalhes() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [itemEditando, setItemEditando] = useState<string | null>(null); // id do item, ou "novo"
+  const [itemForm, setItemForm] = useState({
+    descricao: "",
+    quantidade: 1,
+    valorUnitario: 0,
+  });
+  const [itemSalvando, setItemSalvando] = useState(false);
+  const [itemExcluindo, setItemExcluindo] = useState<string | null>(null);
   const [motivoCancelamento, setMotivoCancelamento] = useState("");
 
   const load = useCallback(async () => {
@@ -238,6 +251,72 @@ export function OrdemDetalhes() {
     }
   };
 
+  const abrirNovoItem = () => {
+    setItemForm({ descricao: "", quantidade: 1, valorUnitario: 0 });
+    setItemEditando("novo");
+  };
+
+  const abrirEdicaoItem = (item: OrdemServicoItem) => {
+    setItemForm({
+      descricao: item.descricao,
+      quantidade: item.quantidade,
+      valorUnitario: item.valorUnitario,
+    });
+    setItemEditando(item.id);
+  };
+
+  const cancelarEdicaoItem = () => {
+    setItemEditando(null);
+  };
+
+  const salvarItem = async () => {
+    if (!ordem) return;
+
+    if (!itemForm.descricao.trim()) {
+      toast.warning("Informe a descrição do item");
+      return;
+    }
+    if (itemForm.quantidade <= 0) {
+      toast.warning("Quantidade deve ser maior que zero");
+      return;
+    }
+
+    setItemSalvando(true);
+    try {
+      if (itemEditando === "novo") {
+        await adicionarItem(ordem.id, itemForm);
+        toast.success("Item adicionado");
+      } else if (itemEditando) {
+        await atualizarItem(ordem.id, itemEditando, itemForm);
+        toast.success("Item atualizado");
+      }
+      setItemEditando(null);
+      await load();
+    } catch (err) {
+      toast.error("Erro ao salvar item");
+      console.error(err);
+    } finally {
+      setItemSalvando(false);
+    }
+  };
+
+  const excluirItem = async (item: OrdemServicoItem) => {
+    if (!ordem) return;
+    if (!window.confirm(`Remover o item "${item.descricao}"?`)) return;
+
+    setItemExcluindo(item.id);
+    try {
+      await removerItem(ordem.id, item.id);
+      toast.success("Item removido");
+      await load();
+    } catch (err) {
+      toast.error("Erro ao remover item");
+      console.error(err);
+    } finally {
+      setItemExcluindo(null);
+    }
+  };
+
   if (loading) return <PageLoader label="Carregando ordem de serviço..." />;
   if (!ordem)
     return (
@@ -258,6 +337,7 @@ export function OrdemDetalhes() {
     );
 
   const status = statusFromNumber(ordem.status);
+  const isAberta = ordem.status === 0;
 
   return (
     <div className="space-y-5">
@@ -381,11 +461,20 @@ export function OrdemDetalhes() {
           </Card>
 
           <Card>
-            <CardHeader
-              title="Peças / Itens"
-              subtitle={`${itens.length} item(s)`}
-            />
-            {itens.length === 0 ? (
+            <div className="flex items-center justify-between px-5 pt-4">
+              <CardHeader
+                title="Peças / Itens"
+                subtitle={`${itens.length} item(s)`}
+              />
+              {isAberta && itemEditando === null && (
+                <Button variant="outline" size="sm" onClick={abrirNovoItem}>
+                  <Plus className="h-4 w-4" />
+                  Adicionar item
+                </Button>
+              )}
+            </div>
+
+            {itens.length === 0 && itemEditando === null ? (
               <EmptyState
                 icon={<Package className="h-7 w-7" />}
                 title="Nenhum item"
@@ -399,25 +488,196 @@ export function OrdemDetalhes() {
                       <th className="px-5 py-3 text-right">Qtd</th>
                       <th className="px-5 py-3 text-right">Valor unit.</th>
                       <th className="px-5 py-3 text-right">Total</th>
+                      {isAberta && (
+                        <th className="px-5 py-3 text-right">Ações</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-ink-700/40">
-                    {itens.map((item) => (
-                      <tr key={item.id}>
-                        <td className="px-5 py-3 text-sm text-white">
-                          {item.descricao}
+                    {itemEditando === "novo" && (
+                      <tr className="bg-ink-800/30">
+                        <td className="px-5 py-2">
+                          <input
+                            autoFocus
+                            className="w-full rounded-lg border border-ink-700 bg-ink-900 px-2 py-1.5 text-sm text-white focus:border-flame-500 focus:outline-none"
+                            value={itemForm.descricao}
+                            onChange={(e) =>
+                              setItemForm((f) => ({
+                                ...f,
+                                descricao: e.target.value,
+                              }))
+                            }
+                            placeholder="Descrição da peça"
+                          />
                         </td>
-                        <td className="px-5 py-3 text-right text-sm text-ink-200">
-                          {item.quantidade}
+                        <td className="px-5 py-2">
+                          <input
+                            type="number"
+                            min={1}
+                            className="w-20 rounded-lg border border-ink-700 bg-ink-900 px-2 py-1.5 text-right text-sm text-white focus:border-flame-500 focus:outline-none"
+                            value={itemForm.quantidade}
+                            onChange={(e) =>
+                              setItemForm((f) => ({
+                                ...f,
+                                quantidade: Number(e.target.value),
+                              }))
+                            }
+                          />
                         </td>
-                        <td className="px-5 py-3 text-right text-sm text-ink-200">
-                          {formatCurrency(item.valorUnitario)}
+                        <td className="px-5 py-2">
+                          <input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            className="w-28 rounded-lg border border-ink-700 bg-ink-900 px-2 py-1.5 text-right text-sm text-white focus:border-flame-500 focus:outline-none"
+                            value={itemForm.valorUnitario}
+                            onChange={(e) =>
+                              setItemForm((f) => ({
+                                ...f,
+                                valorUnitario: Number(e.target.value),
+                              }))
+                            }
+                          />
                         </td>
-                        <td className="px-5 py-3 text-right text-sm font-semibold text-white">
-                          {formatCurrency(item.valorTotal)}
+                        <td className="px-5 py-2 text-right text-sm font-semibold text-white">
+                          {formatCurrency(
+                            itemForm.quantidade * itemForm.valorUnitario,
+                          )}
+                        </td>
+                        <td className="px-5 py-2">
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              size="sm"
+                              variant="success"
+                              onClick={salvarItem}
+                              loading={itemSalvando}
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={cancelarEdicaoItem}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
-                    ))}
+                    )}
+
+                    {itens.map((item) =>
+                      itemEditando === item.id ? (
+                        <tr key={item.id} className="bg-ink-800/30">
+                          <td className="px-5 py-2">
+                            <input
+                              autoFocus
+                              className="w-full rounded-lg border border-ink-700 bg-ink-900 px-2 py-1.5 text-sm text-white focus:border-flame-500 focus:outline-none"
+                              value={itemForm.descricao}
+                              onChange={(e) =>
+                                setItemForm((f) => ({
+                                  ...f,
+                                  descricao: e.target.value,
+                                }))
+                              }
+                            />
+                          </td>
+                          <td className="px-5 py-2">
+                            <input
+                              type="number"
+                              min={1}
+                              className="w-20 rounded-lg border border-ink-700 bg-ink-900 px-2 py-1.5 text-right text-sm text-white focus:border-flame-500 focus:outline-none"
+                              value={itemForm.quantidade}
+                              onChange={(e) =>
+                                setItemForm((f) => ({
+                                  ...f,
+                                  quantidade: Number(e.target.value),
+                                }))
+                              }
+                            />
+                          </td>
+                          <td className="px-5 py-2">
+                            <input
+                              type="number"
+                              min={0}
+                              step="0.01"
+                              className="w-28 rounded-lg border border-ink-700 bg-ink-900 px-2 py-1.5 text-right text-sm text-white focus:border-flame-500 focus:outline-none"
+                              value={itemForm.valorUnitario}
+                              onChange={(e) =>
+                                setItemForm((f) => ({
+                                  ...f,
+                                  valorUnitario: Number(e.target.value),
+                                }))
+                              }
+                            />
+                          </td>
+                          <td className="px-5 py-2 text-right text-sm font-semibold text-white">
+                            {formatCurrency(
+                              itemForm.quantidade * itemForm.valorUnitario,
+                            )}
+                          </td>
+                          <td className="px-5 py-2">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                size="sm"
+                                variant="success"
+                                onClick={salvarItem}
+                                loading={itemSalvando}
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={cancelarEdicaoItem}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        <tr key={item.id}>
+                          <td className="px-5 py-3 text-sm text-white">
+                            {item.descricao}
+                          </td>
+                          <td className="px-5 py-3 text-right text-sm text-ink-200">
+                            {item.quantidade}
+                          </td>
+                          <td className="px-5 py-3 text-right text-sm text-ink-200">
+                            {formatCurrency(item.valorUnitario)}
+                          </td>
+                          <td className="px-5 py-3 text-right text-sm font-semibold text-white">
+                            {formatCurrency(
+                              item.quantidade * item.valorUnitario,
+                            )}
+                          </td>
+                          {isAberta && (
+                            <td className="px-5 py-3">
+                              <div className="flex justify-end gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => abrirEdicaoItem(item)}
+                                  disabled={itemEditando !== null}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => excluirItem(item)}
+                                  loading={itemExcluindo === item.id}
+                                  disabled={itemEditando !== null}
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-400" />
+                                </Button>
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      ),
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -437,7 +697,13 @@ export function OrdemDetalhes() {
                 <span className="text-sm text-ink-300">Peças/Itens</span>
                 <span className="text-sm font-semibold text-white">
                   {formatCurrency(
-                    itens.reduce((s, i) => s + (Number(i.valorTotal) || 0), 0),
+                    itens.reduce(
+                      (s, i) =>
+                        s +
+                        Number(i.quantidade || 0) *
+                          Number(i.valorUnitario || 0),
+                      0,
+                    ),
                   )}
                 </span>
               </div>
@@ -503,7 +769,7 @@ export function OrdemDetalhes() {
                   </Button>
                 </>
               )}
-            {(status === "Aprovada" || status === "Reaberta") && (
+              {(status === "Aprovada" || status === "Reaberta") && (
                 <Button
                   variant="success"
                   className="w-full justify-start"

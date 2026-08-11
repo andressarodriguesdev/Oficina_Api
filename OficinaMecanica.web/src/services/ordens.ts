@@ -53,9 +53,9 @@ export async function createOrdem(input: CreateOrdemInput): Promise<OrdemServico
 
 export async function updateOrdem(
   id: string,
-  input: Partial<Omit<CreateOrdemInput, 'itens'>>,
-): Promise<OrdemServico> {
-  return api.put<OrdemServico>(`/ordens-servico/${id}`, input);
+  input: Partial<CreateOrdemInput>,
+): Promise<void> {
+  await api.put(`/ordens-servico/${id}`, input);
 }
 
 export async function deleteOrdem(id: string): Promise<void> {
@@ -110,4 +110,32 @@ export async function gerarWhatsApp(id: string): Promise<string> {
   );
 
   return response.link;
+}
+
+export interface OrdemServicoItemInput {
+  descricao: string;
+  quantidade: number;
+  valorUnitario: number;
+}
+
+export async function adicionarItem(
+  ordemId: string,
+  input: OrdemServicoItemInput,
+): Promise<void> {
+  await api.post(`/ordens-servico/${ordemId}/itens`, input);
+}
+
+export async function atualizarItem(
+  ordemId: string,
+  itemId: string,
+  input: OrdemServicoItemInput,
+): Promise<void> {
+  await api.put(`/ordens-servico/${ordemId}/itens/${itemId}`, input);
+}
+
+export async function removerItem(
+  ordemId: string,
+  itemId: string,
+): Promise<void> {
+  await api.delete(`/ordens-servico/${ordemId}/itens/${itemId}`);
 }

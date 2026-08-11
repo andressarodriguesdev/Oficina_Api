@@ -29,7 +29,6 @@ builder.Services.AddSwaggerGen();
 
 
 
-
 // Banco de dados
 builder.Services.AddDbContext<OficinaDbContext>(options =>
     options.UseNpgsql(
