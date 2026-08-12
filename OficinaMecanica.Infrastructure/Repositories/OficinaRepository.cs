@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿
 using Microsoft.EntityFrameworkCore;
 using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Infrastructure.Data;
@@ -17,7 +14,6 @@ public class OficinaRepository
         _context = context;
     }
 
-
     public async Task<Oficina> AdicionarAsync(Oficina oficina)
     {
         await _context.Oficinas.AddAsync(oficina);
@@ -27,20 +23,23 @@ public class OficinaRepository
         return oficina;
     }
 
-
     public async Task<Oficina?> ObterPorIdAsync(Guid id)
     {
         return await _context.Oficinas
             .FirstOrDefaultAsync(o => o.Id == id);
     }
 
+    public async Task<Oficina?> ObterPorUsuarioIdAsync(int usuarioId)
+    {
+        return await _context.Oficinas
+            .FirstOrDefaultAsync(o => o.UsuarioId == usuarioId);
+    }
 
     public async Task<List<Oficina>> ListarAsync()
     {
         return await _context.Oficinas
             .ToListAsync();
     }
-
 
     public async Task AtualizarAsync(Oficina oficina)
     {
@@ -49,7 +48,6 @@ public class OficinaRepository
         await _context.SaveChangesAsync();
     }
 
-
     public async Task RemoverAsync(Oficina oficina)
     {
         _context.Oficinas.Remove(oficina);
@@ -57,3 +55,4 @@ public class OficinaRepository
         await _context.SaveChangesAsync();
     }
 }
+

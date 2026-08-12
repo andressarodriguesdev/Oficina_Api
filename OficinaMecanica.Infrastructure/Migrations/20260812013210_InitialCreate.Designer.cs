@@ -12,15 +12,15 @@ using OficinaMecanica.Infrastructure.Data;
 namespace OficinaMecanica.Infrastructure.Migrations
 {
     [DbContext(typeof(OficinaDbContext))]
-    [Migration("20260721223854_Boolean")]
-    partial class Boolean
+    [Migration("20260812013210_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.9")
+                .HasAnnotation("ProductVersion", "10.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -84,6 +84,36 @@ namespace OficinaMecanica.Infrastructure.Migrations
                     b.ToTable("HistoricosOrdemServico");
                 });
 
+            modelBuilder.Entity("OficinaMecanica.Domain.Entities.Mecanico", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Especialidade")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("OficinaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Telefone")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OficinaId");
+
+                    b.ToTable("Mecanicos");
+                });
+
             modelBuilder.Entity("OficinaMecanica.Domain.Entities.Oficina", b =>
                 {
                     b.Property<Guid>("Id")
@@ -105,7 +135,12 @@ namespace OficinaMecanica.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId");
 
                     b.ToTable("Oficinas");
                 });
@@ -138,6 +173,9 @@ namespace OficinaMecanica.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid>("MecanicoId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("MotivoCancelamento")
                         .HasColumnType("text");
 
@@ -160,6 +198,8 @@ namespace OficinaMecanica.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ClienteId");
+
+                    b.HasIndex("MecanicoId");
 
                     b.HasIndex("OficinaId");
 
@@ -234,6 +274,42 @@ namespace OficinaMecanica.Infrastructure.Migrations
                     b.ToTable("Veiculos");
                 });
 
+            modelBuilder.Entity("Usuario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("DataCadastro")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("SenhaHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Usuario");
+                });
+
             modelBuilder.Entity("OficinaMecanica.Domain.Entities.Cliente", b =>
                 {
                     b.HasOne("OficinaMecanica.Domain.Entities.Oficina", "Oficina")
@@ -256,12 +332,38 @@ namespace OficinaMecanica.Infrastructure.Migrations
                     b.Navigation("OrdemServico");
                 });
 
+            modelBuilder.Entity("OficinaMecanica.Domain.Entities.Mecanico", b =>
+                {
+                    b.HasOne("OficinaMecanica.Domain.Entities.Oficina", "Oficina")
+                        .WithMany()
+                        .HasForeignKey("OficinaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Oficina");
+                });
+
+            modelBuilder.Entity("OficinaMecanica.Domain.Entities.Oficina", b =>
+                {
+                    b.HasOne("Usuario", null)
+                        .WithMany("Oficinas")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("OficinaMecanica.Domain.Entities.OrdemServico", b =>
                 {
                     b.HasOne("OficinaMecanica.Domain.Entities.Cliente", "Cliente")
                         .WithMany("OrdensServico")
                         .HasForeignKey("ClienteId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OficinaMecanica.Domain.Entities.Mecanico", "Mecanico")
+                        .WithMany("OrdensServico")
+                        .HasForeignKey("MecanicoId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("OficinaMecanica.Domain.Entities.Oficina", "Oficina")
@@ -277,6 +379,8 @@ namespace OficinaMecanica.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Cliente");
+
+                    b.Navigation("Mecanico");
 
                     b.Navigation("Oficina");
 
@@ -320,6 +424,11 @@ namespace OficinaMecanica.Infrastructure.Migrations
                     b.Navigation("Veiculos");
                 });
 
+            modelBuilder.Entity("OficinaMecanica.Domain.Entities.Mecanico", b =>
+                {
+                    b.Navigation("OrdensServico");
+                });
+
             modelBuilder.Entity("OficinaMecanica.Domain.Entities.OrdemServico", b =>
                 {
                     b.Navigation("Historicos");
@@ -330,6 +439,11 @@ namespace OficinaMecanica.Infrastructure.Migrations
             modelBuilder.Entity("OficinaMecanica.Domain.Entities.Veiculo", b =>
                 {
                     b.Navigation("OrdensServico");
+                });
+
+            modelBuilder.Entity("Usuario", b =>
+                {
+                    b.Navigation("Oficinas");
                 });
 #pragma warning restore 612, 618
         }

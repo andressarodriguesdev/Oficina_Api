@@ -1,4 +1,4 @@
-﻿using OficinaMecanica.Application.Constants;
+﻿
 using OficinaMecanica.Application.DTOs;
 using OficinaMecanica.Application.DTOs.Mecanico;
 using OficinaMecanica.Application.DTOs.Mecanicos;
@@ -69,7 +69,9 @@ public class MecanicoAppService
         };
     }
 
-    public async Task<MecanicoResponseDto> CreateAsync(MecanicoRequestDto dto)
+    public async Task<MecanicoResponseDto> CreateAsync(
+    MecanicoRequestDto dto,
+    Guid oficinaId)
     {
         var mecanico = new Mecanico
         {
@@ -78,7 +80,7 @@ public class MecanicoAppService
             Telefone = dto.Telefone ?? "",
             Especialidade = dto.Especialidade,
             Ativo = true,
-            OficinaId = OficinaConstants.OficinaPadraoId
+            OficinaId = oficinaId
         };
 
         await _repository.AddAsync(mecanico);

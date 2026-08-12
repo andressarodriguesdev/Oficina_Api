@@ -23,9 +23,9 @@ public class OrdemServicoRepository
 
         await _context.SaveChangesAsync();
 
-        return ordemServico;
+        return await ObterPorIdAsync(ordemServico.Id)
+            ?? throw new Exception("Não foi possível recuperar a ordem de serviço criada.");
     }
-
 
     public async Task<List<OrdemServico>> ListarAsync()
     {

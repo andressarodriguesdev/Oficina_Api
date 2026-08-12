@@ -21,32 +21,33 @@ public class VeiculoAppService
 
 
 
-    public async Task<VeiculoResponseDto> CriarAsync(CriarVeiculoDto dto)
+    public async Task<VeiculoResponseDto> CriarAsync(
+     CriarVeiculoDto dto,
+     Guid oficinaId)
     {
         var cliente = await _clienteRepository.ObterPorIdAsync(dto.ClienteId);
-
 
         if (cliente == null)
         {
             throw new ClienteNaoEncontradoException(dto.ClienteId);
         }
 
+        if (cliente.OficinaId != oficinaId)
+        {
+            throw new UnauthorizedAccessException(
+                "O cliente não pertence à oficina do usuário autenticado.");
+        }
 
-        // A oficina vem do cliente automaticamente
         var veiculo = new Veiculo(
             dto.Placa,
             dto.Marca,
             dto.Modelo,
             dto.Ano,
             cliente.Id,
-            cliente.OficinaId
-
+            oficinaId
         );
 
-
         var veiculoCriado = await _repository.AdicionarAsync(veiculo);
-
-
 
         return MapearResponse(veiculoCriado);
     }

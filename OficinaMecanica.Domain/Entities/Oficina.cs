@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace OficinaMecanica.Domain.Entities
+﻿namespace OficinaMecanica.Domain.Entities
 {
     public class Oficina
     {
         public Guid Id { get; private set; }
+
+        public int UsuarioId { get; private set; }
 
         public string Nome { get; private set; } = string.Empty;
 
@@ -14,26 +12,23 @@ namespace OficinaMecanica.Domain.Entities
 
         public string Endereco { get; private set; } = string.Empty;
 
-
         public string? Logotipo { get; private set; }
 
+        private Oficina() { }
 
-        // Usado pelo Entity Framework
-
-        private Oficina() { } 
-        public Oficina( 
-            string nome, 
-            string telefone, 
-            string endereco, 
-            string? logotipo = null) 
-        { 
+        public Oficina(
+            int usuarioId,
+            string nome,
+            string telefone,
+            string endereco,
+            string? logotipo = null)
+        {
             Id = Guid.NewGuid();
-            Nome = nome; 
-            Telefone = telefone; 
-            Endereco = endereco; 
-            Logotipo = logotipo; 
+            UsuarioId = usuarioId;
+            Nome = nome;
+            Telefone = telefone;
+            Endereco = endereco;
+            Logotipo = logotipo;
         }
-
-
     }
 }

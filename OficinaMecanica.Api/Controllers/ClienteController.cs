@@ -1,25 +1,42 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using OficinaMecanica.Application.DTOs;
 using OficinaMecanica.Application.Services;
+using System.Security.Claims;
 
 namespace OficinaMecanica.Api.Controllers;
 
 [ApiController]
 [Route("api/clientes")]
+[Authorize]
 public class ClienteController : ControllerBase
 {
     private readonly ClienteAppService _service;
+    private readonly OficinaAppService _oficinaService;
 
-    public ClienteController(ClienteAppService service)
+    public ClienteController(
+        ClienteAppService service,
+        OficinaAppService oficinaService)
     {
         _service = service;
+        _oficinaService = oficinaService;
     }
-
 
     [HttpPost]
     public async Task<IActionResult> Criar(CriarClienteDto dto)
     {
-        var cliente = await _service.CriarAsync(dto);
+        var usuarioIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(usuarioIdClaim, out var usuarioId))
+            return Unauthorized();
+
+        var oficina = await _oficinaService.ObterPorUsuarioIdAsync(usuarioId);
+
+        if (oficina == null)
+            return BadRequest("O usuário não possui uma oficina cadastrada.");
+
+        var cliente = await _service.CriarAsync(dto, oficina.Id);
 
         return CreatedAtAction(
             nameof(ObterPorId),
@@ -28,7 +45,6 @@ public class ClienteController : ControllerBase
         );
     }
 
-
     [HttpGet]
     public async Task<IActionResult> Listar()
     {
@@ -36,7 +52,6 @@ public class ClienteController : ControllerBase
 
         return Ok(clientes);
     }
-
 
     [HttpGet("{id}")]
     public async Task<IActionResult> ObterPorId(Guid id)
@@ -48,7 +63,6 @@ public class ClienteController : ControllerBase
 
         return Ok(cliente);
     }
-
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Atualizar(
@@ -95,3 +109,4 @@ public class ClienteController : ControllerBase
         return Ok(historico);
     }
 }
+

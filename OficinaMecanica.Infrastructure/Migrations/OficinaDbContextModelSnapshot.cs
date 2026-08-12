@@ -17,7 +17,7 @@ namespace OficinaMecanica.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.9")
+                .HasAnnotation("ProductVersion", "10.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -132,7 +132,12 @@ namespace OficinaMecanica.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId");
 
                     b.ToTable("Oficinas");
                 });
@@ -165,7 +170,7 @@ namespace OficinaMecanica.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid?>("MecanicoId")
+                    b.Property<Guid>("MecanicoId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("MotivoCancelamento")
@@ -266,6 +271,42 @@ namespace OficinaMecanica.Infrastructure.Migrations
                     b.ToTable("Veiculos");
                 });
 
+            modelBuilder.Entity("Usuario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("DataCadastro")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("SenhaHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Usuario");
+                });
+
             modelBuilder.Entity("OficinaMecanica.Domain.Entities.Cliente", b =>
                 {
                     b.HasOne("OficinaMecanica.Domain.Entities.Oficina", "Oficina")
@@ -299,6 +340,15 @@ namespace OficinaMecanica.Infrastructure.Migrations
                     b.Navigation("Oficina");
                 });
 
+            modelBuilder.Entity("OficinaMecanica.Domain.Entities.Oficina", b =>
+                {
+                    b.HasOne("Usuario", null)
+                        .WithMany("Oficinas")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("OficinaMecanica.Domain.Entities.OrdemServico", b =>
                 {
                     b.HasOne("OficinaMecanica.Domain.Entities.Cliente", "Cliente")
@@ -308,8 +358,10 @@ namespace OficinaMecanica.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("OficinaMecanica.Domain.Entities.Mecanico", "Mecanico")
-                        .WithMany()
-                        .HasForeignKey("MecanicoId");
+                        .WithMany("OrdensServico")
+                        .HasForeignKey("MecanicoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("OficinaMecanica.Domain.Entities.Oficina", "Oficina")
                         .WithMany()
@@ -369,6 +421,11 @@ namespace OficinaMecanica.Infrastructure.Migrations
                     b.Navigation("Veiculos");
                 });
 
+            modelBuilder.Entity("OficinaMecanica.Domain.Entities.Mecanico", b =>
+                {
+                    b.Navigation("OrdensServico");
+                });
+
             modelBuilder.Entity("OficinaMecanica.Domain.Entities.OrdemServico", b =>
                 {
                     b.Navigation("Historicos");
@@ -379,6 +436,11 @@ namespace OficinaMecanica.Infrastructure.Migrations
             modelBuilder.Entity("OficinaMecanica.Domain.Entities.Veiculo", b =>
                 {
                     b.Navigation("OrdensServico");
+                });
+
+            modelBuilder.Entity("Usuario", b =>
+                {
+                    b.Navigation("Oficinas");
                 });
 #pragma warning restore 612, 618
         }

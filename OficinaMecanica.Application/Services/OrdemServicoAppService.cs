@@ -39,21 +39,24 @@ public class OrdemServicoAppService
         if (cliente == null)
             throw new Exception("Cliente não encontrado.");
 
-
         var veiculo = await _veiculoRepository.ObterPorIdAsync(dto.VeiculoId);
 
         if (veiculo == null)
             throw new Exception("Veículo não encontrado.");
 
-
         if (veiculo.ClienteId != dto.ClienteId)
             throw new Exception("O veículo não pertence ao cliente informado.");
+
+        if (veiculo.OficinaId != cliente.OficinaId)
+            throw new Exception("O veículo não pertence à oficina do cliente.");
 
         var mecanico = await _mecanicoRepository.GetByIdAsync(dto.MecanicoId);
 
         if (mecanico == null)
             throw new Exception("Mecânico não encontrado.");
 
+        if (mecanico.OficinaId != cliente.OficinaId)
+            throw new Exception("O mecânico não pertence à oficina do cliente.");
 
         var ordemServico = new OrdemServico(
             cliente.OficinaId,
@@ -62,9 +65,7 @@ public class OrdemServicoAppService
             dto.MecanicoId,
             dto.Descricao,
             dto.ValorMaoObra
-            
         );
-
 
         foreach (var itemDto in dto.Itens)
         {
@@ -76,7 +77,6 @@ public class OrdemServicoAppService
 
             ordemServico.AdicionarItem(item);
         }
-
 
         var ordemCriada = await _repository.AdicionarAsync(ordemServico);
 
@@ -402,30 +402,45 @@ public class OrdemServicoAppService
         if (ordem == null)
             throw new Exception("Ordem de serviço não encontrada.");
 
-
         if (ordem.Status != StatusOrdemServico.Aberta)
             throw new Exception(
                 "Somente ordens abertas podem ser editadas."
             );
-
 
         var cliente = await _clienteRepository.ObterPorIdAsync(dto.ClienteId);
 
         if (cliente == null)
             throw new Exception("Cliente não encontrado.");
 
-
         var veiculo = await _veiculoRepository.ObterPorIdAsync(dto.VeiculoId);
 
         if (veiculo == null)
             throw new Exception("Veículo não encontrado.");
-
 
         if (veiculo.ClienteId != dto.ClienteId)
             throw new Exception(
                 "O veículo não pertence ao cliente informado."
             );
 
+        if (veiculo.OficinaId != cliente.OficinaId)
+            throw new Exception(
+                "O veículo não pertence à oficina do cliente."
+            );
+
+        var mecanico = await _mecanicoRepository.GetByIdAsync(dto.MecanicoId);
+
+        if (mecanico == null)
+            throw new Exception("Mecânico não encontrado.");
+
+        if (mecanico.OficinaId != cliente.OficinaId)
+            throw new Exception(
+                "O mecânico não pertence à oficina do cliente."
+            );
+
+        if (ordem.OficinaId != cliente.OficinaId)
+            throw new Exception(
+                "A ordem de serviço não pertence à oficina do cliente."
+            );
 
         ordem.AtualizarDados(
             dto.ClienteId,
@@ -434,7 +449,6 @@ public class OrdemServicoAppService
             dto.Descricao,
             dto.ValorMaoObra
         );
-
 
         await _repository.AtualizarAsync(ordem);
     }

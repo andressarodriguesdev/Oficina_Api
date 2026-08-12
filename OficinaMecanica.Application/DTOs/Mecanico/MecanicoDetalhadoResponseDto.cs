@@ -1,5 +1,6 @@
 ﻿using OficinaMecanica.Application.DTOs.Mecanico;
 using OficinaMecanica.Domain.Entities;
+
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -25,7 +26,7 @@ public class MecanicoDetalhadoResponseDto
 
     public Guid OficinaId { get; set; }
 
-    public Oficina Oficina { get; set; } 
+    public OficinaMecanica.Domain.Entities.Oficina Oficina { get; set; }
 
     public decimal TotalMaoObra { get; set; }
 

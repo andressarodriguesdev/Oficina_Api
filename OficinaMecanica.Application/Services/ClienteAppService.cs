@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using OficinaMecanica.Application.Constants;
 using OficinaMecanica.Application.DTOs;
 using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Infrastructure.Repositories;
@@ -20,13 +19,15 @@ public class ClienteAppService
     }
 
 
-    public async Task<ClienteResponseDto> CriarAsync(CriarClienteDto dto)
+    public async Task<ClienteResponseDto> CriarAsync(
+     CriarClienteDto dto,
+     Guid oficinaId)
     {
         var cliente = new Cliente(
       dto.Nome,
       dto.Telefone,
       dto.Email,
-      OficinaConstants.OficinaPadraoId
+      oficinaId
       );
 
         var clienteCriado = await _repository.AdicionarAsync(cliente);

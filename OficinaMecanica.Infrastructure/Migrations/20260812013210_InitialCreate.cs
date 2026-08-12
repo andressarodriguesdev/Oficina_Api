@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -12,10 +13,28 @@ namespace OficinaMecanica.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "Usuario",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Nome = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    Email = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    SenhaHash = table.Column<string>(type: "text", nullable: false),
+                    DataCadastro = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Ativo = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Usuario", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Oficinas",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UsuarioId = table.Column<int>(type: "integer", nullable: false),
                     Nome = table.Column<string>(type: "text", nullable: false),
                     Telefone = table.Column<string>(type: "text", nullable: false),
                     Endereco = table.Column<string>(type: "text", nullable: false),
@@ -24,6 +43,12 @@ namespace OficinaMecanica.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Oficinas", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Oficinas_Usuario_UsuarioId",
+                        column: x => x.UsuarioId,
+                        principalTable: "Usuario",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -34,6 +59,7 @@ namespace OficinaMecanica.Infrastructure.Migrations
                     Nome = table.Column<string>(type: "text", nullable: false),
                     Telefone = table.Column<string>(type: "text", nullable: false),
                     Email = table.Column<string>(type: "text", nullable: false),
+                    Ativo = table.Column<bool>(type: "boolean", nullable: false),
                     OficinaId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -48,6 +74,28 @@ namespace OficinaMecanica.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Mecanicos",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Nome = table.Column<string>(type: "text", nullable: false),
+                    Telefone = table.Column<string>(type: "text", nullable: false),
+                    Especialidade = table.Column<string>(type: "text", nullable: true),
+                    Ativo = table.Column<bool>(type: "boolean", nullable: false),
+                    OficinaId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Mecanicos", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Mecanicos_Oficinas_OficinaId",
+                        column: x => x.OficinaId,
+                        principalTable: "Oficinas",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Veiculos",
                 columns: table => new
                 {
@@ -56,6 +104,7 @@ namespace OficinaMecanica.Infrastructure.Migrations
                     Marca = table.Column<string>(type: "text", nullable: false),
                     Modelo = table.Column<string>(type: "text", nullable: false),
                     Ano = table.Column<string>(type: "text", nullable: false),
+                    Ativo = table.Column<bool>(type: "boolean", nullable: false),
                     ClienteId = table.Column<Guid>(type: "uuid", nullable: false),
                     OficinaId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -93,7 +142,8 @@ namespace OficinaMecanica.Infrastructure.Migrations
                     MotivoCancelamento = table.Column<string>(type: "text", nullable: true),
                     DataReabertura = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     MotivoReabertura = table.Column<string>(type: "text", nullable: true),
-                    OficinaId = table.Column<Guid>(type: "uuid", nullable: false)
+                    OficinaId = table.Column<Guid>(type: "uuid", nullable: false),
+                    MecanicoId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -104,6 +154,12 @@ namespace OficinaMecanica.Infrastructure.Migrations
                         principalTable: "Clientes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_OrdensServico_Mecanicos_MecanicoId",
+                        column: x => x.MecanicoId,
+                        principalTable: "Mecanicos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_OrdensServico_Oficinas_OficinaId",
                         column: x => x.OficinaId,
@@ -172,6 +228,16 @@ namespace OficinaMecanica.Infrastructure.Migrations
                 column: "OrdemServicoId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Mecanicos_OficinaId",
+                table: "Mecanicos",
+                column: "OficinaId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Oficinas_UsuarioId",
+                table: "Oficinas",
+                column: "UsuarioId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OrdemServicoItens_OrdemServicoId",
                 table: "OrdemServicoItens",
                 column: "OrdemServicoId");
@@ -182,6 +248,11 @@ namespace OficinaMecanica.Infrastructure.Migrations
                 column: "ClienteId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_OrdensServico_MecanicoId",
+                table: "OrdensServico",
+                column: "MecanicoId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OrdensServico_OficinaId",
                 table: "OrdensServico",
                 column: "OficinaId");
@@ -190,6 +261,12 @@ namespace OficinaMecanica.Infrastructure.Migrations
                 name: "IX_OrdensServico_VeiculoId",
                 table: "OrdensServico",
                 column: "VeiculoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Usuario_Email",
+                table: "Usuario",
+                column: "Email",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Veiculos_ClienteId",
@@ -215,6 +292,9 @@ namespace OficinaMecanica.Infrastructure.Migrations
                 name: "OrdensServico");
 
             migrationBuilder.DropTable(
+                name: "Mecanicos");
+
+            migrationBuilder.DropTable(
                 name: "Veiculos");
 
             migrationBuilder.DropTable(
@@ -222,6 +302,9 @@ namespace OficinaMecanica.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Oficinas");
+
+            migrationBuilder.DropTable(
+                name: "Usuario");
         }
     }
 }

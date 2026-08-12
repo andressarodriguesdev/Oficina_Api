@@ -8,6 +8,7 @@ public class OficinaDbContext : DbContext
         : base(options) 
     {
     }
+    public DbSet<Usuario> Usuario { get; set; }
     public DbSet<Oficina> Oficinas { get; set; } 
     public DbSet<Cliente> Clientes { get; set; } 
     public DbSet<Veiculo> Veiculos { get; set; } 
@@ -20,6 +21,45 @@ public class OficinaDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         base.OnModelCreating(modelBuilder);
         
+
+
+        
+// Usuario
+
+        modelBuilder.Entity<Usuario>()
+            .Property(u => u.Nome)
+            .IsRequired()
+            .HasMaxLength(150);
+
+        modelBuilder.Entity<Usuario>()
+            .Property(u => u.Email)
+            .IsRequired()
+            .HasMaxLength(150);
+
+        modelBuilder.Entity<Usuario>()
+            .HasIndex(u => u.Email)
+            .IsUnique();
+
+        modelBuilder.Entity<Usuario>()
+            .Property(u => u.SenhaHash)
+            .IsRequired();
+
+        modelBuilder.Entity<Usuario>()
+            .Property(u => u.DataCadastro)
+            .IsRequired();
+
+        modelBuilder.Entity<Usuario>()
+            .Property(u => u.Ativo)
+            .IsRequired();
+
+
+        // Usuario -> Oficinas
+        modelBuilder.Entity<Usuario>()
+            .HasMany(u => u.Oficinas)
+            .WithOne()
+            .HasForeignKey(o => o.UsuarioId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // Oficina -> Clientes
 
         modelBuilder.Entity<Oficina>()
