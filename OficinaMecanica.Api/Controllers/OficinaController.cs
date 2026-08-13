@@ -7,7 +7,8 @@ using System.Security.Claims;
 namespace OficinaMecanica.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/oficinas")]
+
 public class OficinaController : ControllerBase
 {
     private readonly OficinaAppService _service;
@@ -21,11 +22,23 @@ public class OficinaController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Criar(CriarOficinaDto dto)
     {
-        var usuarioIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var usuarioIdClaim = User.FindFirst(
+            ClaimTypes.NameIdentifier
+        )?.Value;
 
         if (!int.TryParse(usuarioIdClaim, out var usuarioId))
         {
             return Unauthorized();
+        }
+
+        // O sistema permite apenas uma oficina cadastrada.
+        var oficinaExistente = await _service.ObterUnicaAsync();
+
+        if (oficinaExistente != null)
+        {
+            return BadRequest(
+                "Já existe uma oficina cadastrada no sistema."
+            );
         }
 
         var oficina = await _service.CriarAsync(dto, usuarioId);
@@ -54,5 +67,17 @@ public class OficinaController : ControllerBase
         var oficinas = await _service.ListarAsync();
 
         return Ok(oficinas);
+    }
+
+    [Authorize]
+    [HttpGet("minha-oficina")]
+    public async Task<IActionResult> MinhaOficina()
+    {
+        var oficina = await _service.ObterUnicaAsync();
+
+        if (oficina == null)
+            return NotFound();
+
+        return Ok(oficina);
     }
 }

@@ -1,5 +1,4 @@
-﻿
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Infrastructure.Data;
 
@@ -35,6 +34,13 @@ public class OficinaRepository
             .FirstOrDefaultAsync(o => o.UsuarioId == usuarioId);
     }
 
+    // Nova regra: o sistema possui uma única oficina
+    public async Task<Oficina?> ObterUnicaAsync()
+    {
+        return await _context.Oficinas
+            .FirstOrDefaultAsync();
+    }
+
     public async Task<List<Oficina>> ListarAsync()
     {
         return await _context.Oficinas
@@ -55,4 +61,3 @@ public class OficinaRepository
         await _context.SaveChangesAsync();
     }
 }
-

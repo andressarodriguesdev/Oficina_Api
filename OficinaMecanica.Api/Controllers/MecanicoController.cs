@@ -1,10 +1,8 @@
-﻿
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OficinaMecanica.Application.DTOs;
+using OficinaMecanica.Application.DTOs.Mecanico;
 using OficinaMecanica.Application.Services;
-using OficinaMecanica.Domain.Entities;
-using System.Security.Claims;
 
 namespace OficinaMecanica.Api.Controllers;
 
@@ -25,17 +23,36 @@ public class MecanicoController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<Mecanico>>> GetAll()
+    public async Task<IActionResult> GetAll()
     {
-        var mecanicos = await _service.GetAllAsync();
+        var oficina = await _oficinaService.ObterUnicaAsync();
+
+        if (oficina == null)
+            return BadRequest(
+                "Nenhuma oficina cadastrada no sistema."
+            );
+
+        var mecanicos = await _service.GetAllAsync(
+            oficina.Id
+        );
 
         return Ok(mecanicos);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Mecanico>> GetById(Guid id)
+    public async Task<IActionResult> GetById(Guid id)
     {
-        var mecanico = await _service.GetByIdAsync(id);
+        var oficina = await _oficinaService.ObterUnicaAsync();
+
+        if (oficina == null)
+            return BadRequest(
+                "Nenhuma oficina cadastrada no sistema."
+            );
+
+        var mecanico = await _service.GetByIdAsync(
+            id,
+            oficina.Id
+        );
 
         if (mecanico == null)
             return NotFound();
@@ -44,20 +61,20 @@ public class MecanicoController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<MecanicoResponseDto>> Create(
+    public async Task<IActionResult> Create(
         MecanicoRequestDto dto)
     {
-        var usuarioIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (!int.TryParse(usuarioIdClaim, out var usuarioId))
-            return Unauthorized();
-
-        var oficina = await _oficinaService.ObterPorUsuarioIdAsync(usuarioId);
+        var oficina = await _oficinaService.ObterUnicaAsync();
 
         if (oficina == null)
-            return BadRequest("O usuário não possui uma oficina cadastrada.");
+            return BadRequest(
+                "Nenhuma oficina cadastrada no sistema."
+            );
 
-        var criado = await _service.CreateAsync(dto, oficina.Id);
+        var criado = await _service.CreateAsync(
+            dto,
+            oficina.Id
+        );
 
         return CreatedAtAction(
             nameof(GetById),
@@ -71,7 +88,18 @@ public class MecanicoController : ControllerBase
         Guid id,
         MecanicoRequestDto dto)
     {
-        var atualizado = await _service.UpdateAsync(id, dto);
+        var oficina = await _oficinaService.ObterUnicaAsync();
+
+        if (oficina == null)
+            return BadRequest(
+                "Nenhuma oficina cadastrada no sistema."
+            );
+
+        var atualizado = await _service.UpdateAsync(
+            id,
+            dto,
+            oficina.Id
+        );
 
         if (!atualizado)
             return NotFound();
@@ -82,7 +110,17 @@ public class MecanicoController : ControllerBase
     [HttpPatch("{id}/inativar")]
     public async Task<IActionResult> Inativar(Guid id)
     {
-        await _service.InativarAsync(id);
+        var oficina = await _oficinaService.ObterUnicaAsync();
+
+        if (oficina == null)
+            return BadRequest(
+                "Nenhuma oficina cadastrada no sistema."
+            );
+
+        await _service.InativarAsync(
+            id,
+            oficina.Id
+        );
 
         return NoContent();
     }
@@ -90,7 +128,17 @@ public class MecanicoController : ControllerBase
     [HttpPatch("{id}/reativar")]
     public async Task<IActionResult> Reativar(Guid id)
     {
-        await _service.ReativarAsync(id);
+        var oficina = await _oficinaService.ObterUnicaAsync();
+
+        if (oficina == null)
+            return BadRequest(
+                "Nenhuma oficina cadastrada no sistema."
+            );
+
+        await _service.ReativarAsync(
+            id,
+            oficina.Id
+        );
 
         return NoContent();
     }
@@ -98,7 +146,17 @@ public class MecanicoController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var removido = await _service.DeleteAsync(id);
+        var oficina = await _oficinaService.ObterUnicaAsync();
+
+        if (oficina == null)
+            return BadRequest(
+                "Nenhuma oficina cadastrada no sistema."
+            );
+
+        var removido = await _service.DeleteAsync(
+            id,
+            oficina.Id
+        );
 
         if (!removido)
             return NotFound();
@@ -106,4 +164,3 @@ public class MecanicoController : ControllerBase
         return NoContent();
     }
 }
-

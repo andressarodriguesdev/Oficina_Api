@@ -5,17 +5,24 @@
  *   VITE_API_URL=https://localhost:5001/api
  *
  * Todas as rotas seguem o padrão REST:
- *   GET    /clientes            GET    /clientes/{id}
- *   POST   /clientes             PUT    /clientes/{id}
+ *   GET    /clientes
+ *   GET    /clientes/{id}
+ *   POST   /clientes
+ *   PUT    /clientes/{id}
  *   DELETE /clientes/{id}
  *
- *   GET    /veiculos             GET    /veiculos/{id}
- *   POST   /veiculos             PUT    /veiculos/{id}
+ *   GET    /veiculos
+ *   GET    /veiculos/{id}
+ *   POST   /veiculos
+ *   PUT    /veiculos/{id}
  *   DELETE /veiculos/{id}
  *
- *   GET    /ordens-servico       GET    /ordens-servico/{id}
- *   POST   /ordens-servico       PUT    /ordens-servico/{id}
+ *   GET    /ordens-servico
+ *   GET    /ordens-servico/{id}
+ *   POST   /ordens-servico
+ *   PUT    /ordens-servico/{id}
  *   DELETE /ordens-servico/{id}
+ *
  *   POST   /ordens-servico/{id}/enviar-aprovacao
  *   POST   /ordens-servico/{id}/aprovar
  *   POST   /ordens-servico/{id}/recusar
@@ -30,6 +37,7 @@ const BASE_URL = (import.meta.env.VITE_API_URL as string) || '/api';
 
 export class ApiError extends Error {
   status: number;
+
   constructor(message: string, status: number) {
     super(message);
     this.name = 'ApiError';
@@ -49,52 +57,94 @@ async function request<T>(
     ...((options.headers as Record<string, string>) ?? {}),
   };
 
-  // Quando tiver autenticação JWT no futuro, basta descomentar:
-  // const token = localStorage.getItem('token');
-  // if (token) headers['Authorization'] = `Bearer ${token}`;
+  // Recupera o JWT salvo após o login
+  const token = localStorage.getItem('accessToken');
 
-  const response = await fetch(url, { ...options, headers });
+  // Envia o JWT nas requisições autenticadas
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, {
+    ...options,
+    headers,
+  });
 
   if (!response.ok) {
     let message = `Erro ${response.status}`;
     try {
       const body = await response.json();
-      message = body.message ?? body.title ?? body.error ?? message;
+
+      if (typeof body === 'string') {
+        message = body;
+      } else {
+        message =
+          body.message ??
+          body.mensagem ??
+          body.title ??
+          body.error ??
+          message;
+      }
     } catch {
-      // resposta não-JSON
+      // Resposta não-JSON
     }
+
     throw new ApiError(message, response.status);
   }
 
- if (response.status === 204) {
-  return undefined as T;
+  // No Content
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  // Arquivos/PDFs
+  if (responseType === 'blob') {
+    return response.blob() as Promise<T>;
+  }
+
+  return response.json() as Promise<T>;
 }
-
-if (responseType === 'blob') {
-  return response.blob() as Promise<T>;
-}
-
-return response.json() as Promise<T>;
-
-}
-
 
 export const api = {
-  get: <T>(path: string,responseType: 'json' | 'blob' = 'json') =>
-    request<T>(path, { method: 'GET' }, responseType),
-
-  post: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),
-
-  put: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: 'PUT', body: body ? JSON.stringify(body) : undefined }),
-
-  patch: <T>(path: string, body?: unknown) =>
+  get: <T>(
+    path: string,
+    responseType: 'json' | 'blob' = 'json',
+  ) =>
     request<T>(
       path,
-      { method: 'PATCH', body: body ? JSON.stringify(body) : undefined }
+      { method: 'GET' },
+      responseType,
     ),
 
+  post: <T>(
+    path: string,
+    body?: unknown,
+  ) =>
+    request<T>(path, {
+      method: 'POST',
+      body: body ? JSON.stringify(body) : undefined,
+    }),
+
+  put: <T>(
+    path: string,
+    body?: unknown,
+  ) =>
+    request<T>(path, {
+      method: 'PUT',
+      body: body ? JSON.stringify(body) : undefined,
+    }),
+
+  patch: <T>(
+    path: string,
+    body?: unknown,
+  ) =>
+    request<T>(path, {
+      method: 'PATCH',
+      body: body ? JSON.stringify(body) : undefined,
+    }),
+
   delete: <T>(path: string) =>
-    request<T>(path, { method: 'DELETE' }),
+    request<T>(path, {
+      method: 'DELETE',
+    }),
 };

@@ -13,7 +13,6 @@ public class ClienteRepository
         _context = context;
     }
 
-
     public async Task<Cliente> AdicionarAsync(Cliente cliente)
     {
         _context.Clientes.Add(cliente);
@@ -23,23 +22,24 @@ public class ClienteRepository
         return cliente;
     }
 
-
-    public async Task<List<Cliente>> ListarAsync()
+    public async Task<List<Cliente>> ListarAsync(Guid oficinaId)
     {
         return await _context.Clientes
+            .Where(c => c.OficinaId == oficinaId)
             .Include(c => c.Veiculos)
             .ToListAsync();
     }
 
-    public async Task<Cliente?> ObterPorIdAsync(Guid id)
+    public async Task<Cliente?> ObterPorIdAsync(
+        Guid id,
+        Guid oficinaId)
     {
         return await _context.Clientes
+            .Where(c => c.OficinaId == oficinaId)
             .Include(c => c.Veiculos)
             .Include(c => c.OrdensServico)
-
             .FirstOrDefaultAsync(c => c.Id == id);
     }
-
 
     public async Task AtualizarAsync(Cliente cliente)
     {
@@ -48,7 +48,6 @@ public class ClienteRepository
         await _context.SaveChangesAsync();
     }
 
-
     public async Task RemoverAsync(Cliente cliente)
     {
         _context.Clientes.Remove(cliente);
@@ -56,17 +55,20 @@ public class ClienteRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<List<Cliente>> ListarAtivosAsync()
+    public async Task<List<Cliente>> ListarAtivosAsync(Guid oficinaId)
     {
         return await _context.Clientes
-            .Where(c => c.Ativo)
+            .Where(c => c.OficinaId == oficinaId && c.Ativo)
             .Include(c => c.Veiculos.Where(v => v.Ativo))
             .ToListAsync();
     }
 
-    public async Task<Cliente?> BuscarComHistoricoAsync(Guid id)
+    public async Task<Cliente?> BuscarComHistoricoAsync(
+        Guid id,
+        Guid oficinaId)
     {
         return await _context.Clientes
+            .Where(c => c.OficinaId == oficinaId)
             .Include(c => c.OrdensServico)
                 .ThenInclude(o => o.Historicos)
             .FirstOrDefaultAsync(c => c.Id == id);

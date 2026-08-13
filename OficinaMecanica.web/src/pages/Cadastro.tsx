@@ -1,67 +1,60 @@
-import { login } from "../services/authService";
-import { ApiError } from "../services/api";
-import { obterMinhaOficina } from "../services/oficinaService";
-import { Link } from "react-router-dom";
-import { type FormEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
+
+import { type FormEvent, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Wrench,
+  User,
   Mail,
   Lock,
   Eye,
   EyeOff,
   ArrowRight,
-  ShieldCheck,
-  Zap,
-  ClipboardList,
-} from "lucide-react";
-import { useToast } from "../components/ui/Toast";
-import { Button } from "../components/ui/Button";
+} from 'lucide-react';
+import { useToast } from '../components/ui/Toast';
+import { Button } from '../components/ui/Button';
+import { cadastrarUsuario } from '../services/usuarioService';
 
 const WORKSHOP_IMAGE =
-  "https://images.pexels.com/photos/4116231/pexels-photo-4116231.jpeg?auto=crop&fit=crop&w=1200&q=80";
+  'https://images.pexels.com/photos/4116231/pexels-photo-4116231.jpeg?auto=crop&fit=crop&w=1200&q=80';
 
-export function Login() {
+export function Cadastro() {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [nome, setNome] = useState('');
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [confirmarSenha, setConfirmarSenha] = useState('');
+
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (senha !== confirmarSenha) {
+      toast.error('As senhas não coincidem.');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await login(email, password);
+      await cadastrarUsuario({
+        nome,
+        email,
+        senha,
+      });
 
-      // Salva o JWT para ser enviado automaticamente
-      // pelo api.ts nas próximas requisições.
-      localStorage.setItem("accessToken", response.token);
+      toast.success('Usuário cadastrado com sucesso!');
 
-      toast.success(`Bem-vindo, ${response.nome}!`);
-
-      try {
-        await obterMinhaOficina();
-
-        // Usuário já possui uma oficina
-        navigate("/painel");
-      } catch (error) {
-        if (error instanceof ApiError && error.status === 404) {
-          // Usuário ainda não possui uma oficina
-          navigate("/criar-oficina");
-          return;
-        }
-
-        throw error;
-      }
-
-      navigate("/painel");
+      navigate('/login');
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "E-mail ou senha inválidos.";
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível realizar o cadastro.';
 
       toast.error(message);
     } finally {
@@ -71,7 +64,7 @@ export function Login() {
 
   return (
     <div className="flex min-h-screen bg-ink-950">
-      {/* Lado esquerdo — imagem + frase de impacto */}
+      {/* Lado esquerdo */}
       <div className="relative hidden w-1/2 overflow-hidden lg:block">
         <img
           src={WORKSHOP_IMAGE}
@@ -92,53 +85,22 @@ export function Login() {
                 OficinaMecânica
               </p>
 
-              <p className="text-xs text-ink-300">Painel Administrativo</p>
+              <p className="text-xs text-ink-300">
+                Painel Administrativo
+              </p>
             </div>
           </div>
 
           <div className="max-w-md">
             <h2 className="font-display text-4xl font-extrabold leading-tight text-white">
-              Gerencie sua oficina com{" "}
-              <span className="text-flame-400">precisão</span> e{" "}
-              <span className="text-flame-400">velocidade</span>.
+              Sua oficina organizada em{' '}
+              <span className="text-flame-400">um só lugar</span>.
             </h2>
 
             <p className="mt-4 text-lg text-ink-200">
-              Controle completo de ordens de serviço, clientes, veículos e
-              faturamento em um só lugar.
+              Crie sua conta e tenha controle completo de clientes, veículos,
+              ordens de serviço e faturamento.
             </p>
-
-            <div className="mt-8 space-y-3">
-              {[
-                {
-                  icon: ClipboardList,
-                  text: "Ordens de serviço com fluxo de aprovação completo",
-                },
-                {
-                  icon: Zap,
-                  text: "Envio de orçamentos via WhatsApp em um clique",
-                },
-                {
-                  icon: ShieldCheck,
-                  text: "Histórico e rastreabilidade de cada OS",
-                },
-              ].map((item) => {
-                const Icon = item.icon;
-
-                return (
-                  <div
-                    key={item.text}
-                    className="flex items-center gap-3 text-sm text-ink-200"
-                  >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-flame-500/20 text-flame-400">
-                      <Icon className="h-4 w-4" />
-                    </div>
-
-                    {item.text}
-                  </div>
-                );
-              })}
-            </div>
           </div>
 
           <p className="text-xs text-ink-400">
@@ -148,7 +110,7 @@ export function Login() {
         </div>
       </div>
 
-      {/* Lado direito — formulário de login */}
+      {/* Formulário */}
       <div className="flex w-full items-center justify-center p-6 lg:w-1/2">
         <div className="w-full max-w-md animate-scale-in">
           {/* Logo mobile */}
@@ -161,19 +123,43 @@ export function Login() {
               OficinaMecânica
             </h1>
 
-            <p className="mt-1 text-sm text-ink-400">Painel Administrativo</p>
+            <p className="mt-1 text-sm text-ink-400">
+              Painel Administrativo
+            </p>
           </div>
 
           <div className="card p-8">
             <h2 className="font-display text-xl font-bold text-white">
-              Bem-vindo de volta
+              Crie sua conta
             </h2>
 
             <p className="mt-1 text-sm text-ink-400">
-              Acesse o painel de gerenciamento da oficina.
+              Cadastre seus dados para começar.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+              {/* Nome */}
+              <div>
+                <label htmlFor="nome" className="label-base">
+                  Nome
+                </label>
+
+                <div className="relative">
+                  <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+
+                  <input
+                    id="nome"
+                    type="text"
+                    required
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    placeholder="Seu nome"
+                    className="input-base pl-9"
+                  />
+                </div>
+              </div>
+
+              {/* E-mail */}
               <div>
                 <label htmlFor="email" className="label-base">
                   E-mail
@@ -188,14 +174,15 @@ export function Login() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@oficina.com"
+                    placeholder="seu@email.com"
                     className="input-base pl-9"
                   />
                 </div>
               </div>
 
+              {/* Senha */}
               <div>
-                <label htmlFor="password" className="label-base">
+                <label htmlFor="senha" className="label-base">
                   Senha
                 </label>
 
@@ -203,12 +190,12 @@ export function Login() {
                   <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
 
                   <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
+                    id="senha"
+                    type={showPassword ? 'text' : 'password'}
                     required
                     minLength={6}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={senha}
+                    onChange={(e) => setSenha(e.target.value)}
                     placeholder="••••••••"
                     className="input-base px-9"
                   />
@@ -227,18 +214,40 @@ export function Login() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <label className="flex cursor-pointer items-center gap-2 text-sm text-ink-300">
-                  <input type="checkbox" className="h-4 w-4 accent-flame-500" />
-                  Lembrar-me
+              {/* Confirmar senha */}
+              <div>
+                <label htmlFor="confirmarSenha" className="label-base">
+                  Confirmar senha
                 </label>
 
-                <button
-                  type="button"
-                  className="text-sm font-semibold text-flame-400 transition hover:text-flame-300"
-                >
-                  Esqueceu a senha?
-                </button>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+
+                  <input
+                    id="confirmarSenha"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    minLength={6}
+                    value={confirmarSenha}
+                    onChange={(e) => setConfirmarSenha(e.target.value)}
+                    placeholder="••••••••"
+                    className="input-base px-9"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowConfirmPassword((s) => !s)
+                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 transition hover:text-white"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <Button
@@ -247,21 +256,19 @@ export function Login() {
                 loading={loading}
                 size="lg"
               >
-                Entrar
+                Criar minha conta
                 {!loading && <ArrowRight className="h-4 w-4" />}
               </Button>
             </form>
+
             <p className="mt-6 text-center text-sm text-ink-400">
-              Ainda não possui uma conta?{" "}
+              Já possui uma conta?{' '}
               <Link
-                to="/cadastro"
+                to="/login"
                 className="font-semibold text-flame-400 transition hover:text-flame-300"
               >
-                Criar conta
+                Entrar
               </Link>
-            </p>
-            <p className="mt-6 text-center text-xs text-ink-400">
-              Sistema de gerenciamento para oficinas mecânicas
             </p>
           </div>
         </div>
@@ -269,3 +276,4 @@ export function Login() {
     </div>
   );
 }
+

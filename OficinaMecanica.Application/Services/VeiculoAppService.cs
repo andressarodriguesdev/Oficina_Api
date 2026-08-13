@@ -1,7 +1,7 @@
 ﻿using OficinaMecanica.Application.DTOs;
+using OficinaMecanica.Application.Exceptions;
 using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Infrastructure.Repositories;
-using OficinaMecanica.Application.Exceptions;
 
 namespace OficinaMecanica.Application.Services;
 
@@ -9,7 +9,6 @@ public class VeiculoAppService
 {
     private readonly ClienteRepository _clienteRepository;
     private readonly VeiculoRepository _repository;
-
 
     public VeiculoAppService(
         VeiculoRepository repository,
@@ -19,23 +18,18 @@ public class VeiculoAppService
         _clienteRepository = clienteRepository;
     }
 
-
-
     public async Task<VeiculoResponseDto> CriarAsync(
-     CriarVeiculoDto dto,
-     Guid oficinaId)
+        CriarVeiculoDto dto,
+        Guid oficinaId)
     {
-        var cliente = await _clienteRepository.ObterPorIdAsync(dto.ClienteId);
+        var cliente = await _clienteRepository.ObterPorIdAsync(
+            dto.ClienteId,
+            oficinaId
+        );
 
         if (cliente == null)
         {
             throw new ClienteNaoEncontradoException(dto.ClienteId);
-        }
-
-        if (cliente.OficinaId != oficinaId)
-        {
-            throw new UnauthorizedAccessException(
-                "O cliente não pertence à oficina do usuário autenticado.");
         }
 
         var veiculo = new Veiculo(
@@ -52,63 +46,66 @@ public class VeiculoAppService
         return MapearResponse(veiculoCriado);
     }
 
-
-
-    public async Task<List<VeiculoResponseDto>> ListarAsync()
+    public async Task<List<VeiculoResponseDto>> ListarAsync(
+        Guid oficinaId)
     {
-        var veiculos = await _repository.ListarAsync();
-
+        var veiculos = await _repository.ListarAsync(
+            oficinaId
+        );
 
         return veiculos
             .Select(MapearResponse)
             .ToList();
     }
 
-
-
-    public async Task<VeiculoResponseDto?> BuscarPorIdAsync(Guid id)
+    public async Task<VeiculoResponseDto?> BuscarPorIdAsync(
+        Guid id,
+        Guid oficinaId)
     {
-        var veiculo = await _repository.ObterPorIdAsync(id);
-
+        var veiculo = await _repository.ObterPorIdAsync(
+            id,
+            oficinaId
+        );
 
         if (veiculo == null)
             return null;
-
 
         return MapearResponse(veiculo);
     }
 
-
-
     public async Task<VeiculoResponseDto?> AtualizarAsync(
         Guid id,
-        AtualizarVeiculoDto dto)
+        AtualizarVeiculoDto dto,
+        Guid oficinaId)
     {
-        var veiculo = await _repository.ObterPorIdAsync(id);
-
+        var veiculo = await _repository.ObterPorIdAsync(
+            id,
+            oficinaId
+        );
 
         if (veiculo == null)
             return null;
-
 
         veiculo.Atualizar(
             dto.Placa,
             dto.Marca,
-            dto.Ano,
-            dto.Modelo
+            dto.Modelo,
+            dto.Ano
         );
 
-
         await _repository.AtualizarAsync(veiculo);
-
 
         return MapearResponse(veiculo);
     }
 
-
-    public async Task InativarAsync(Guid id)
+    public async Task InativarAsync(
+        Guid id,
+        Guid oficinaId)
     {
-        var veiculo = await _repository.ObterPorIdAsync(id);
+        var veiculo = await _repository.ObterPorIdAsync(
+            id,
+            oficinaId
+        );
 
         if (veiculo == null)
             throw new Exception("Veículo não encontrado");
@@ -118,9 +115,14 @@ public class VeiculoAppService
         await _repository.AtualizarAsync(veiculo);
     }
 
-    public async Task ReativarAsync(Guid id)
+    public async Task ReativarAsync(
+        Guid id,
+        Guid oficinaId)
     {
-        var veiculo = await _repository.ObterPorIdAsync(id);
+        var veiculo = await _repository.ObterPorIdAsync(
+            id,
+            oficinaId
+        );
 
         if (veiculo == null)
             throw new Exception("Veículo não encontrado");
@@ -130,9 +132,14 @@ public class VeiculoAppService
         await _repository.AtualizarAsync(veiculo);
     }
 
-    public async Task RemoverAsync(Guid id)
+    public async Task RemoverAsync(
+        Guid id,
+        Guid oficinaId)
     {
-        var veiculo = await _repository.ObterPorIdAsync(id);
+        var veiculo = await _repository.ObterPorIdAsync(
+            id,
+            oficinaId
+        );
 
         if (veiculo == null)
             throw new Exception("Veículo não encontrado");
@@ -146,8 +153,8 @@ public class VeiculoAppService
         await _repository.RemoverAsync(veiculo);
     }
 
-
-    private static VeiculoResponseDto MapearResponse(Veiculo veiculo)
+    private static VeiculoResponseDto MapearResponse(
+        Veiculo veiculo)
     {
         return new VeiculoResponseDto
         {
@@ -160,8 +167,7 @@ public class VeiculoAppService
             OficinaId = veiculo.OficinaId,
             Ativo = veiculo.Ativo,
 
-            
-               OrdensServico = veiculo.OrdensServico
+            OrdensServico = veiculo.OrdensServico
                 .Select(o => new VeiculoOrdemServicoResumoDto
                 {
                     OrdemServicoId = o.Id,
@@ -170,7 +176,6 @@ public class VeiculoAppService
                     DataCriacao = o.DataCriacao,
                     DataConclusao = o.DataConclusao
                 })
-                .ToList()
                 .ToList()
         };
     }

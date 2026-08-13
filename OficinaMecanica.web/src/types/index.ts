@@ -124,6 +124,22 @@ export interface ProdutividadeMecanico {
   ticketMedio: number;
 }
 
+export interface Oficina {
+  id: string;
+  usuarioId: number;
+  nome: string;
+  telefone: string;
+  endereco: string;
+  logotipo?: string | null;
+}
+
+export interface CriarOficinaDto {
+  nome: string;
+  telefone: string;
+  endereco: string;
+  logotipo?: string;
+}
+
 export interface OficinaResumo {
   id: string;
   nome: string;
@@ -140,3 +156,8 @@ export interface ClienteHistorico {
   historicos: HistoricoOrdemServico[];
 }
 
+export interface UsuarioCadastro {
+  nome: string;
+  email: string;
+  senha: string;
+}

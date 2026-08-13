@@ -1,12 +1,9 @@
-﻿
-using OficinaMecanica.Application.DTOs;
+﻿using OficinaMecanica.Application.DTOs;
 using OficinaMecanica.Application.DTOs.Mecanico;
 using OficinaMecanica.Application.DTOs.Mecanicos;
 using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Domain.Enums;
 using OficinaMecanica.Infrastructure.Repositories;
-
-
 
 namespace OficinaMecanica.Application.Services;
 
@@ -19,18 +16,23 @@ public class MecanicoAppService
         _repository = repository;
     }
 
-    public async Task<List<Mecanico>> GetAllAsync()
+    public async Task<List<Mecanico>> GetAllAsync(
+        Guid oficinaId)
     {
-        return await _repository.GetAllAsync();
+        return await _repository.GetAllAsync(oficinaId);
     }
 
-    public async Task<MecanicoDetalhadoResponseDto?> GetByIdAsync(Guid id)
+    public async Task<MecanicoDetalhadoResponseDto?> GetByIdAsync(
+        Guid id,
+        Guid oficinaId)
     {
-        var mecanico = await _repository.GetByIdAsync(id);
+        var mecanico = await _repository.GetByIdAsync(
+            id,
+            oficinaId
+        );
 
         if (mecanico == null)
             return null;
-
 
         return new MecanicoDetalhadoResponseDto
         {
@@ -42,36 +44,43 @@ public class MecanicoAppService
             OficinaId = mecanico.OficinaId,
             Oficina = mecanico.Oficina,
 
-            QuantidadeOrdensServico = mecanico.OrdensServico.Count(),
+            QuantidadeOrdensServico =
+                mecanico.OrdensServico.Count(),
 
-            QuantidadeConcluidas = mecanico.OrdensServico
-                .Count(o => o.Status == StatusOrdemServico.Concluida),
+            QuantidadeConcluidas =
+                mecanico.OrdensServico.Count(
+                    o => o.Status == StatusOrdemServico.Concluida),
 
-            QuantidadeCanceladas = mecanico.OrdensServico
-                .Count(o => o.Status == StatusOrdemServico.Cancelada),
+            QuantidadeCanceladas =
+                mecanico.OrdensServico.Count(
+                    o => o.Status == StatusOrdemServico.Cancelada),
 
-            TotalMaoObra = mecanico.OrdensServico
-                .Where(o => o.Status == StatusOrdemServico.Concluida)
-                .Sum(o => o.ValorMaoObra),
+            TotalMaoObra =
+                mecanico.OrdensServico
+                    .Where(
+                        o => o.Status == StatusOrdemServico.Concluida)
+                    .Sum(o => o.ValorMaoObra),
 
-            OrdensServico = mecanico.OrdensServico
-                .Select(o => new MecanicoOrdemServicoResumoDto
-                {
-                    OrdemServicoId = o.Id,
-                    ClienteNome = o.Cliente.Nome,
-                    Veiculo = $"{o.Veiculo.Marca} {o.Veiculo.Modelo}",
-                    ValorMaoObra = o.ValorMaoObra,
-                    Status = o.Status,
-                    DataCriacao = o.DataCriacao,
-                    DataConclusao = o.DataConclusao
-                })
-                .ToList()
+            OrdensServico =
+                mecanico.OrdensServico
+                    .Select(o => new MecanicoOrdemServicoResumoDto
+                    {
+                        OrdemServicoId = o.Id,
+                        ClienteNome = o.Cliente.Nome,
+                        Veiculo =
+                            $"{o.Veiculo.Marca} {o.Veiculo.Modelo}",
+                        ValorMaoObra = o.ValorMaoObra,
+                        Status = o.Status,
+                        DataCriacao = o.DataCriacao,
+                        DataConclusao = o.DataConclusao
+                    })
+                    .ToList()
         };
     }
 
     public async Task<MecanicoResponseDto> CreateAsync(
-    MecanicoRequestDto dto,
-    Guid oficinaId)
+        MecanicoRequestDto dto,
+        Guid oficinaId)
     {
         var mecanico = new Mecanico
         {
@@ -96,9 +105,15 @@ public class MecanicoAppService
         };
     }
 
-    public async Task<bool> UpdateAsync(Guid id, MecanicoRequestDto dto)
+    public async Task<bool> UpdateAsync(
+        Guid id,
+        MecanicoRequestDto dto,
+        Guid oficinaId)
     {
-        var existente = await _repository.GetByIdAsync(id);
+        var existente = await _repository.GetByIdAsync(
+            id,
+            oficinaId
+        );
 
         if (existente == null)
             return false;
@@ -108,14 +123,20 @@ public class MecanicoAppService
         existente.Especialidade = dto.Especialidade;
 
         _repository.Update(existente);
+
         await _repository.SaveChangesAsync();
 
         return true;
     }
 
-    public async Task InativarAsync(Guid id)
+    public async Task InativarAsync(
+        Guid id,
+        Guid oficinaId)
     {
-        var mecanico = await _repository.GetByIdAsync(id);
+        var mecanico = await _repository.GetByIdAsync(
+            id,
+            oficinaId
+        );
 
         if (mecanico == null)
             throw new Exception("Mecânico não encontrado");
@@ -125,10 +146,14 @@ public class MecanicoAppService
         await _repository.SaveChangesAsync();
     }
 
-
-    public async Task ReativarAsync(Guid id)
+    public async Task ReativarAsync(
+        Guid id,
+        Guid oficinaId)
     {
-        var mecanico = await _repository.GetByIdAsync(id);
+        var mecanico = await _repository.GetByIdAsync(
+            id,
+            oficinaId
+        );
 
         if (mecanico == null)
             throw new Exception("Mecânico não encontrado");
@@ -138,18 +163,22 @@ public class MecanicoAppService
         await _repository.SaveChangesAsync();
     }
 
-    public async Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(
+        Guid id,
+        Guid oficinaId)
     {
-        var mecanico = await _repository.GetByIdAsync(id);
+        var mecanico = await _repository.GetByIdAsync(
+            id,
+            oficinaId
+        );
 
         if (mecanico == null)
             return false;
 
         _repository.Delete(mecanico);
+
         await _repository.SaveChangesAsync();
 
         return true;
     }
-
-
 }

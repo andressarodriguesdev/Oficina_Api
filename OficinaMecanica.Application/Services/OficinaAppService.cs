@@ -1,5 +1,4 @@
-﻿
-using OficinaMecanica.Application.DTOs;
+﻿using OficinaMecanica.Application.DTOs;
 using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Infrastructure.Repositories;
 
@@ -51,6 +50,16 @@ public class OficinaAppService
         return MapearResponse(oficina);
     }
 
+    public async Task<OficinaResponseDto?> ObterUnicaAsync()
+    {
+        var oficina = await _repository.ObterUnicaAsync();
+
+        if (oficina == null)
+            return null;
+
+        return MapearResponse(oficina);
+    }
+
     public async Task<List<OficinaResponseDto>> ListarAsync()
     {
         var oficinas = await _repository.ListarAsync();
@@ -72,4 +81,3 @@ public class OficinaAppService
         };
     }
 }
-

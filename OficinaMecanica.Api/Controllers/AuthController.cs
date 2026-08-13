@@ -5,7 +5,8 @@ using OficinaMecanica.Api.Services;
 using OficinaMecanica.Application.DTOs.Usuario;
 using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Infrastructure.Data;
-namespace OficinaMecanica.API.Controllers;
+
+namespace OficinaMecanica.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -16,8 +17,8 @@ public class AuthController : ControllerBase
     private readonly JwtService _jwtService;
 
     public AuthController(
-     OficinaDbContext context,
-     JwtService jwtService)
+        OficinaDbContext context,
+        JwtService jwtService)
     {
         _context = context;
         _passwordHasher = new PasswordHasher<Usuario>();
@@ -28,11 +29,13 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Register(UsuarioCadastroDto dto)
     {
         var emailExiste = await _context.Usuario
-            .AnyAsync(u => u.Email == dto.Email);
+            .AnyAsync(u => u.Email == dto.Email.Trim().ToLower());
 
         if (emailExiste)
         {
-            return BadRequest("Já existe um usuário cadastrado com este e-mail.");
+            return BadRequest(
+                "Já existe um usuário cadastrado com este e-mail."
+            );
         }
 
         var usuario = new Usuario
@@ -52,15 +55,16 @@ public class AuthController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        return Ok("Usuário cadastrado com sucesso.");
+        return NoContent();
     }
-
 
     [HttpPost("login")]
     public async Task<IActionResult> Login(UsuarioLoginDto dto)
     {
         var usuario = await _context.Usuario
-            .FirstOrDefaultAsync(u => u.Email == dto.Email.Trim().ToLower());
+            .FirstOrDefaultAsync(
+                u => u.Email == dto.Email.Trim().ToLower()
+            );
 
         if (usuario == null)
         {
@@ -96,4 +100,3 @@ public class AuthController : ControllerBase
         });
     }
 }
-

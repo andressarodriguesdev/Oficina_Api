@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using OficinaMecanica.Application.DTOs;
 using OficinaMecanica.Application.Services;
-using System.Security.Claims;
 
 namespace OficinaMecanica.Api.Controllers;
 
@@ -23,19 +22,20 @@ public class VeiculoController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Criar(CriarVeiculoDto dto)
+    public async Task<IActionResult> Criar(
+        CriarVeiculoDto dto)
     {
-        var usuarioIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (!int.TryParse(usuarioIdClaim, out var usuarioId))
-            return Unauthorized();
-
-        var oficina = await _oficinaService.ObterPorUsuarioIdAsync(usuarioId);
+        var oficina = await _oficinaService.ObterUnicaAsync();
 
         if (oficina == null)
-            return BadRequest("O usuário não possui uma oficina cadastrada.");
+            return BadRequest(
+                "Nenhuma oficina cadastrada no sistema."
+            );
 
-        var veiculo = await _service.CriarAsync(dto, oficina.Id);
+        var veiculo = await _service.CriarAsync(
+            dto,
+            oficina.Id
+        );
 
         return CreatedAtAction(
             nameof(ObterPorId),
@@ -47,15 +47,35 @@ public class VeiculoController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Listar()
     {
-        var veiculos = await _service.ListarAsync();
+        var oficina = await _oficinaService.ObterUnicaAsync();
+
+        if (oficina == null)
+            return BadRequest(
+                "Nenhuma oficina cadastrada no sistema."
+            );
+
+        var veiculos = await _service.ListarAsync(
+            oficina.Id
+        );
 
         return Ok(veiculos);
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> ObterPorId(Guid id)
+    public async Task<IActionResult> ObterPorId(
+        Guid id)
     {
-        var veiculo = await _service.BuscarPorIdAsync(id);
+        var oficina = await _oficinaService.ObterUnicaAsync();
+
+        if (oficina == null)
+            return BadRequest(
+                "Nenhuma oficina cadastrada no sistema."
+            );
+
+        var veiculo = await _service.BuscarPorIdAsync(
+            id,
+            oficina.Id
+        );
 
         if (veiculo == null)
             return NotFound();
@@ -68,7 +88,18 @@ public class VeiculoController : ControllerBase
         Guid id,
         AtualizarVeiculoDto dto)
     {
-        var veiculoAtualizado = await _service.AtualizarAsync(id, dto);
+        var oficina = await _oficinaService.ObterUnicaAsync();
+
+        if (oficina == null)
+            return BadRequest(
+                "Nenhuma oficina cadastrada no sistema."
+            );
+
+        var veiculoAtualizado = await _service.AtualizarAsync(
+            id,
+            dto,
+            oficina.Id
+        );
 
         if (veiculoAtualizado == null)
             return NotFound();
@@ -77,25 +108,58 @@ public class VeiculoController : ControllerBase
     }
 
     [HttpPatch("{id}/inativar")]
-    public async Task<IActionResult> Inativar(Guid id)
+    public async Task<IActionResult> Inativar(
+        Guid id)
     {
-        await _service.InativarAsync(id);
+        var oficina = await _oficinaService.ObterUnicaAsync();
+
+        if (oficina == null)
+            return BadRequest(
+                "Nenhuma oficina cadastrada no sistema."
+            );
+
+        await _service.InativarAsync(
+            id,
+            oficina.Id
+        );
 
         return NoContent();
     }
 
     [HttpPatch("{id}/reativar")]
-    public async Task<IActionResult> Reativar(Guid id)
+    public async Task<IActionResult> Reativar(
+        Guid id)
     {
-        await _service.ReativarAsync(id);
+        var oficina = await _oficinaService.ObterUnicaAsync();
+
+        if (oficina == null)
+            return BadRequest(
+                "Nenhuma oficina cadastrada no sistema."
+            );
+
+        await _service.ReativarAsync(
+            id,
+            oficina.Id
+        );
 
         return NoContent();
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Remover(Guid id)
+    public async Task<IActionResult> Remover(
+        Guid id)
     {
-        await _service.RemoverAsync(id);
+        var oficina = await _oficinaService.ObterUnicaAsync();
+
+        if (oficina == null)
+            return BadRequest(
+                "Nenhuma oficina cadastrada no sistema."
+            );
+
+        await _service.RemoverAsync(
+            id,
+            oficina.Id
+        );
 
         return NoContent();
     }

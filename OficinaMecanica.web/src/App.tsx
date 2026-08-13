@@ -15,6 +15,8 @@ import { Configuracoes } from './pages/Configuracoes';
 import { Financeiro } from './pages/Financeiro';
 import { Mecanicos } from './pages/MecanicosPage';
 import { MecanicoDetalhes } from './pages/MecanicoDetalhes';
+import { CriarOficina } from './pages/CriarOficina';
+import { Cadastro } from './pages/Cadastro';
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/cadastro" element={<Cadastro />} />
+          <Route path="/criar-oficina" element={<CriarOficina />} />
           <Route element={<AppLayout />}>
             <Route path="/painel" element={<Dashboard />} />
             <Route path="/clientes" element={<Clientes />} />
