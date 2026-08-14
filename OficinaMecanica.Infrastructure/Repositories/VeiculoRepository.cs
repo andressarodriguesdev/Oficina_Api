@@ -28,6 +28,7 @@ public class VeiculoRepository
             .Where(v => v.OficinaId == oficinaId)
             .Include(v => v.Cliente)
             .Include(v => v.OrdensServico)
+                .ThenInclude(o => o.Itens)
             .ToListAsync();
     }
 
@@ -39,6 +40,7 @@ public class VeiculoRepository
                 v.Ativo)
             .Include(v => v.Cliente)
             .Include(v => v.OrdensServico)
+                .ThenInclude(o => o.Itens)
             .ToListAsync();
     }
 
@@ -50,6 +52,7 @@ public class VeiculoRepository
             .Where(v => v.OficinaId == oficinaId)
             .Include(v => v.Cliente)
             .Include(v => v.OrdensServico)
+                .ThenInclude(o => o.Itens)
             .FirstOrDefaultAsync(v => v.Id == id);
     }
 

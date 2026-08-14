@@ -9,7 +9,7 @@ import {
   UserCheck,
   UserCog,
   Eye,
-  ArrowLeft
+  ArrowLeft,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -157,52 +157,43 @@ export function Mecanicos() {
           Voltar
         </Button>
       </div>
-      {/* FILTROS / AÇÕES */}
-      <div className="flex flex-col gap-3">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:items-center">
-          {/* Busca */}
-          <div className="relative min-w-0 lg:flex-1 lg:max-w-md">
-            <Search
-              className="
-                pointer-events-none
-                absolute left-3 top-1/2
-                h-4 w-4
-                -translate-y-1/2
-                text-ink-400
-              "
-            />
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        {/* BUSCA */}
+        <div className="relative w-full lg:w-[420px] lg:shrink-0">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
 
-            <Input
-              placeholder="Buscar por nome, telefone ou especialidade..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9"
-            />
-          </div>
+          <Input
+            placeholder="Buscar por nome, telefone ou especialidade..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9"
+          />
+        </div>
 
-          {/* Filtro */}
+        {/* FILTRO DE STATUS */}
+        <div className="w-full lg:w-56 lg:shrink-0">
           <Select
             value={filtroStatus}
             onChange={(e) => setFiltroStatus(e.target.value)}
-            className="w-full lg:w-56"
+            className="w-full"
           >
             <option value="todos">Todos os mecânicos</option>
             <option value="ativos">Mecânicos ativos</option>
             <option value="inativos">Mecânicos inativos</option>
           </Select>
-
-          {/* Novo mecânico */}
-          <Button
-            className="w-full whitespace-nowrap sm:w-auto lg:ml-auto"
-            onClick={() => {
-              setEditing(null);
-              setModalOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            Novo mecânico
-          </Button>
         </div>
+
+        {/* NOVO MECÂNICO */}
+        <Button
+          className="w-full whitespace-nowrap lg:ml-auto lg:w-auto"
+          onClick={() => {
+            setEditing(null);
+            setModalOpen(true);
+          }}
+        >
+          <Plus className="h-4 w-4" />
+          Novo mecânico
+        </Button>
       </div>
 
       {/* CONTEÚDO */}

@@ -19,6 +19,7 @@ import { PageLoader } from "../components/ui/Spinner";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Modal } from "../components/ui/Modal";
 import { useToast } from "../components/ui/Toast";
+
 import {
   ClienteForm,
   type ClienteFormValues,
@@ -31,6 +32,7 @@ import {
   reativarCliente,
   getHistoricoCliente,
 } from "../services/clientes";
+
 import type {
   ClienteDetalhado,
   VeiculoResumo,
@@ -47,14 +49,29 @@ export function ClienteDetalhes() {
   const [cliente, setCliente] = useState<ClienteDetalhado | null>(null);
   const [veiculos, setVeiculos] = useState<VeiculoResumo[]>([]);
   const [historico, setHistorico] = useState<ClienteHistorico[]>([]);
+
   const quantidadeOS = historico.length;
 
-const totalPago = historico
-  .filter((os) => os.statusAtual === 4)
-  .reduce(
-    (total, os) => total + os.valorTotal,
-    0
-  );
+  const totalPago = historico
+    .filter((os) => os.statusAtual === 4)
+    .reduce((total, os) => total + os.valorTotal, 0);
+
+  /*
+   * Mantém somente as 10 OS mais recentes
+   * para exibição na tela de detalhes.
+   */
+  const ultimasOS = historico
+    .slice()
+    .sort((a, b) => {
+      const dataA = a.historicos[0]?.dataAlteracao;
+      const dataB = b.historicos[0]?.dataAlteracao;
+
+      return (
+        new Date(dataB ?? 0).getTime() -
+        new Date(dataA ?? 0).getTime()
+      );
+    })
+    .slice(0, 10);
 
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
@@ -62,6 +79,7 @@ const totalPago = historico
 
   useEffect(() => {
     if (!id) return;
+
     (async () => {
       try {
         const detalhe = await getCliente(id);
@@ -92,6 +110,7 @@ const totalPago = historico
       setEditOpen(false);
 
       const atualizado = await getCliente(id);
+
       setCliente(atualizado);
       setVeiculos(atualizado?.veiculos ?? []);
     } catch (err) {
@@ -159,6 +178,7 @@ const totalPago = historico
 
   return (
     <div className="space-y-5">
+      {/* Cabeçalho */}
       <div className="flex items-center justify-between gap-3">
         <Link to="/clientes">
           <Button variant="ghost" size="sm">
@@ -168,24 +188,38 @@ const totalPago = historico
         </Link>
 
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setEditOpen(true)}
+          >
             <Pencil className="h-4 w-4" />
             Editar
           </Button>
 
           {cliente.ativo ? (
-            <Button variant="danger" size="sm" onClick={handleInativar}>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleInativar}
+            >
               <UserX className="h-4 w-4" />
               Inativar
             </Button>
           ) : (
-            <Button variant="outline" size="sm" onClick={handleReativar}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReativar}
+            >
               <UserCheck className="h-4 w-4" />
               Reativar
             </Button>
           )}
         </div>
       </div>
+
+      {/* Dados do cliente */}
       <Card className="p-6">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-ink-700 to-ink-800 text-xl font-bold text-flame-400">
@@ -212,16 +246,19 @@ const totalPago = historico
         </div>
       </Card>
 
+      {/* Resumo */}
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-800 text-flame-400">
               <Car className="h-5 w-5" />
             </div>
+
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                 Veículos
               </p>
+
               <p className="font-display text-xl font-bold text-white">
                 {veiculos.length}
               </p>
@@ -234,10 +271,12 @@ const totalPago = historico
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-800 text-sky-400">
               <ClipboardList className="h-5 w-5" />
             </div>
+
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                 Ordens de Serviço
               </p>
+
               <p className="font-display text-xl font-bold text-white">
                 {quantidadeOS}
               </p>
@@ -250,10 +289,12 @@ const totalPago = historico
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-800 text-emerald-400">
               <ClipboardList className="h-5 w-5" />
             </div>
+
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
                 Total Pago
               </p>
+
               <p className="font-display text-xl font-bold text-white">
                 {formatCurrency(totalPago)}
               </p>
@@ -262,6 +303,7 @@ const totalPago = historico
         </Card>
       </div>
 
+      {/* Veículos */}
       <Card>
         <CardHeader
           title="Veículos do cliente"
@@ -299,7 +341,10 @@ const totalPago = historico
                     <p className="text-sm font-semibold text-white">
                       {v.marca} {v.modelo}
                     </p>
-                    <p className="text-xs text-ink-400">{v.placa || "—"}</p>
+
+                    <p className="text-xs text-ink-400">
+                      {v.placa || "—"}
+                    </p>
                   </div>
                 </div>
               </Link>
@@ -308,10 +353,15 @@ const totalPago = historico
         )}
       </Card>
 
+      {/* Ordens de Serviço */}
       <Card>
         <CardHeader
-          title="Ordens de Serviço"
-          subtitle={`${historico.length} atendimento(s)`}
+          title="Últimas Ordens de Serviço"
+          subtitle={
+            historico.length > 10
+              ? `Exibindo as 10 mais recentes de ${historico.length} atendimento(s)`
+              : `${historico.length} atendimento(s)`
+          }
         />
 
         {historico.length === 0 ? (
@@ -322,45 +372,55 @@ const totalPago = historico
           />
         ) : (
           <div className="grid gap-4 p-5 md:grid-cols-2">
-            {historico.map((os) => {
+            {ultimasOS.map((os) => {
               const ultimoHistorico = os.historicos[0];
 
               const statusAtual = ultimoHistorico?.novoStatus ?? 0;
 
-              const dataUltimaAtualizacao = ultimoHistorico?.dataAlteracao;
+              const dataUltimaAtualizacao =
+                ultimoHistorico?.dataAlteracao;
 
               return (
-                <Card key={os.ordemServicoId} className="bg-ink-800/40 p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-lg font-bold text-white">
-                        OS #{os.ordemServicoId.slice(-4)}
-                      </p>
+                <Link
+                  key={os.ordemServicoId}
+                  to={`/ordens-servico/${os.ordemServicoId}`}
+                  className="block"
+                >
+                  <Card className="bg-ink-800/40 p-5 transition hover:bg-ink-700/50 hover:ring-1 hover:ring-sky-400/30">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-lg font-bold text-white">
+                          OS #{os.ordemServicoId.slice(-4)}
+                        </p>
 
-                      <p className="mt-2 text-sm text-ink-300">
-                        Status:{" "}
-                        <span className="font-semibold text-white">
-                          {statusLabel(statusAtual)}
-                        </span>
-                      </p>
+                        <p className="mt-2 text-sm text-ink-300">
+                          Status:{" "}
+                          <span className="font-semibold text-white">
+                            {statusLabel(statusAtual)}
+                          </span>
+                        </p>
+                      </div>
+
+                      <ClipboardList className="h-6 w-6 text-sky-400" />
                     </div>
 
-                    <ClipboardList className="h-6 w-6 text-sky-400" />
-                  </div>
-
-                  {dataUltimaAtualizacao && (
-                    <p className="mt-4 text-xs text-ink-400">
-                      Última atualização:{" "}
-                      {new Date(dataUltimaAtualizacao).toLocaleDateString()}
-                    </p>
-                  )}
-                </Card>
+                    {dataUltimaAtualizacao && (
+                      <p className="mt-4 text-xs text-ink-400">
+                        Última atualização:{" "}
+                        {new Date(
+                          dataUltimaAtualizacao
+                        ).toLocaleDateString("pt-BR")}
+                      </p>
+                    )}
+                  </Card>
+                </Link>
               );
             })}
           </div>
         )}
       </Card>
 
+      {/* Modal de edição */}
       <Modal
         open={editOpen}
         onClose={() => setEditOpen(false)}

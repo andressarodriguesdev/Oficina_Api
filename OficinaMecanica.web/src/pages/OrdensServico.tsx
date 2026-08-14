@@ -68,7 +68,6 @@ export function OrdensServico() {
   const [submitting, setSubmitting] = useState(false);
 
   const [toDelete, setToDelete] = useState<OrdemWithRelations | null>(null);
-
   const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
@@ -137,9 +136,7 @@ export function OrdensServico() {
         0,
       );
 
-      const valorTotal = Number(
-        (values.valorMaoObra + totalItens).toFixed(2),
-      );
+      const valorTotal = Number((values.valorMaoObra + totalItens).toFixed(2));
 
       await createOrdem({
         clienteId: values.clienteId,
@@ -195,19 +192,11 @@ export function OrdensServico() {
       await load();
 
       if (os.cliente?.telefone) {
-        const fresh =
-          (await listOrdens()).find((o) => o.id === os.id) ?? os;
+        const fresh = (await listOrdens()).find((o) => o.id === os.id) ?? os;
 
-        const msg = buildWhatsAppMessage(
-          fresh,
-          os.cliente,
-          os.veiculo,
-        );
+        const msg = buildWhatsAppMessage(fresh, os.cliente, os.veiculo);
 
-        window.open(
-          whatsappUrl(os.cliente.telefone, msg),
-          "_blank",
-        );
+        window.open(whatsappUrl(os.cliente.telefone, msg), "_blank");
       }
     } catch (err) {
       toast.error("Erro ao enviar para aprovação");
@@ -219,11 +208,7 @@ export function OrdensServico() {
     <div className="space-y-5">
       {/* CABEÇALHO */}
       <div className="flex items-center">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate("/painel")}
-        >
+        <Button variant="ghost" size="sm" onClick={() => navigate("/painel")}>
           <ArrowLeft className="h-4 w-4" />
           Voltar
         </Button>
@@ -232,33 +217,57 @@ export function OrdensServico() {
       {/* FILTROS */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 flex-col gap-3 sm:flex-row">
+          {/* BUSCA */}
           <div className="relative w-full sm:max-w-xs">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+            <Search
+              className="
+                pointer-events-none
+                absolute left-3 top-1/2
+                h-4 w-4
+                -translate-y-1/2
+                text-ink-400
+              "
+            />
 
             <Input
               placeholder="Buscar OS..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
+              className="
+                pl-9
+                bg-ink-800
+                border-ink-700
+                text-white
+                placeholder:text-ink-500
+                focus:border-flame-500
+                focus:ring-flame-500/20
+              "
             />
           </div>
 
-          <Select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="sm:w-52"
-          >
-            <option value="">Todos os status</option>
+          {/* FILTRO */}
+          <div className="w-full sm:w-52">
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="
+                w-full
+                bg-ink-800
+                border-ink-700
+                text-white
+                focus:border-flame-500
+                focus:ring-flame-500/20
+              "
+            >
+              <option value="">Todos os status</option>
 
-            {ALL_STATUSES.map((s) => (
-              <option
-                key={s}
-                value={STATUS_TEXT_TO_NUMBER[s]}
-              >
-                {STATUS_LABEL[s]}
-              </option>
-            ))}
-          </Select>
+              {ALL_STATUSES.map((s) => (
+                <option key={s} value={STATUS_TEXT_TO_NUMBER[s]}>
+                  {STATUS_LABEL[s]}
+                </option>
+              ))}
+            </Select>
+          </div>
         </div>
 
         <Button onClick={() => setModalOpen(true)}>
@@ -297,134 +306,164 @@ export function OrdensServico() {
         </Card>
       ) : (
         <>
-          {/* DESKTOP */}
+          {/* DESKTOP — MESMO PADRÃO DO DASHBOARD */}
           <div className="hidden lg:block">
-            <Card className="overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-ink-700/60 text-left text-xs font-semibold uppercase tracking-wide text-ink-400">
-                      <th className="px-5 py-3.5">OS</th>
-                      <th className="px-5 py-3.5">Cliente</th>
-                      <th className="px-5 py-3.5">Veículo</th>
-                      <th className="px-5 py-3.5">Status</th>
-                      <th className="px-5 py-3.5">Data</th>
-                      <th className="px-5 py-3.5 text-right">
-                        Valor
-                      </th>
-                      <th className="px-5 py-3.5 text-right">
-                        Ações
-                      </th>
-                    </tr>
-                  </thead>
+            <Card>
+              {/* CABEÇALHO DA LISTA */}
+              <div className="border-b border-ink-700/60 px-5 py-4">
+                <h3 className="font-display text-base font-bold text-white">
+                  Ordens de Serviço
+                </h3>
 
-                  <tbody className="divide-y divide-ink-700/40">
-                    {filtered.map((os) => (
-                      <tr
-                        key={os.id}
-                        onClick={() =>
-                          navigate(`/ordens-servico/${os.id}`)
-                        }
-                        className="cursor-pointer transition hover:bg-ink-800/30"
+                <p className="mt-0.5 text-sm text-ink-400">
+                  Acompanhe todas as ordens de serviço cadastradas
+                </p>
+              </div>
+
+              {/* LISTA */}
+              <div className="divide-y divide-ink-700/40">
+                {filtered.map((os) => (
+                  <div
+                    key={os.id}
+                    onClick={() => navigate(`/ordens-servico/${os.id}`)}
+                    className="
+                      flex
+                      items-center
+                      justify-between
+                      gap-4
+                      px-5
+                      py-3.5
+                      cursor-pointer
+                      transition
+                      hover:bg-ink-800/40
+                    "
+                  >
+                    {/* OS + CLIENTE + VEÍCULO */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-3">
+                        <Link
+                          to={`/ordens-servico/${os.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="
+                            shrink-0
+                            font-mono
+                            text-xs
+                            font-semibold
+                            text-flame-400
+                            hover:text-flame-300
+                          "
+                        >
+                          #{os.id.slice(0, 8).toUpperCase()}
+                        </Link>
+
+                        <span className="text-ink-700">·</span>
+
+                        <p className="truncate text-sm font-semibold text-white">
+                          {os.cliente?.nome ?? "Cliente não informado"}
+                        </p>
+                      </div>
+
+                      <p className="mt-0.5 truncate text-xs text-ink-400">
+                        {os.veiculo
+                          ? `${os.veiculo.marca} ${os.veiculo.modelo}`
+                          : "Veículo não informado"}
+
+                        {os.veiculo?.placa && (
+                          <>
+                            {" · "}
+                            {os.veiculo.placa}
+                          </>
+                        )}
+                      </p>
+                    </div>
+
+                    {/* INFORMAÇÕES + AÇÕES */}
+                    <div className="flex shrink-0 items-center gap-4">
+                      <span className="hidden text-xs text-ink-400 xl:block">
+                        {formatDate(os.dataCriacao)}
+                      </span>
+
+                      <span className="hidden text-sm font-semibold text-white xl:block">
+                        {formatCurrency(os.valorTotal)}
+                      </span>
+
+                      <StatusBadge status={os.status} />
+
+                      <div
+                        className="flex items-center gap-1"
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        <td className="px-5 py-3.5">
+                        {/* VISUALIZAR */}
+                        <Link
+                          to={`/ordens-servico/${os.id}`}
+                          className="
+                            rounded-lg
+                            p-2
+                            text-ink-400
+                            transition
+                            hover:bg-ink-700
+                            hover:text-sky-400
+                          "
+                          title="Visualizar"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Link>
+
+                        {/* EDITAR */}
+                        {os.status === 0 && (
                           <Link
-                            to={`/ordens-servico/${os.id}`}
-                            className="font-mono text-xs font-semibold text-flame-400 hover:text-flame-300"
+                            to={`/ordens-servico/${os.id}/editar`}
+                            className="
+                              rounded-lg
+                              p-2
+                              text-ink-400
+                              transition
+                              hover:bg-ink-700
+                              hover:text-flame-400
+                            "
+                            title="Editar"
                           >
-                            #{os.id.slice(0, 8).toUpperCase()}
+                            <Pencil className="h-4 w-4" />
                           </Link>
-                        </td>
+                        )}
 
-                        <td className="px-5 py-3.5">
-                          <p className="text-sm font-medium text-white">
-                            {os.cliente?.nome ?? "—"}
-                          </p>
-                        </td>
+                        {/* ENVIAR PARA APROVAÇÃO */}
+                        {os.status === 0 && (
+                          <button
+                            onClick={() => handleEnviarAprovacao(os)}
+                            className="
+                              rounded-lg
+                              p-2
+                              text-ink-400
+                              transition
+                              hover:bg-ink-700
+                              hover:text-emerald-400
+                            "
+                            title="Enviar para aprovação"
+                          >
+                            <FileText className="h-4 w-4" />
+                          </button>
+                        )}
 
-                        <td className="px-5 py-3.5">
-                          <p className="text-sm text-ink-200">
-                            {os.veiculo
-                              ? `${os.veiculo.marca} ${os.veiculo.modelo}`
-                              : "—"}
-                          </p>
-
-                          <p className="text-xs text-ink-400">
-                            {os.veiculo?.placa ?? ""}
-                          </p>
-                        </td>
-
-                        <td className="px-5 py-3.5">
-                          <StatusBadge status={os.status} />
-                        </td>
-
-                        <td className="px-5 py-3.5">
-                          <p className="text-sm text-ink-300">
-                            {formatDate(os.dataCriacao)}
-                          </p>
-                        </td>
-
-                        <td className="px-5 py-3.5 text-right">
-                          <p className="text-sm font-semibold text-white">
-                            {formatCurrency(os.valorTotal)}
-                          </p>
-                        </td>
-
-                        <td className="px-5 py-3.5">
-                          <div className="flex items-center justify-end gap-1">
-                            <Link
-                              to={`/ordens-servico/${os.id}`}
-                              onClick={(e) =>
-                                e.stopPropagation()
-                              }
-                              className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-700 hover:text-sky-400"
-                              title="Visualizar"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Link>
-
-                            {os.status === 0 && (
-                              <Link
-                                to={`/ordens-servico/${os.id}/editar`}
-                                onClick={(e) =>
-                                  e.stopPropagation()
-                                }
-                                className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-700 hover:text-flame-400"
-                                title="Editar"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Link>
-                            )}
-
-                            {os.status === 0 && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEnviarAprovacao(os);
-                                }}
-                                className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-700 hover:text-emerald-400"
-                                title="Enviar para aprovação"
-                              >
-                                <FileText className="h-4 w-4" />
-                              </button>
-                            )}
-
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setToDelete(os);
-                              }}
-                              className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-700 hover:text-red-400"
-                              title="Excluir"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        {/* EXCLUIR */}
+                        <button
+                          onClick={() => setToDelete(os)}
+                          className="
+                            rounded-lg
+                            p-2
+                            text-ink-400
+                            transition
+                            hover:bg-ink-700
+                            hover:text-red-400
+                          "
+                          title="Excluir"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </Card>
           </div>
@@ -436,9 +475,7 @@ export function OrdensServico() {
                 key={os.id}
                 hover
                 className="cursor-pointer p-4"
-                onClick={() =>
-                  navigate(`/ordens-servico/${os.id}`)
-                }
+                onClick={() => navigate(`/ordens-servico/${os.id}`)}
               >
                 <div className="flex items-start justify-between gap-3">
                   <Link
@@ -451,8 +488,7 @@ export function OrdensServico() {
                     </p>
 
                     <p className="mt-1 truncate text-sm font-semibold text-white">
-                      {os.cliente?.nome ??
-                        "Cliente não informado"}
+                      {os.cliente?.nome ?? "Cliente não informado"}
                     </p>
                   </Link>
 
@@ -461,9 +497,7 @@ export function OrdensServico() {
 
                 <div className="mt-4 space-y-2 border-t border-ink-700/40 pt-3">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs text-ink-400">
-                      Veículo
-                    </span>
+                    <span className="text-xs text-ink-400">Veículo</span>
 
                     <div className="min-w-0 text-right">
                       <p className="truncate text-sm text-ink-200">
@@ -481,9 +515,7 @@ export function OrdensServico() {
                   </div>
 
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs text-ink-400">
-                      Data
-                    </span>
+                    <span className="text-xs text-ink-400">Data</span>
 
                     <span className="text-sm text-ink-300">
                       {formatDate(os.dataCriacao)}
@@ -491,9 +523,7 @@ export function OrdensServico() {
                   </div>
 
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs text-ink-400">
-                      Valor
-                    </span>
+                    <span className="text-xs text-ink-400">Valor</span>
 
                     <span className="text-sm font-bold text-white">
                       {formatCurrency(os.valorTotal)}
@@ -502,43 +532,77 @@ export function OrdensServico() {
                 </div>
 
                 <div className="mt-4 flex items-center justify-end gap-1 border-t border-ink-700/40 pt-3">
+                  {/* VISUALIZAR */}
                   <Link
                     to={`/ordens-servico/${os.id}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-800 hover:text-sky-400"
+                    className="
+                      rounded-lg
+                      p-2
+                      text-ink-400
+                      transition
+                      hover:bg-ink-800
+                      hover:text-sky-400
+                    "
                     title="Visualizar"
-                  ></Link>
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Link>
 
+                  {/* EDITAR */}
                   {os.status === 0 && (
                     <Link
                       to={`/ordens-servico/${os.id}/editar`}
                       onClick={(e) => e.stopPropagation()}
-                      className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-800 hover:text-flame-400"
+                      className="
+                        rounded-lg
+                        p-2
+                        text-ink-400
+                        transition
+                        hover:bg-ink-800
+                        hover:text-flame-400
+                      "
                       title="Editar"
                     >
                       <Pencil className="h-4 w-4" />
                     </Link>
                   )}
 
+                  {/* ENVIAR PARA APROVAÇÃO */}
                   {os.status === 0 && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEnviarAprovacao(os);
                       }}
-                      className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-800 hover:text-emerald-400"
+                      className="
+                        rounded-lg
+                        p-2
+                        text-ink-400
+                        transition
+                        hover:bg-ink-800
+                        hover:text-emerald-400
+                      "
                       title="Enviar para aprovação"
                     >
                       <FileText className="h-4 w-4" />
                     </button>
                   )}
 
+                  {/* EXCLUIR */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setToDelete(os);
                     }}
-                    className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-800 hover:text-red-400"
+                    className="
+                      rounded-lg
+                      p-2
+                      text-ink-400
+                      transition
+                      hover:bg-ink-800
+                      hover:text-red-400
+                    "
                     title="Excluir"
                   >
                     <Trash2 className="h-4 w-4" />

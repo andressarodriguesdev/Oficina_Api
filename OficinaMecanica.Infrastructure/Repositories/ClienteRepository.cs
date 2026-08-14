@@ -31,13 +31,14 @@ public class ClienteRepository
     }
 
     public async Task<Cliente?> ObterPorIdAsync(
-        Guid id,
-        Guid oficinaId)
+     Guid id,
+     Guid oficinaId)
     {
         return await _context.Clientes
             .Where(c => c.OficinaId == oficinaId)
             .Include(c => c.Veiculos)
             .Include(c => c.OrdensServico)
+                .ThenInclude(o => o.Itens)
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
@@ -64,13 +65,15 @@ public class ClienteRepository
     }
 
     public async Task<Cliente?> BuscarComHistoricoAsync(
-        Guid id,
-        Guid oficinaId)
+    Guid id,
+    Guid oficinaId)
     {
         return await _context.Clientes
             .Where(c => c.OficinaId == oficinaId)
             .Include(c => c.OrdensServico)
                 .ThenInclude(o => o.Historicos)
+            .Include(c => c.OrdensServico)
+                .ThenInclude(o => o.Itens)
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 }

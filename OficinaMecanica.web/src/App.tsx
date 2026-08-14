@@ -17,37 +17,48 @@ import { Mecanicos } from './pages/MecanicosPage';
 import { MecanicoDetalhes } from './pages/MecanicoDetalhes';
 import { CriarOficina } from './pages/CriarOficina';
 import { Cadastro } from './pages/Cadastro';
+import { ThemeProvider } from './context/ThemeContext';
 
 function App() {
   return (
-    <ToastProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/cadastro" element={<Cadastro />} />
-          <Route path="/criar-oficina" element={<CriarOficina />} />
-          <Route element={<AppLayout />}>
-            <Route path="/painel" element={<Dashboard />} />
-            <Route path="/clientes" element={<Clientes />} />
-            <Route path="/clientes/:id" element={<ClienteDetalhes />} />
-            <Route path="/veiculos" element={<Veiculos />} />
-            <Route path="/veiculos/:id" element={<VeiculoDetalhes />} />
-            <Route path="/ordens-servico" element={<OrdensServico />} />
-            <Route path="/ordens-servico/:id" element={<OrdemDetalhes />} />
-            <Route path="/ordens-servico/:id/editar" element={<OrdemEditar />} />
-            <Route path="/historico" element={<Historico />} />
-            <Route path="/configuracoes" element={<Configuracoes />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-            <Route  path="/financeiro" element={<Financeiro />} />
-            <Route path="/mecanicos" element={<Mecanicos />} />
-            <Route  path="/mecanicos/:id" element={<MecanicoDetalhes />} 
-/>
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </ToastProvider>
+    <ThemeProvider>
+      <ToastProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/cadastro" element={<Cadastro />} />
+            <Route path="/criar-oficina" element={<CriarOficina />} />
+
+            <Route element={<AppLayout />}>
+              <Route path="/painel" element={<Dashboard />} />
+              <Route path="/clientes" element={<Clientes />} />
+              <Route path="/clientes/:id" element={<ClienteDetalhes />} />
+              <Route path="/veiculos" element={<Veiculos />} />
+              <Route path="/veiculos/:id" element={<VeiculoDetalhes />} />
+              <Route path="/ordens-servico" element={<OrdensServico />} />
+              <Route path="/ordens-servico/:id" element={<OrdemDetalhes />} />
+              <Route
+                path="/ordens-servico/:id/editar"
+                element={<OrdemEditar />}
+              />
+              <Route path="/historico" element={<Historico />} />
+              <Route path="/configuracoes" element={<Configuracoes />} />
+              <Route path="/financeiro" element={<Financeiro />} />
+              <Route path="/mecanicos" element={<Mecanicos />} />
+              <Route
+                path="/mecanicos/:id"
+                element={<MecanicoDetalhes />}
+              />
+              <Route
+                path="*"
+                element={<Navigate to="/" replace />}
+              />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </ToastProvider>
+    </ThemeProvider>
   );
 }
-
 export default App;
