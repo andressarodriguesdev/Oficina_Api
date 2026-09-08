@@ -1,4 +1,4 @@
-import { api } from './api';
+import { api } from "./api";
 
 export interface LoginRequest {
   email: string;
@@ -6,6 +6,17 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
+  mensagem: string;
+  token?: string;
+  usuarioId?: number;
+  nome?: string;
+  email?: string;
+
+  requiresTwoFactor?: boolean;
+  twoFactorToken?: string;
+}
+
+export interface VerifyTwoFactorResponse {
   mensagem: string;
   token: string;
   usuarioId: number;
@@ -17,8 +28,18 @@ export async function login(
   email: string,
   senha: string,
 ): Promise<LoginResponse> {
-  return api.post<LoginResponse>('/Auth/login', {
+  return api.post<LoginResponse>("/Auth/login", {
     email,
     senha,
+  });
+}
+
+export async function verificarTwoFactor(
+  twoFactorToken: string,
+  code: string,
+): Promise<VerifyTwoFactorResponse> {
+  return api.post<VerifyTwoFactorResponse>("/Auth/2fa/verify", {
+    twoFactorToken,
+    code,
   });
 }

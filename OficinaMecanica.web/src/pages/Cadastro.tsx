@@ -1,6 +1,5 @@
-
-import { type FormEvent, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { type FormEvent, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Wrench,
   User,
@@ -9,22 +8,21 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
-} from 'lucide-react';
-import { useToast } from '../components/ui/Toast';
-import { Button } from '../components/ui/Button';
-import { cadastrarUsuario } from '../services/usuarioService';
+} from "lucide-react";
+import { useToast } from "../components/ui/Toast";
+import { Button } from "../components/ui/Button";
+import { cadastrarUsuario } from "../services/usuarioService";
 
-const WORKSHOP_IMAGE =
-  'https://images.pexels.com/photos/4116231/pexels-photo-4116231.jpeg?auto=crop&fit=crop&w=1200&q=80';
+const WORKSHOP_IMAGE = "/./src/public/oficina-login.jpg";
 
 export function Cadastro() {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
-  const [confirmarSenha, setConfirmarSenha] = useState('');
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -34,27 +32,38 @@ export function Cadastro() {
     e.preventDefault();
 
     if (senha !== confirmarSenha) {
-      toast.error('As senhas não coincidem.');
+      toast.error("As senhas não coincidem.");
       return;
     }
 
     setLoading(true);
 
     try {
-      await cadastrarUsuario({
+      const response = await cadastrarUsuario({
         nome,
         email,
         senha,
       });
 
-      toast.success('Usuário cadastrado com sucesso!');
+      sessionStorage.setItem(
+        "emailVerificationToken",
+        response.verificationToken,
+      );
 
-      navigate('/login');
+      toast.success(
+        "Enviamos um código de verificação para seu e-mail.",
+      );
+
+      navigate("/verificar-email", {
+        state: {
+          email,
+        },
+      });
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : 'Não foi possível realizar o cadastro.';
+          : "Não foi possível realizar o cadastro.";
 
       toast.error(message);
     } finally {
@@ -64,7 +73,10 @@ export function Cadastro() {
 
   return (
     <div className="flex min-h-screen bg-ink-950">
-      {/* Lado esquerdo */}
+      {/* =====================================================
+          LADO ESQUERDO
+          ===================================================== */}
+
       <div className="relative hidden w-1/2 overflow-hidden lg:block">
         <img
           src={WORKSHOP_IMAGE}
@@ -72,9 +84,11 @@ export function Cadastro() {
           className="absolute inset-0 h-full w-full object-cover"
         />
 
-        <div className="absolute inset-0 bg-gradient-to-br from-ink-950/90 via-ink-950/70 to-flame-600/40" />
+        <div className="absolute inset-0 bg-gradient-to-br from-ink-950/50 via-ink-950/70 to-flame-600/40" />
 
         <div className="relative flex h-full flex-col justify-between p-12">
+          {/* Logo */}
+
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-flame-500 to-flame-600 shadow-glow">
               <Wrench className="h-6 w-6 text-white" />
@@ -91,29 +105,41 @@ export function Cadastro() {
             </div>
           </div>
 
+          {/* Texto */}
+
           <div className="max-w-md">
             <h2 className="font-display text-4xl font-extrabold leading-tight text-white">
-              Sua oficina organizada em{' '}
-              <span className="text-flame-400">um só lugar</span>.
+              Sua oficina organizada em{" "}
+              <span className="text-flame-400">
+                um só lugar
+              </span>
+              .
             </h2>
 
             <p className="mt-4 text-lg text-ink-200">
-              Crie sua conta e tenha controle completo de clientes, veículos,
-              ordens de serviço e faturamento.
+              Crie sua conta e tenha controle completo de
+              clientes, veículos, ordens de serviço e faturamento.
             </p>
           </div>
 
+          {/* Rodapé */}
+
           <p className="text-xs text-ink-400">
-            © {new Date().getFullYear()} OficinaMecânica. Todos os direitos
-            reservados.
+            © {new Date().getFullYear()} OficinaMecânica.
+            Todos os direitos reservados.
           </p>
         </div>
       </div>
 
-      {/* Formulário */}
+      {/* =====================================================
+          FORMULÁRIO
+          ===================================================== */}
+
       <div className="flex w-full items-center justify-center p-6 lg:w-1/2">
         <div className="w-full max-w-md animate-scale-in">
+
           {/* Logo mobile */}
+
           <div className="mb-8 flex flex-col items-center text-center lg:hidden">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-flame-500 to-flame-600 shadow-glow">
               <Wrench className="h-8 w-8 text-white" />
@@ -128,6 +154,8 @@ export function Cadastro() {
             </p>
           </div>
 
+          {/* Card */}
+
           <div className="card p-8">
             <h2 className="font-display text-xl font-bold text-white">
               Crie sua conta
@@ -137,10 +165,17 @@ export function Cadastro() {
               Cadastre seus dados para começar.
             </p>
 
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <form
+              onSubmit={handleSubmit}
+              className="mt-6 space-y-4"
+            >
               {/* Nome */}
+
               <div>
-                <label htmlFor="nome" className="label-base">
+                <label
+                  htmlFor="nome"
+                  className="label-base"
+                >
                   Nome
                 </label>
 
@@ -151,8 +186,12 @@ export function Cadastro() {
                     id="nome"
                     type="text"
                     required
+                    autoComplete="name"
+                    disabled={loading}
                     value={nome}
-                    onChange={(e) => setNome(e.target.value)}
+                    onChange={(e) =>
+                      setNome(e.target.value)
+                    }
                     placeholder="Seu nome"
                     className="input-base pl-9"
                   />
@@ -160,8 +199,12 @@ export function Cadastro() {
               </div>
 
               {/* E-mail */}
+
               <div>
-                <label htmlFor="email" className="label-base">
+                <label
+                  htmlFor="email"
+                  className="label-base"
+                >
                   E-mail
                 </label>
 
@@ -172,8 +215,12 @@ export function Cadastro() {
                     id="email"
                     type="email"
                     required
+                    autoComplete="email"
+                    disabled={loading}
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) =>
+                      setEmail(e.target.value)
+                    }
                     placeholder="seu@email.com"
                     className="input-base pl-9"
                   />
@@ -181,8 +228,12 @@ export function Cadastro() {
               </div>
 
               {/* Senha */}
+
               <div>
-                <label htmlFor="senha" className="label-base">
+                <label
+                  htmlFor="senha"
+                  className="label-base"
+                >
                   Senha
                 </label>
 
@@ -191,19 +242,35 @@ export function Cadastro() {
 
                   <input
                     id="senha"
-                    type={showPassword ? 'text' : 'password'}
+                    type={
+                      showPassword
+                        ? "text"
+                        : "password"
+                    }
                     required
                     minLength={6}
+                    autoComplete="new-password"
+                    disabled={loading}
                     value={senha}
-                    onChange={(e) => setSenha(e.target.value)}
+                    onChange={(e) =>
+                      setSenha(e.target.value)
+                    }
                     placeholder="••••••••"
                     className="input-base px-9"
                   />
 
                   <button
                     type="button"
-                    onClick={() => setShowPassword((s) => !s)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 transition hover:text-white"
+                    onClick={() =>
+                      setShowPassword((s) => !s)
+                    }
+                    disabled={loading}
+                    aria-label={
+                      showPassword
+                        ? "Ocultar senha"
+                        : "Mostrar senha"
+                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 transition hover:text-white disabled:opacity-50"
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -215,8 +282,12 @@ export function Cadastro() {
               </div>
 
               {/* Confirmar senha */}
+
               <div>
-                <label htmlFor="confirmarSenha" className="label-base">
+                <label
+                  htmlFor="confirmarSenha"
+                  className="label-base"
+                >
                   Confirmar senha
                 </label>
 
@@ -225,11 +296,19 @@ export function Cadastro() {
 
                   <input
                     id="confirmarSenha"
-                    type={showConfirmPassword ? 'text' : 'password'}
+                    type={
+                      showConfirmPassword
+                        ? "text"
+                        : "password"
+                    }
                     required
                     minLength={6}
+                    autoComplete="new-password"
+                    disabled={loading}
                     value={confirmarSenha}
-                    onChange={(e) => setConfirmarSenha(e.target.value)}
+                    onChange={(e) =>
+                      setConfirmarSenha(e.target.value)
+                    }
                     placeholder="••••••••"
                     className="input-base px-9"
                   />
@@ -239,7 +318,13 @@ export function Cadastro() {
                     onClick={() =>
                       setShowConfirmPassword((s) => !s)
                     }
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 transition hover:text-white"
+                    disabled={loading}
+                    aria-label={
+                      showConfirmPassword
+                        ? "Ocultar confirmação de senha"
+                        : "Mostrar confirmação de senha"
+                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 transition hover:text-white disabled:opacity-50"
                   >
                     {showConfirmPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -250,6 +335,8 @@ export function Cadastro() {
                 </div>
               </div>
 
+              {/* Botão */}
+
               <Button
                 type="submit"
                 className="w-full"
@@ -257,12 +344,18 @@ export function Cadastro() {
                 size="lg"
               >
                 Criar minha conta
-                {!loading && <ArrowRight className="h-4 w-4" />}
+
+                {!loading && (
+                  <ArrowRight className="h-4 w-4" />
+                )}
               </Button>
             </form>
 
+            {/* Login */}
+
             <p className="mt-6 text-center text-sm text-ink-400">
-              Já possui uma conta?{' '}
+              Já possui uma conta?{" "}
+
               <Link
                 to="/login"
                 className="font-semibold text-flame-400 transition hover:text-flame-300"
@@ -276,4 +369,3 @@ export function Cadastro() {
     </div>
   );
 }
-

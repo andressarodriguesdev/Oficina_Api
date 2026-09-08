@@ -9,6 +9,7 @@ using OficinaMecanica.Infrastructure.Data;
 using OficinaMecanica.Infrastructure.Repositories;
 using OficinaMecanica.Infrastructure.Services;
 using QuestPDF.Infrastructure;
+using Resend;
 using System.Text;
 
 QuestPDF.Settings.License = LicenseType.Community;
@@ -61,7 +62,14 @@ builder.Services.AddSingleton(sp =>
 );
 
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<TwoFactorService>();
+builder.Services.AddScoped<ResendEmailService>();
 
+builder.Services
+    .AddOptions<ResendClientOptions>()
+    .Bind(builder.Configuration.GetSection("Resend"));
+
+builder.Services.AddHttpClient<ResendClient>();
 
 
 

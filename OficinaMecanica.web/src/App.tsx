@@ -1,23 +1,24 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ToastProvider } from './components/ui/Toast';
-import { AppLayout } from './components/layout/AppLayout';
-import { Login } from './pages/Login';
-import { Dashboard } from './pages/Dashboard';
-import { Clientes } from './pages/Clientes';
-import { ClienteDetalhes } from './pages/ClienteDetalhes';
-import { Veiculos } from './pages/Veiculos';
-import { VeiculoDetalhes } from './pages/VeiculoDetalhes';
-import { OrdensServico } from './pages/OrdensServico';
-import { OrdemDetalhes } from './pages/OrdemDetalhes';
-import { OrdemEditar } from './pages/OrdemEditar';
-import { Historico } from './pages/Historico';
-import { Configuracoes } from './pages/Configuracoes';
-import { Financeiro } from './pages/Financeiro';
-import { Mecanicos } from './pages/MecanicosPage';
-import { MecanicoDetalhes } from './pages/MecanicoDetalhes';
-import { CriarOficina } from './pages/CriarOficina';
-import { Cadastro } from './pages/Cadastro';
-import { ThemeProvider } from './context/ThemeContext';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ToastProvider } from "./components/ui/Toast";
+import { AppLayout } from "./components/layout/AppLayout";
+import { Login } from "./pages/Login";
+import { Dashboard } from "./pages/Dashboard";
+import { Clientes } from "./pages/Clientes";
+import { ClienteDetalhes } from "./pages/ClienteDetalhes";
+import { Veiculos } from "./pages/Veiculos";
+import { VeiculoDetalhes } from "./pages/VeiculoDetalhes";
+import { OrdensServico } from "./pages/OrdensServico";
+import { OrdemDetalhes } from "./pages/OrdemDetalhes";
+import { OrdemEditar } from "./pages/OrdemEditar";
+import { Historico } from "./pages/Historico";
+import { Configuracoes } from "./pages/Configuracoes";
+import { Financeiro } from "./pages/Financeiro";
+import { Mecanicos } from "./pages/MecanicosPage";
+import { MecanicoDetalhes } from "./pages/MecanicoDetalhes";
+import { CriarOficina } from "./pages/CriarOficina";
+import { Cadastro } from "./pages/Cadastro";
+import { ThemeProvider } from "./context/ThemeContext";
+import { VerificarEmail } from "./pages/VerificarEmail";
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Cadastro />} />
+            <Route path="/verificar-email" element={<VerificarEmail />} />
             <Route path="/criar-oficina" element={<CriarOficina />} />
 
             <Route element={<AppLayout />}>
@@ -46,14 +48,8 @@ function App() {
               <Route path="/configuracoes" element={<Configuracoes />} />
               <Route path="/financeiro" element={<Financeiro />} />
               <Route path="/mecanicos" element={<Mecanicos />} />
-              <Route
-                path="/mecanicos/:id"
-                element={<MecanicoDetalhes />}
-              />
-              <Route
-                path="*"
-                element={<Navigate to="/" replace />}
-              />
+              <Route path="/mecanicos/:id" element={<MecanicoDetalhes />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>
         </BrowserRouter>

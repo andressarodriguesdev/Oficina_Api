@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using OficinaMecanica.Infrastructure.Data;
@@ -11,9 +12,11 @@ using OficinaMecanica.Infrastructure.Data;
 namespace OficinaMecanica.Infrastructure.Migrations
 {
     [DbContext(typeof(OficinaDbContext))]
-    partial class OficinaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260907232211_AutenticacaoDoisFatores")]
+    partial class AutenticacaoDoisFatores
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -290,24 +293,6 @@ namespace OficinaMecanica.Infrastructure.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
-                    b.Property<bool>("EmailVerificado")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("EmailVerificationAttempts")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("EmailVerificationCodeExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("EmailVerificationCodeHash")
-                        .HasColumnType("text");
-
-                    b.Property<string>("EmailVerificationToken")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("EmailVerificationTokenExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -328,12 +313,6 @@ namespace OficinaMecanica.Infrastructure.Migrations
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("TwoFactorToken")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("TwoFactorTokenExpiresAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
