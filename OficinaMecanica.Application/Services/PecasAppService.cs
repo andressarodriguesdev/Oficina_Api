@@ -10,13 +10,16 @@ public class PecasAppService
 {
     private readonly PecasRepository _repository;
     private readonly OrdemServicoRepository _ordemServicoRepository;
+    private readonly MovimentacaoEstoqueRepository _movimentacaoRepository;
 
     public PecasAppService(
         PecasRepository repository,
-        OrdemServicoRepository ordemServicoRepository)
+        OrdemServicoRepository ordemServicoRepository,
+        MovimentacaoEstoqueRepository movimentacaoRepository)
     {
         _repository = repository;
         _ordemServicoRepository = ordemServicoRepository;
+        _movimentacaoRepository = movimentacaoRepository;
     }
 
     public async Task<List<Pecas>> ListarAsync(Guid oficinaId)
@@ -52,6 +55,19 @@ public class PecasAppService
             estoqueMinimo);
 
         await _repository.AddAsync(peca);
+
+        if (quantidadeEstoque > 0)
+        {
+            await _movimentacaoRepository.AddAsync(
+                new MovimentacaoEstoque(
+                    oficinaId,
+                    peca.Id,
+                    TipoMovimentacaoEstoque.SaldoInicial,
+                    0,
+                    quantidadeEstoque,
+                    motivo: "Cadastro da peça"));
+        }
+
         await _repository.SaveChangesAsync();
 
         return peca;
@@ -174,13 +190,62 @@ public class PecasAppService
                 $"Reservas: {detalhesReservas}.");
         }
 
-        peca.AjustarEstoque(quantidade);
+        var movimentacao = peca.AjustarEstoque(
+            quantidade,
+            TipoMovimentacaoEstoque.AjusteManual,
+            motivo: "Ajuste manual de estoque");
+
+        if (movimentacao.Quantidade != 0)
+        {
+            await _movimentacaoRepository.AddAsync(movimentacao);
+        }
 
         _repository.Update(peca);
 
         await _repository.SaveChangesAsync();
 
         return peca;
+    }
+
+    public async Task<List<MovimentacaoEstoqueResponseDto>>
+        ListarHistoricoEstoqueAsync(
+            Guid id,
+            Guid oficinaId,
+            DateTime? de,
+            DateTime? ate,
+            TipoMovimentacaoEstoque? tipo)
+    {
+        var peca = await _repository.GetByIdAsync(
+            id,
+            oficinaId);
+
+        if (peca == null)
+        {
+            throw new RegraNegocioException(
+                "Peça não encontrada.");
+        }
+
+        var movimentacoes =
+            await _movimentacaoRepository.ListarAsync(
+                peca.Id,
+                oficinaId,
+                de,
+                ate,
+                tipo);
+
+        return movimentacoes
+            .Select(m => new MovimentacaoEstoqueResponseDto
+            {
+                Id = m.Id,
+                Tipo = m.Tipo.ToString(),
+                Quantidade = m.Quantidade,
+                QuantidadeAnterior = m.QuantidadeAnterior,
+                QuantidadePosterior = m.QuantidadePosterior,
+                OrdemServicoId = m.OrdemServicoId,
+                Motivo = m.Motivo,
+                CriadoEm = m.CriadoEm
+            })
+            .ToList();
     }
 
     public async Task ExcluirAsync(

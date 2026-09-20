@@ -74,4 +74,26 @@ public class Pecas
 
         QuantidadeEstoque = quantidade;
     }
+
+    // Ajusta o estoque e devolve a movimentação para o histórico.
+    // Quem chamar deve persistir a movimentação retornada.
+    public MovimentacaoEstoque AjustarEstoque(
+        int quantidade,
+        TipoMovimentacaoEstoque tipo,
+        Guid? ordemServicoId = null,
+        string? motivo = null)
+    {
+        var anterior = QuantidadeEstoque;
+
+        AjustarEstoque(quantidade);
+
+        return new MovimentacaoEstoque(
+            OficinaId,
+            Id,
+            tipo,
+            anterior,
+            quantidade,
+            ordemServicoId,
+            motivo);
+    }
 }

@@ -113,6 +113,7 @@ builder.Services.AddScoped<MecanicoAppService>();
 
 builder.Services.AddScoped<PecasRepository>();
 builder.Services.AddScoped<PecasAppService>();
+builder.Services.AddScoped<MovimentacaoEstoqueRepository>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

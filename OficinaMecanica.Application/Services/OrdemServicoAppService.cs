@@ -15,6 +15,7 @@ public class OrdemServicoAppService
     private readonly MecanicoRepository _mecanicoRepository;
     private readonly OficinaRepository _oficinaRepository;
     private readonly PecasRepository _pecasRepository;
+    private readonly MovimentacaoEstoqueRepository _movimentacaoRepository;
 
 
 public OrdemServicoAppService(
@@ -24,7 +25,8 @@ public OrdemServicoAppService(
     HistoricoOrdemServicoRepository historicoRepository,
     MecanicoRepository mecanicoRepository,
     OficinaRepository oficinaRepository,
-    PecasRepository pecasRepository)
+    PecasRepository pecasRepository,
+    MovimentacaoEstoqueRepository movimentacaoRepository)
     {
         _repository = repository;
         _clienteRepository = clienteRepository;
@@ -33,6 +35,7 @@ public OrdemServicoAppService(
         _mecanicoRepository = mecanicoRepository;
         _oficinaRepository = oficinaRepository;
         _pecasRepository = pecasRepository;
+        _movimentacaoRepository = movimentacaoRepository;
     }
 
     public async Task<OrdemServicoResponseDto> CriarAsync(
@@ -291,9 +294,14 @@ public OrdemServicoAppService(
 
         foreach (var item in pecasParaBaixa)
         {
-            item.Peca.AjustarEstoque(
-                item.Peca.QuantidadeEstoque - item.Quantidade
+            var movimentacao = item.Peca.AjustarEstoque(
+                item.Peca.QuantidadeEstoque - item.Quantidade,
+                TipoMovimentacaoEstoque.SaidaOrdemServico,
+                ordem.Id,
+                $"Baixa da OS #{ordem.Id.ToString()[..8].ToUpper()}"
             );
+
+            await _movimentacaoRepository.AddAsync(movimentacao);
 
             _pecasRepository.Update(item.Peca);
         }
@@ -383,9 +391,14 @@ public OrdemServicoAppService(
                 if (peca == null)
                     continue;
 
-                peca.AjustarEstoque(
-                    peca.QuantidadeEstoque + item.Quantidade
+                var movimentacao = peca.AjustarEstoque(
+                    peca.QuantidadeEstoque + item.Quantidade,
+                    TipoMovimentacaoEstoque.EstornoReabertura,
+                    ordem.Id,
+                    $"Reabertura da OS #{ordem.Id.ToString()[..8].ToUpper()}"
                 );
+
+                await _movimentacaoRepository.AddAsync(movimentacao);
 
                 _pecasRepository.Update(peca);
             }

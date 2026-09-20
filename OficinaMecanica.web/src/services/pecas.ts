@@ -84,3 +84,43 @@ export async function excluirPeca(
 ): Promise<void> {
   await api.delete(`/pecas/${id}`);
 }
+
+export type TipoMovimentacaoEstoque =
+  | "SaldoInicial"
+  | "AjusteManual"
+  | "SaidaOrdemServico"
+  | "EstornoReabertura";
+
+export interface MovimentacaoEstoque {
+  id: string;
+  tipo: TipoMovimentacaoEstoque;
+  quantidade: number;
+  quantidadeAnterior: number;
+  quantidadePosterior: number;
+  ordemServicoId?: string | null;
+  motivo?: string | null;
+  criadoEm: string;
+}
+
+export interface HistoricoEstoqueFiltro {
+  de?: string;
+  ate?: string;
+  tipo?: TipoMovimentacaoEstoque | "";
+}
+
+export async function listarHistoricoEstoque(
+  id: string,
+  filtro: HistoricoEstoqueFiltro = {},
+): Promise<MovimentacaoEstoque[]> {
+  const params = new URLSearchParams();
+
+  if (filtro.de) params.set("de", filtro.de);
+  if (filtro.ate) params.set("ate", filtro.ate);
+  if (filtro.tipo) params.set("tipo", filtro.tipo);
+
+  const query = params.toString();
+
+  return api.get<MovimentacaoEstoque[]>(
+    `/pecas/${id}/estoque/historico${query ? `?${query}` : ""}`,
+  );
+}

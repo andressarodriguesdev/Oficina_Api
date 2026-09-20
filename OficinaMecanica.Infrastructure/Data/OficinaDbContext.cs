@@ -18,6 +18,7 @@ public class OficinaDbContext : DbContext
 
     public DbSet<Mecanico> Mecanicos { get; set; }
     public DbSet<Pecas> Pecas { get; set; }
+    public DbSet<MovimentacaoEstoque> MovimentacoesEstoque { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         base.OnModelCreating(modelBuilder);
@@ -135,5 +136,21 @@ public class OficinaDbContext : DbContext
             .WithOne(p => p.Oficina)
             .HasForeignKey(p => p.OficinaId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // MovimentacaoEstoque -> Pecas
+        // Cascade: só peças nunca usadas em OS podem ser excluídas,
+        // então o histórico delas é removido junto.
+        modelBuilder.Entity<MovimentacaoEstoque>()
+            .HasOne(m => m.Peca)
+            .WithMany()
+            .HasForeignKey(m => m.PecaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<MovimentacaoEstoque>()
+            .Property(m => m.Motivo)
+            .HasMaxLength(300);
+
+        modelBuilder.Entity<MovimentacaoEstoque>()
+            .HasIndex(m => new { m.PecaId, m.CriadoEm });
     }
 }

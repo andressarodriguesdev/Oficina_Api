@@ -14,6 +14,7 @@ import {
   Trash2,
   PlusCircle,
   MinusCircle,
+  History,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
@@ -44,6 +45,7 @@ import {
 
 import type { Peca } from "../types";
 import { formatCurrency } from "../utils/format";
+import { HistoricoEstoqueModal } from "../components/forms/HistoricoEstoqueModal";
 
 export function Pecas() {
   const { error, success } = useToast();
@@ -73,6 +75,8 @@ export function Pecas() {
   const [quantidadeAdicionar, setQuantidadeAdicionar] = useState("");
 
   const [adicionandoEstoque, setAdicionandoEstoque] = useState(false);
+
+  const [historicoPeca, setHistoricoPeca] = useState<Peca | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1306,6 +1310,27 @@ export function Pecas() {
                 </span>
 
                 <div className="flex items-center gap-1">
+                  {/* HISTÓRICO DE ESTOQUE */}
+                  <button
+                    type="button"
+                    onClick={() => setHistoricoPeca(p)}
+                    className="
+                      rounded-lg
+                      p-2
+                      text-[var(--app-text-muted)]
+                      transition-colors
+                      duration-200
+                      hover:bg-[var(--hover-bg)]
+                      hover:text-[var(--accent-text)]
+                      focus:outline-none
+                      focus-visible:ring-2
+                      focus-visible:ring-[var(--accent)]/40
+                    "
+                    title="Histórico de estoque"
+                  >
+                    <History className="h-4 w-4" />
+                  </button>
+
                   {/* EDITAR */}
                   <button
                     type="button"
@@ -1425,6 +1450,14 @@ export function Pecas() {
           submitting={submitting}
         />
       </Modal>
+
+      {historicoPeca && (
+        <HistoricoEstoqueModal
+          key={historicoPeca.id}
+          peca={historicoPeca}
+          onClose={() => setHistoricoPeca(null)}
+        />
+      )}
     </div>
   );
 }

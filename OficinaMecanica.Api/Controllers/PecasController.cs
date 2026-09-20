@@ -4,6 +4,7 @@ using OficinaMecanica.Application.DTOs;
 using OficinaMecanica.Application.DTOs.Pecas;
 using OficinaMecanica.Application.Exceptions;
 using OficinaMecanica.Application.Services;
+using OficinaMecanica.Domain.Entities;
 
 namespace OficinaMecanica.Api.Controllers;
 
@@ -247,6 +248,47 @@ public class PecasController : ControllerBase
                 quantidade);
 
             return Ok(peca);
+        }
+        catch (RegraNegocioException ex)
+        {
+            return Conflict(
+                new
+                {
+                    message = ex.Message
+                });
+        }
+    }
+
+    [HttpGet("{id:guid}/estoque/historico")]
+    public async Task<IActionResult> HistoricoEstoque(
+        Guid id,
+        [FromQuery] DateTime? de,
+        [FromQuery] DateTime? ate,
+        [FromQuery] TipoMovimentacaoEstoque? tipo)
+    {
+        var oficina = await _oficinaService.ObterUnicaAsync();
+
+        if (oficina == null)
+        {
+            return BadRequest(
+                new
+                {
+                    message =
+                        "Nenhuma oficina cadastrada no sistema."
+                });
+        }
+
+        try
+        {
+            var historico =
+                await _service.ListarHistoricoEstoqueAsync(
+                    id,
+                    oficina.Id,
+                    de,
+                    ate,
+                    tipo);
+
+            return Ok(historico);
         }
         catch (RegraNegocioException ex)
         {
