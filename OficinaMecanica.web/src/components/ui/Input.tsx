@@ -1,6 +1,8 @@
+
 import { type InputHTMLAttributes, forwardRef } from 'react';
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface InputProps
+  extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   hint?: string;
@@ -26,13 +28,23 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           id={inputId}
           className={[
             'input-base',
-            'w-full',
             'appearance-none',
+            'transition-all',
+            'duration-300',
+
             error
-              ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+              ? [
+                  'border-red-500',
+                  'focus:border-red-500',
+                  'focus:ring-2',
+                  'focus:ring-red-500/20',
+                ].join(' ')
               : '',
+
             className ?? '',
-          ].join(' ')}
+          ]
+            .filter(Boolean)
+            .join(' ')}
           {...props}
         />
 
@@ -41,7 +53,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {error}
           </p>
         ) : hint ? (
-          <p className="mt-1 text-xs text-ink-400">
+          <p className="mt-1 text-xs text-[var(--app-text-muted)]">
             {hint}
           </p>
         ) : null}
@@ -51,3 +63,4 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 );
 
 Input.displayName = 'Input';
+

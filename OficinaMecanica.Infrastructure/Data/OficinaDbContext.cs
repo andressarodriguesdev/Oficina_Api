@@ -17,6 +17,7 @@ public class OficinaDbContext : DbContext
     public DbSet<OrdemServicoItem> OrdemServicoItens { get; set; }
 
     public DbSet<Mecanico> Mecanicos { get; set; }
+    public DbSet<Pecas> Pecas { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         base.OnModelCreating(modelBuilder);
@@ -120,5 +121,19 @@ public class OficinaDbContext : DbContext
             .HasMany(o => o.Itens)
             .WithOne(i => i.OrdemServico)
             .HasForeignKey(i => i.OrdemServicoId);
+
+        // OrdemServicoItem -> Pecas
+        modelBuilder.Entity<Pecas>()
+            .HasMany<OrdemServicoItem>()
+            .WithOne(i => i.Peca)
+            .HasForeignKey(i => i.PecaId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Oficina -> Pecas
+        modelBuilder.Entity<Oficina>()
+            .HasMany<Pecas>()
+            .WithOne(p => p.Oficina)
+            .HasForeignKey(p => p.OficinaId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

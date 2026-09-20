@@ -30,6 +30,7 @@ export async function getOrdemHistorico(ordemId: string): Promise<HistoricoOrdem
 }
 
 export interface OrdemItemInput {
+  pecaId?: string;
   descricao: string;
   quantidade: number;
   valorUnitario: number;
@@ -113,6 +114,7 @@ export async function gerarWhatsApp(id: string): Promise<string> {
 }
 
 export interface OrdemServicoItemInput {
+  pecaId?: string;
   descricao: string;
   quantidade: number;
   valorUnitario: number;

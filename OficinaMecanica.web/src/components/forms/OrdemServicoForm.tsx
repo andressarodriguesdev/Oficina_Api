@@ -1,5 +1,5 @@
+import { type FormEvent, useEffect, useState } from "react";
 
-import { type FormEvent, useState } from "react";
 import {
   Plus,
   Trash2,
@@ -7,19 +7,22 @@ import {
   Check,
   X,
 } from "lucide-react";
+
 import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
 import { Textarea } from "../ui/Textarea";
 import { Button } from "../ui/Button";
+
 import type {
   Cliente,
   Veiculo,
   Mecanico,
   OrdemServicoItem,
+  PecaDisponivelOrdemServico,
 } from "../../types";
-import {
-  formatCurrency,
-} from "../../utils/format";
+
+import { formatCurrency } from "../../utils/format";
+
 import {
   adicionarItem,
   atualizarItem,
@@ -27,8 +30,16 @@ import {
   getOrdem,
 } from "../../services/ordens";
 
+import {
+  listPecasDisponiveisParaOrdemServico,
+} from "../../services/pecas";
+
+import { ApiError } from "../../services/api";
+import { useToast } from "../ui/Toast";
+
 export interface OrdemItemFormValue {
   id?: string;
+  pecaId?: string | null;
   descricao: string;
   quantidade: number;
   valorUnitario: number;
@@ -65,12 +76,30 @@ export function OrdemServicoForm({
   submitting,
 }: OrdemServicoFormProps) {
   const modoEdicao = Boolean(initial?.id);
+  const toast = useToast();
 
-  const [itens, setItens] = useState<OrdemItemFormValue[]>(
+  const [pecas, setPecas] = useState<
+    PecaDisponivelOrdemServico[]
+  >([]);
+
+  const [carregandoPecas, setCarregandoPecas] =
+    useState(true);
+
+  const [itens, setItens] = useState<
+    OrdemItemFormValue[]
+  >(
     initial?.itens && initial.itens.length > 0
-      ? initial.itens
+      ? initial.itens.map((item) => ({
+          id: item.id,
+          pecaId: item.pecaId ?? "",
+          descricao: item.descricao,
+          quantidade: item.quantidade,
+          valorUnitario: item.valorUnitario,
+          valorTotal: item.valorTotal,
+        }))
       : [
           {
+            pecaId: "",
             descricao: "",
             quantidade: 1,
             valorUnitario: 0,
@@ -79,45 +108,148 @@ export function OrdemServicoForm({
         ],
   );
 
-  const [clienteSelecionado, setClienteSelecionado] = useState(
-    initial?.clienteId ?? "",
-  );
+  const [clienteSelecionado, setClienteSelecionado] =
+    useState(initial?.clienteId ?? "");
 
-  const [veiculoSelecionado, setVeiculoSelecionado] = useState(
-    initial?.veiculoId ?? "",
-  );
+  const [veiculoSelecionado, setVeiculoSelecionado] =
+    useState(initial?.veiculoId ?? "");
 
-  const [mecanicoSelecionado, setMecanicoSelecionado] = useState(
-    initial?.mecanicoId ?? "",
-  );
+  const [mecanicoSelecionado, setMecanicoSelecionado] =
+    useState(initial?.mecanicoId ?? "");
 
-  const [itemEditando, setItemEditando] = useState<string | null>(
-    null,
-  );
+  const [itemEditando, setItemEditando] =
+    useState<string | null>(null);
 
   const [itemForm, setItemForm] = useState({
+    pecaId: "",
     descricao: "",
     quantidade: 1,
     valorUnitario: 0,
   });
 
-  const [itemSalvando, setItemSalvando] = useState(false);
-  const [itemExcluindo, setItemExcluindo] = useState<string | null>(
-    null,
-  );
+  const [itemSalvando, setItemSalvando] =
+    useState(false);
+
+  const [itemExcluindo, setItemExcluindo] =
+    useState<string | null>(null);
 
   const filteredVeiculos = clienteSelecionado
     ? veiculos.filter(
-        (v) => v.clienteId === clienteSelecionado,
+        (veiculo) =>
+          veiculo.clienteId === clienteSelecionado,
       )
     : [];
 
   // =========================================================
-  // ITENS
+  // MENSAGEM DE ERRO DA API
+  // =========================================================
+
+  const obterMensagemErro = (
+    err: unknown,
+    mensagemPadrao: string,
+  ) => {
+    if (err instanceof ApiError && err.message) {
+      return err.message;
+    }
+
+    if (err instanceof Error && err.message) {
+      return err.message;
+    }
+
+    return mensagemPadrao;
+  };
+
+  // =========================================================
+  // CARREGAR PEÇAS DISPONÍVEIS
+  // =========================================================
+
+  useEffect(() => {
+    const carregarPecas = async () => {
+      try {
+        setCarregandoPecas(true);
+
+        const data =
+          await listPecasDisponiveisParaOrdemServico(
+            initial?.id,
+          );
+
+        setPecas(data);
+      } catch (err) {
+        console.error(
+          "Erro ao carregar peças:",
+          err,
+        );
+
+        toast.error(
+          obterMensagemErro(
+            err,
+            "Não foi possível carregar as peças.",
+          ),
+        );
+      } finally {
+        setCarregandoPecas(false);
+      }
+    };
+
+    carregarPecas();
+  }, [initial?.id]);
+
+  // =========================================================
+  // SELECIONAR PEÇA - NOVA OS
+  // =========================================================
+
+  const selecionarPecaNovo = (
+    index: number,
+    pecaId: string,
+  ) => {
+    const peca = pecas.find(
+      (item) => item.id === pecaId,
+    );
+
+    setItens((prev) =>
+      prev.map((item, i) => {
+        if (i !== index) {
+          return item;
+        }
+
+        if (!peca) {
+          return {
+            ...item,
+            pecaId: "",
+            descricao: "",
+            valorUnitario: 0,
+            valorTotal: 0,
+          };
+        }
+
+        const quantidade =
+          Number(item.quantidade) || 1;
+
+        const valorUnitario =
+          Number(peca.valorVenda) || 0;
+
+        return {
+          ...item,
+          pecaId: peca.id,
+          descricao: peca.nome,
+          valorUnitario,
+          valorTotal: Number(
+            (
+              quantidade * valorUnitario
+            ).toFixed(2),
+          ),
+        };
+      }),
+    );
+  };
+
+  // =========================================================
+  // ITENS - EDIÇÃO
   // =========================================================
 
   const abrirNovoItem = () => {
     setItemForm({
+      pecaId: "",
       descricao: "",
       quantidade: 1,
       valorUnitario: 0,
@@ -126,10 +258,15 @@ export function OrdemServicoForm({
     setItemEditando("novo");
   };
 
-  const abrirEdicaoItem = (item: OrdemItemFormValue) => {
-    if (!item.id) return;
+  const abrirEdicaoItem = (
+    item: OrdemItemFormValue,
+  ) => {
+    if (!item.id) {
+      return;
+    }
 
     setItemForm({
+      pecaId: item.pecaId ?? "",
       descricao: item.descricao,
       quantidade: item.quantidade,
       valorUnitario: item.valorUnitario,
@@ -142,14 +279,59 @@ export function OrdemServicoForm({
     setItemEditando(null);
   };
 
+  const selecionarPecaEdicao = (
+    pecaId: string,
+  ) => {
+    const peca = pecas.find(
+      (item) => item.id === pecaId,
+    );
+
+    if (!peca) {
+      setItemForm((form) => ({
+        ...form,
+        pecaId: "",
+        descricao: "",
+        valorUnitario: 0,
+      }));
+
+      return;
+    }
+
+    setItemForm((form) => ({
+      ...form,
+      pecaId: peca.id,
+      descricao: peca.nome,
+      valorUnitario: peca.valorVenda,
+    }));
+  };
+
+  // =========================================================
+  // SALVAR ITEM NA OS EXISTENTE
+  // =========================================================
+
   const salvarItem = async () => {
-    if (!initial?.id) return;
+    if (!initial?.id) {
+      return;
+    }
+
+    if (!itemForm.pecaId) {
+      toast.error("Selecione uma peça.");
+      return;
+    }
 
     if (!itemForm.descricao.trim()) {
+      toast.error(
+        "Informe uma peça para o item.",
+      );
+
       return;
     }
 
     if (itemForm.quantidade <= 0) {
+      toast.error(
+        "A quantidade deve ser maior que zero.",
+      );
+
       return;
     }
 
@@ -158,41 +340,92 @@ export function OrdemServicoForm({
     try {
       if (itemEditando === "novo") {
         await adicionarItem(initial.id, {
-          descricao: itemForm.descricao.trim(),
-          quantidade: Number(itemForm.quantidade),
-          valorUnitario: Number(itemForm.valorUnitario),
+          pecaId:
+            itemForm.pecaId || undefined,
+
+          descricao:
+            itemForm.descricao.trim(),
+
+          quantidade:
+            Number(itemForm.quantidade),
+
+          valorUnitario:
+            Number(itemForm.valorUnitario),
         });
       } else if (itemEditando) {
         await atualizarItem(
           initial.id,
           itemEditando,
           {
-            descricao: itemForm.descricao.trim(),
-            quantidade: Number(itemForm.quantidade),
-            valorUnitario: Number(itemForm.valorUnitario),
+            pecaId:
+              itemForm.pecaId || undefined,
+
+            descricao:
+              itemForm.descricao.trim(),
+
+            quantidade:
+              Number(itemForm.quantidade),
+
+            valorUnitario:
+              Number(itemForm.valorUnitario),
           },
+        );
+      }
+
+      const atualizada = await getOrdem(
+        initial.id,
+      );
+
+      if (atualizada) {
+        setItens(
+          (atualizada.itens ?? []).map(
+            (item: OrdemServicoItem) => ({
+              id: item.id,
+              pecaId: item.pecaId ?? "",
+              descricao: item.descricao,
+              quantidade: item.quantidade,
+              valorUnitario:
+                item.valorUnitario,
+              valorTotal: item.valorTotal,
+            }),
+          ),
         );
       }
 
       setItemEditando(null);
 
-      // Busca novamente os itens diretamente do backend.
-      const atualizada = await getOrdem(initial.id);
-
-      if (atualizada) {
-        setItens(atualizada.itens ?? []);
-      }
+      toast.success(
+        itemEditando === "novo"
+          ? "Peça adicionada à ordem de serviço."
+          : "Peça atualizada na ordem de serviço.",
+      );
     } catch (err) {
-      console.error(err);
+      console.error(
+        "Erro ao salvar item:",
+        err,
+      );
+
+      toast.error(
+        obterMensagemErro(
+          err,
+          "Não foi possível salvar o item.",
+        ),
+      );
     } finally {
       setItemSalvando(false);
     }
   };
 
+  // =========================================================
+  // EXCLUIR ITEM
+  // =========================================================
+
   const excluirItem = async (
     item: OrdemItemFormValue,
   ) => {
-    if (!initial?.id || !item.id) return;
+    if (!initial?.id || !item.id) {
+      return;
+    }
 
     if (
       !window.confirm(
@@ -205,22 +438,53 @@ export function OrdemServicoForm({
     setItemExcluindo(item.id);
 
     try {
-      await removerItem(initial.id, item.id);
+      await removerItem(
+        initial.id,
+        item.id,
+      );
 
-      const atualizada = await getOrdem(initial.id);
+      const atualizada = await getOrdem(
+        initial.id,
+      );
 
       if (atualizada) {
-        setItens(atualizada.itens ?? []);
+        setItens(
+          (atualizada.itens ?? []).map(
+            (item: OrdemServicoItem) => ({
+              id: item.id,
+              pecaId: item.pecaId ?? "",
+              descricao: item.descricao,
+              quantidade: item.quantidade,
+              valorUnitario:
+                item.valorUnitario,
+              valorTotal: item.valorTotal,
+            }),
+          ),
+        );
       }
+
+      toast.success(
+        "Peça removida da ordem de serviço.",
+      );
     } catch (err) {
-      console.error(err);
+      console.error(
+        "Erro ao excluir item:",
+        err,
+      );
+
+      toast.error(
+        obterMensagemErro(
+          err,
+          "Não foi possível remover o item.",
+        ),
+      );
     } finally {
       setItemExcluindo(null);
     }
   };
 
   // =========================================================
-  // ITENS - CADASTRO DE NOVA OS
+  // ITENS - NOVA OS
   // =========================================================
 
   const atualizarItemNovo = (
@@ -230,12 +494,15 @@ export function OrdemServicoForm({
   ) => {
     setItens((prev) =>
       prev.map((item, i) => {
-        if (i !== index) return item;
+        if (i !== index) {
+          return item;
+        }
 
         const next = {
           ...item,
           [field]:
-            field === "descricao"
+            field === "descricao" ||
+            field === "pecaId"
               ? value
               : Number(value),
         } as OrdemItemFormValue;
@@ -261,6 +528,7 @@ export function OrdemServicoForm({
     setItens((prev) => [
       ...prev,
       {
+        pecaId: "",
         descricao: "",
         quantidade: 1,
         valorUnitario: 0,
@@ -269,10 +537,14 @@ export function OrdemServicoForm({
     ]);
   };
 
-  const removerItemNovo = (index: number) => {
+  const removerItemNovo = (
+    index: number,
+  ) => {
     setItens((prev) =>
       prev.length > 1
-        ? prev.filter((_, i) => i !== index)
+        ? prev.filter(
+            (_, i) => i !== index,
+          )
         : prev,
     );
   };
@@ -286,47 +558,89 @@ export function OrdemServicoForm({
   ) => {
     e.preventDefault();
 
-    const fd = new FormData(e.currentTarget);
+    const fd = new FormData(
+      e.currentTarget,
+    );
+
+    const itensValidos = itens
+      .filter(
+        (item) =>
+          item.descricao.trim() !== "",
+      )
+      .map((item) => ({
+        id: item.id,
+        pecaId:
+          item.pecaId || undefined,
+        descricao:
+          item.descricao.trim(),
+        quantidade:
+          Number(item.quantidade) || 0,
+        valorUnitario:
+          Number(item.valorUnitario) || 0,
+        valorTotal:
+          Number(item.valorTotal) || 0,
+      }));
+
+    const itemSemPeca =
+      itensValidos.find(
+        (item) => !item.pecaId,
+      );
+
+    if (itemSemPeca) {
+      toast.error(
+        `Selecione uma peça para o item "${itemSemPeca.descricao}".`,
+      );
+
+      return;
+    }
+
+    const quantidadeInvalida =
+      itensValidos.find(
+        (item) => item.quantidade <= 0,
+      );
+
+    if (quantidadeInvalida) {
+      toast.error(
+        `A quantidade da peça "${quantidadeInvalida.descricao}" deve ser maior que zero.`,
+      );
+
+      return;
+    }
 
     onSubmit({
       clienteId: String(
         fd.get("clienteId") ?? "",
       ),
+
       veiculoId: String(
         fd.get("veiculoId") ?? "",
       ),
+
       mecanicoId: String(
         fd.get("mecanicoId") ?? "",
       ),
+
       descricao: String(
         fd.get("descricao") ?? "",
       ).trim(),
+
       valorMaoObra:
-        Number(fd.get("valorMaoObra") ?? 0) || 0,
+        Number(
+          fd.get("valorMaoObra") ?? 0,
+        ) || 0,
+
       observacao: String(
         fd.get("observacao") ?? "",
       ).trim(),
 
-      itens: itens
-        .filter(
-          (item) => item.descricao.trim() !== "",
-        )
-        .map((item) => ({
-          id: item.id,
-          descricao: item.descricao.trim(),
-          quantidade:
-            Number(item.quantidade) || 0,
-          valorUnitario:
-            Number(item.valorUnitario) || 0,
-          valorTotal:
-            Number(item.valorTotal) || 0,
-        })),
+      itens: itensValidos,
     });
   };
 
   const totalItens = itens.reduce(
     (sum, item) =>
-      sum + (Number(item.valorTotal) || 0),
+      sum +
+      (Number(item.valorTotal) || 0),
     0,
   );
 
@@ -348,11 +662,15 @@ export function OrdemServicoForm({
             setClienteSelecionado(
               e.target.value,
             );
+
             setVeiculoSelecionado("");
           }}
           required
         >
-          <option value="" disabled>
+          <option
+            value=""
+            disabled
+          >
             Selecione um cliente
           </option>
 
@@ -377,22 +695,27 @@ export function OrdemServicoForm({
           }
           required
         >
-          <option value="" disabled>
+          <option
+            value=""
+            disabled
+          >
             Selecione um veículo
           </option>
 
-          {filteredVeiculos.map((veiculo) => (
-            <option
-              key={veiculo.id}
-              value={veiculo.id}
-            >
-              {veiculo.marca}{" "}
-              {veiculo.modelo}
-              {veiculo.placa
-                ? ` — ${veiculo.placa}`
-                : ""}
-            </option>
-          ))}
+          {filteredVeiculos.map(
+            (veiculo) => (
+              <option
+                key={veiculo.id}
+                value={veiculo.id}
+              >
+                {veiculo.marca}{" "}
+                {veiculo.modelo}
+                {veiculo.placa
+                  ? ` — ${veiculo.placa}`
+                  : ""}
+              </option>
+            ),
+          )}
         </Select>
 
         <Select
@@ -406,12 +729,17 @@ export function OrdemServicoForm({
           }
           required
         >
-          <option value="" disabled>
+          <option
+            value=""
+            disabled
+          >
             Selecione um mecânico
           </option>
 
           {mecanico
-            .filter((m) => m.ativo)
+            .filter(
+              (m) => m.ativo,
+            )
             .map((m) => (
               <option
                 key={m.id}
@@ -491,6 +819,7 @@ export function OrdemServicoForm({
               onClick={
                 adicionarItemNovo
               }
+              disabled={carregandoPecas}
             >
               <Plus className="h-4 w-4" />
               Adicionar item
@@ -508,17 +837,21 @@ export function OrdemServicoForm({
               <thead>
                 <tr className="border-b border-ink-700/60 text-left text-xs font-semibold uppercase tracking-wide text-ink-400">
                   <th className="px-5 py-3">
-                    Descrição
+                    Peça
                   </th>
+
                   <th className="px-5 py-3 text-right">
                     Qtd
                   </th>
+
                   <th className="px-5 py-3 text-right">
                     Valor unit.
                   </th>
+
                   <th className="px-5 py-3 text-right">
                     Total
                   </th>
+
                   <th className="px-5 py-3 text-right">
                     Ações
                   </th>
@@ -527,27 +860,55 @@ export function OrdemServicoForm({
 
               <tbody className="divide-y divide-ink-700/40">
                 {/* NOVO ITEM */}
-                {itemEditando === "novo" && (
+
+                {itemEditando ===
+                  "novo" && (
                   <tr className="bg-ink-800/30">
                     <td className="px-5 py-2">
-                      <input
-                        autoFocus
-                        className="w-full rounded-lg border border-ink-700 bg-ink-900 px-2 py-1.5 text-sm text-white focus:border-flame-500 focus:outline-none"
+                      <Select
                         value={
-                          itemForm.descricao
+                          itemForm.pecaId
                         }
                         onChange={(e) =>
-                          setItemForm(
-                            (form) => ({
-                              ...form,
-                              descricao:
-                                e.target
-                                  .value,
-                            }),
+                          selecionarPecaEdicao(
+                            e.target.value,
                           )
                         }
-                        placeholder="Descrição da peça"
-                      />
+                        disabled={
+                          carregandoPecas ||
+                          itemSalvando
+                        }
+                      >
+                        <option value="">
+                          {carregandoPecas
+                            ? "Carregando peças..."
+                            : "Selecione uma peça"}
+                        </option>
+
+                        {pecas.map(
+                          (peca) => (
+                            <option
+                              key={peca.id}
+                              value={peca.id}
+                            >
+                              {peca.nome}
+                              {peca.codigo
+                                ? ` — ${peca.codigo}`
+                                : ""}
+                              {" — Disponível: "}
+                              {
+                                peca.quantidadeDisponivelParaOrdem
+                              }
+                            </option>
+                          ),
+                        )}
+                      </Select>
+
+                      {itemForm.pecaId && (
+                        <p className="mt-1 text-xs text-ink-400">
+                          {itemForm.descricao}
+                        </p>
+                      )}
                     </td>
 
                     <td className="px-5 py-2">
@@ -582,18 +943,7 @@ export function OrdemServicoForm({
                         value={
                           itemForm.valorUnitario
                         }
-                        onChange={(e) =>
-                          setItemForm(
-                            (form) => ({
-                              ...form,
-                              valorUnitario:
-                                Number(
-                                  e.target
-                                    .value,
-                                ),
-                            }),
-                          )
-                        }
+                        readOnly
                       />
                     </td>
 
@@ -643,8 +993,12 @@ export function OrdemServicoForm({
                 )}
 
                 {/* ITENS EXISTENTES */}
+
                 {itens.map(
-                  (item, index) =>
+                  (
+                    item,
+                    index,
+                  ) =>
                     itemEditando ===
                     item.id ? (
                       <tr
@@ -655,24 +1009,49 @@ export function OrdemServicoForm({
                         className="bg-ink-800/30"
                       >
                         <td className="px-5 py-2">
-                          <input
-                            autoFocus
-                            className="w-full rounded-lg border border-ink-700 bg-ink-900 px-2 py-1.5 text-sm text-white focus:border-flame-500 focus:outline-none"
+                          <Select
                             value={
-                              itemForm.descricao
+                              itemForm.pecaId
                             }
                             onChange={(e) =>
-                              setItemForm(
-                                (form) => ({
-                                  ...form,
-                                  descricao:
-                                    e
-                                      .target
-                                      .value,
-                                }),
+                              selecionarPecaEdicao(
+                                e.target
+                                  .value,
                               )
                             }
-                          />
+                            disabled={
+                              carregandoPecas ||
+                              itemSalvando
+                            }
+                          >
+                            <option value="">
+                              {carregandoPecas
+                                ? "Carregando peças..."
+                                : "Selecione uma peça"}
+                            </option>
+
+                            {pecas.map(
+                              (peca) => (
+                                <option
+                                  key={
+                                    peca.id
+                                  }
+                                  value={
+                                    peca.id
+                                  }
+                                >
+                                  {peca.nome}
+                                  {peca.codigo
+                                    ? ` — ${peca.codigo}`
+                                    : ""}
+                                  {" — Disponível: "}
+                                  {
+                                    peca.quantidadeDisponivelParaOrdem
+                                  }
+                                </option>
+                              ),
+                            )}
+                          </Select>
                         </td>
 
                         <td className="px-5 py-2">
@@ -685,7 +1064,9 @@ export function OrdemServicoForm({
                             }
                             onChange={(e) =>
                               setItemForm(
-                                (form) => ({
+                                (
+                                  form,
+                                ) => ({
                                   ...form,
                                   quantidade:
                                     Number(
@@ -708,19 +1089,7 @@ export function OrdemServicoForm({
                             value={
                               itemForm.valorUnitario
                             }
-                            onChange={(e) =>
-                              setItemForm(
-                                (form) => ({
-                                  ...form,
-                                  valorUnitario:
-                                    Number(
-                                      e
-                                        .target
-                                        .value,
-                                    ),
-                                }),
-                              )
-                            }
+                            readOnly
                           />
                         </td>
 
@@ -852,105 +1221,156 @@ export function OrdemServicoForm({
           /* =================================================
              CADASTRO DE NOVA OS
           ================================================= */
+
           <div className="space-y-2.5">
-            {itens.map((item, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-12 items-end gap-2 rounded-xl border border-ink-700/60 bg-ink-800/40 p-3"
-              >
-                <div className="col-span-12 sm:col-span-5">
-                  <Input
-                    aria-label="Descrição do item"
-                    placeholder="Descrição da peça/serviço"
-                    value={
-                      item.descricao
-                    }
-                    onChange={(e) =>
-                      atualizarItemNovo(
-                        index,
-                        "descricao",
-                        e.target.value,
-                      )
-                    }
-                  />
-                </div>
+            {itens.map(
+              (item, index) => {
+                const pecaSelecionada =
+                  pecas.find(
+                    (peca) =>
+                      peca.id ===
+                      item.pecaId,
+                  );
 
-                <div className="col-span-4 sm:col-span-2">
-                  <Input
-                    aria-label="Quantidade"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={
-                      item.quantidade ===
-                      0
-                        ? ""
-                        : item.quantidade
-                    }
-                    onChange={(e) =>
-                      atualizarItemNovo(
-                        index,
-                        "quantidade",
-                        e.target.value,
-                      )
-                    }
-                  />
-                </div>
-
-                <div className="col-span-4 sm:col-span-2">
-                  <Input
-                    aria-label="Valor unitário"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={
-                      item.valorUnitario ===
-                      0
-                        ? ""
-                        : item.valorUnitario
-                    }
-                    onChange={(e) =>
-                      atualizarItemNovo(
-                        index,
-                        "valorUnitario",
-                        e.target.value,
-                      )
-                    }
-                  />
-                </div>
-
-                <div className="col-span-3 sm:col-span-2">
-                  <div className="label-base mb-1.5 text-right">
-                    Total
-                  </div>
-
-                  <div className="flex h-[42px] items-center justify-end rounded-xl border border-ink-700 bg-ink-900/50 px-3 text-sm font-semibold text-ink-200">
-                    {formatCurrency(
-                      item.valorTotal,
-                    )}
-                  </div>
-                </div>
-
-                <div className="col-span-1 flex justify-end">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() =>
-                      removerItemNovo(
-                        index,
-                      )
-                    }
-                    disabled={
-                      itens.length === 1
-                    }
-                    aria-label="Remover item"
+                return (
+                  <div
+                    key={index}
+                    className="grid grid-cols-12 items-end gap-2 rounded-xl border border-ink-700/60 bg-ink-800/40 p-3"
                   >
-                    <Trash2 className="h-4 w-4 text-red-400" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+                    <div className="col-span-12 sm:col-span-5">
+                      <Select
+                        label="Peça"
+                        value={
+                          item.pecaId ??
+                          ""
+                        }
+                        onChange={(e) =>
+                          selecionarPecaNovo(
+                            index,
+                            e.target.value,
+                          )
+                        }
+                        disabled={
+                          carregandoPecas
+                        }
+                      >
+                        <option value="">
+                          {carregandoPecas
+                            ? "Carregando peças..."
+                            : "Selecione uma peça"}
+                        </option>
+
+                        {pecas.map(
+                          (peca) => (
+                            <option
+                              key={
+                                peca.id
+                              }
+                              value={
+                                peca.id
+                              }
+                            >
+                              {peca.nome}
+                              {peca.codigo
+                                ? ` — ${peca.codigo}`
+                                : ""}
+                              {" — Disponível: "}
+                              {
+                                peca.quantidadeDisponivelParaOrdem
+                              }
+                            </option>
+                          ),
+                        )}
+                      </Select>
+
+                      {pecaSelecionada && (
+                        <p className="mt-1 text-xs text-ink-400">
+                          Código:{" "}
+                          {pecaSelecionada.codigo ||
+                            "Sem código"}{" "}
+                          · Disponível:{" "}
+                          {
+                            pecaSelecionada.quantidadeDisponivelParaOrdem
+                          }
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="col-span-4 sm:col-span-2">
+                      <Input
+                        label="Quantidade"
+                        aria-label="Quantidade"
+                        type="number"
+                        step="1"
+                        min="1"
+                        value={
+                          item.quantidade ===
+                          0
+                            ? ""
+                            : item.quantidade
+                        }
+                        onChange={(e) =>
+                          atualizarItemNovo(
+                            index,
+                            "quantidade",
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </div>
+
+                    <div className="col-span-4 sm:col-span-2">
+                      <Input
+                        label="Valor unitário"
+                        aria-label="Valor unitário"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={
+                          item.valorUnitario ===
+                          0
+                            ? ""
+                            : item.valorUnitario
+                        }
+                        readOnly
+                      />
+                    </div>
+
+                    <div className="col-span-3 sm:col-span-2">
+                      <div className="label-base mb-1.5 text-right">
+                        Total
+                      </div>
+
+                      <div className="flex h-[42px] items-center justify-end rounded-xl border border-ink-700 bg-ink-900/50 px-3 text-sm font-semibold text-ink-200">
+                        {formatCurrency(
+                          item.valorTotal,
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="col-span-1 flex justify-end">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() =>
+                          removerItemNovo(
+                            index,
+                          )
+                        }
+                        disabled={
+                          itens.length ===
+                          1
+                        }
+                        aria-label="Remover item"
+                      >
+                        <Trash2 className="h-4 w-4 text-red-400" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              },
+            )}
           </div>
         )}
 
@@ -985,7 +1405,8 @@ export function OrdemServicoForm({
           variant="ghost"
           onClick={onCancel}
           disabled={
-            submitting || itemSalvando
+            submitting ||
+            itemSalvando
           }
         >
           Cancelar
@@ -994,7 +1415,9 @@ export function OrdemServicoForm({
         <Button
           type="submit"
           loading={submitting}
-          disabled={itemEditando !== null}
+          disabled={
+            itemEditando !== null
+          }
         >
           {initial?.id
             ? "Salvar alterações"

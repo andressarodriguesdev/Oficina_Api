@@ -68,7 +68,7 @@ export function AppLayout() {
 
   return (
 
-    <div className="flex h-screen overflow-hidden bg-ink-950">
+    <div className="flex h-screen overflow-hidden bg-[var(--app-bg)]">
 
       <Sidebar
         open={sidebarOpen}

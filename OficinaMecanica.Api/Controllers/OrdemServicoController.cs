@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
 using OficinaMecanica.Application.DTOs;
+using OficinaMecanica.Application.Exceptions;
 using OficinaMecanica.Application.Services;
 using OficinaMecanica.Infrastructure.Services;
 
@@ -14,7 +15,6 @@ public class OrdemServicoController : ControllerBase
     private readonly OrdemServicoPdfService _pdfService;
     private readonly WhatsAppService _whatsAppService;
 
-
     public OrdemServicoController(
         OrdemServicoAppService service,
         OrdemServicoPdfService pdfService,
@@ -25,19 +25,27 @@ public class OrdemServicoController : ControllerBase
         _whatsAppService = whatsAppService;
     }
 
-
     [HttpPost]
     public async Task<IActionResult> Criar(CriarOrdemServicoDto dto)
     {
-        var ordem = await _service.CriarAsync(dto);
+        try
+        {
+            var ordem = await _service.CriarAsync(dto);
 
-        return CreatedAtAction(
-            nameof(ObterPorId),
-            new { id = ordem.Id },
-            ordem
-        );
+            return CreatedAtAction(
+                nameof(ObterPorId),
+                new { id = ordem.Id },
+                ordem
+            );
+        }
+        catch (RegraNegocioException ex)
+        {
+            return Conflict(new
+            {
+                message = ex.Message
+            });
+        }
     }
-
 
     [HttpGet("{id}")]
     public async Task<IActionResult> ObterPorId(Guid id)
@@ -50,7 +58,6 @@ public class OrdemServicoController : ControllerBase
         return Ok(ordem);
     }
 
-
     [HttpGet]
     public async Task<IActionResult> Listar()
     {
@@ -59,64 +66,117 @@ public class OrdemServicoController : ControllerBase
         return Ok(ordens);
     }
 
-
     [HttpPost("{id}/enviar-aprovacao")]
     public async Task<IActionResult> EnviarParaAprovacao(Guid id)
     {
-        await _service.EnviarParaAprovacaoAsync(id);
+        try
+        {
+            await _service.EnviarParaAprovacaoAsync(id);
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (RegraNegocioException ex)
+        {
+            return Conflict(new
+            {
+                message = ex.Message
+            });
+        }
     }
-
 
     [HttpPost("{id}/aprovar")]
     public async Task<IActionResult> Aprovar(Guid id)
     {
-        await _service.AprovarAsync(id);
+        try
+        {
+            await _service.AprovarAsync(id);
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (RegraNegocioException ex)
+        {
+            return Conflict(new
+            {
+                message = ex.Message
+            });
+        }
     }
-
 
     [HttpPost("{id}/recusar")]
     public async Task<IActionResult> Recusar(Guid id)
     {
-        await _service.RecusarAsync(id);
+        try
+        {
+            await _service.RecusarAsync(id);
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (RegraNegocioException ex)
+        {
+            return Conflict(new
+            {
+                message = ex.Message
+            });
+        }
     }
-
 
     [HttpPost("{id}/concluir")]
     public async Task<IActionResult> Concluir(Guid id)
     {
-        await _service.ConcluirAsync(id);
+        try
+        {
+            await _service.ConcluirAsync(id);
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (RegraNegocioException ex)
+        {
+            return Conflict(new
+            {
+                message = ex.Message
+            });
+        }
     }
-
 
     [HttpPost("{id}/cancelar")]
     public async Task<IActionResult> Cancelar(
         Guid id,
         CancelarOrdemServicoDto dto)
     {
-        await _service.CancelarAsync(id, dto.Motivo);
+        try
+        {
+            await _service.CancelarAsync(id, dto.Motivo);
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (RegraNegocioException ex)
+        {
+            return Conflict(new
+            {
+                message = ex.Message
+            });
+        }
     }
-
 
     [HttpPost("{id}/reabrir")]
     public async Task<IActionResult> Reabrir(
         Guid id,
         ReabrirOrdemServicoDto dto)
     {
-        await _service.ReabrirAsync(id, dto.Motivo);
+        try
+        {
+            await _service.ReabrirAsync(id, dto.Motivo);
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (RegraNegocioException ex)
+        {
+            return Conflict(new
+            {
+                message = ex.Message
+            });
+        }
     }
-
 
     [HttpGet("{id}/historico")]
     public async Task<IActionResult> Historico(Guid id)
@@ -126,7 +186,6 @@ public class OrdemServicoController : ControllerBase
         return Ok(historico);
     }
 
-
     [HttpGet("{id}/pdf")]
     public async Task<IActionResult> GerarPdf(Guid id)
     {
@@ -135,9 +194,7 @@ public class OrdemServicoController : ControllerBase
         if (ordem == null)
             return NotFound();
 
-
         var pdf = _pdfService.GerarPdf(ordem);
-
 
         return File(
             pdf,
@@ -146,20 +203,28 @@ public class OrdemServicoController : ControllerBase
         );
     }
 
-
     [HttpPost("{id}/itens")]
     public async Task<IActionResult> AdicionarItem(
         Guid id,
         OrdemServicoItemDto dto)
     {
-        await _service.AdicionarItemAsync(id, dto);
-
-        return Ok(new
+        try
         {
-            mensagem = "Item adicionado com sucesso"
-        });
-    }
+            await _service.AdicionarItemAsync(id, dto);
 
+            return Ok(new
+            {
+                mensagem = "Item adicionado com sucesso"
+            });
+        }
+        catch (RegraNegocioException ex)
+        {
+            return Conflict(new
+            {
+                message = ex.Message
+            });
+        }
+    }
 
     [HttpGet("{id}/whatsapp")]
     public async Task<IActionResult> GerarLinkWhatsApp(Guid id)
@@ -169,9 +234,7 @@ public class OrdemServicoController : ControllerBase
         if (ordem == null)
             return NotFound();
 
-
         var link = _whatsAppService.GerarLinkAprovacao(ordem);
-
 
         return Ok(new
         {
@@ -181,25 +244,62 @@ public class OrdemServicoController : ControllerBase
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Atualizar(
-    Guid id,
-    AtualizarOrdemServicoDto dto)
+        Guid id,
+        AtualizarOrdemServicoDto dto)
     {
-        await _service.AtualizarAsync(id, dto);
+        try
+        {
+            await _service.AtualizarAsync(id, dto);
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (RegraNegocioException ex)
+        {
+            return Conflict(new
+            {
+                message = ex.Message
+            });
+        }
     }
 
     [HttpPut("{id}/itens/{itemId}")]
-    public async Task<IActionResult> AtualizarItem(Guid id, Guid itemId, OrdemServicoItemDto dto)
+    public async Task<IActionResult> AtualizarItem(
+        Guid id,
+        Guid itemId,
+        OrdemServicoItemDto dto)
     {
-        await _service.AtualizarItemAsync(id, itemId, dto);
-        return NoContent();
+        try
+        {
+            await _service.AtualizarItemAsync(id, itemId, dto);
+
+            return NoContent();
+        }
+        catch (RegraNegocioException ex)
+        {
+            return Conflict(new
+            {
+                message = ex.Message
+            });
+        }
     }
 
     [HttpDelete("{id}/itens/{itemId}")]
-    public async Task<IActionResult> RemoverItem(Guid id, Guid itemId)
+    public async Task<IActionResult> RemoverItem(
+        Guid id,
+        Guid itemId)
     {
-        await _service.RemoverItemAsync(id, itemId);
-        return NoContent();
+        try
+        {
+            await _service.RemoverItemAsync(id, itemId);
+
+            return NoContent();
+        }
+        catch (RegraNegocioException ex)
+        {
+            return Conflict(new
+            {
+                message = ex.Message
+            });
+        }
     }
 }

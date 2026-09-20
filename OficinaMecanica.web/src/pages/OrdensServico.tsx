@@ -8,9 +8,9 @@ import {
   Trash2,
   Eye,
   FileText,
-  ArrowLeft,
+  ArrowUpRight,
 } from "lucide-react";
-
+import { ApiError } from "../services/api";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
@@ -127,40 +127,61 @@ export function OrdensServico() {
     });
   }, [ordens, search, statusFilter]);
 
-  const handleCreate = async (values: OrdemFormValues) => {
-    setSubmitting(true);
+const handleCreate = async (values: OrdemFormValues) => {
+  setSubmitting(true);
 
-    try {
-      const totalItens = values.itens.reduce(
-        (s, it) => s + (it.valorTotal || 0),
-        0,
+  try {
+    const totalItens = values.itens.reduce(
+      (s, it) => s + (it.valorTotal || 0),
+      0,
+    );
+
+    const valorTotal = Number(
+      (values.valorMaoObra + totalItens).toFixed(2),
+    );
+
+    await createOrdem({
+      clienteId: values.clienteId,
+      veiculoId: values.veiculoId,
+      mecanicoId: values.mecanicoId,
+      descricao: values.descricao,
+      valorMaoObra: values.valorMaoObra,
+      valorTotal,
+      observacao: values.observacao || null,
+      itens: values.itens.filter(
+        (it) => it.descricao.trim() !== "",
+      ),
+    });
+
+    toast.success(
+      "Ordem de serviço criada com sucesso",
+    );
+
+    setModalOpen(false);
+
+    await load();
+  } catch (err) {
+    console.error(
+      "Erro ao criar ordem de serviço:",
+      err,
+    );
+
+    if (err instanceof ApiError) {
+      toast.error(err.message);
+    } else if (
+      err instanceof Error &&
+      err.message
+    ) {
+      toast.error(err.message);
+    } else {
+      toast.error(
+        "Erro ao criar ordem de serviço",
       );
-
-      const valorTotal = Number((values.valorMaoObra + totalItens).toFixed(2));
-
-      await createOrdem({
-        clienteId: values.clienteId,
-        veiculoId: values.veiculoId,
-        mecanicoId: values.mecanicoId,
-        descricao: values.descricao,
-        valorMaoObra: values.valorMaoObra,
-        valorTotal,
-        observacao: values.observacao || null,
-        itens: values.itens.filter((it) => it.descricao.trim() !== ""),
-      });
-
-      toast.success("Ordem de serviço criada com sucesso");
-
-      setModalOpen(false);
-
-      await load();
-    } catch (err) {
-      toast.error("Erro ao criar ordem de serviço");
-      console.error(err);
-    } finally {
-      setSubmitting(false);
     }
-  };
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   const handleDelete = async () => {
     if (!toDelete) return;
@@ -204,262 +225,246 @@ export function OrdensServico() {
     }
   };
 
+  const hasFilters = Boolean(search.trim() || statusFilter);
+
   return (
-    <div className="space-y-5">
-      {/* CABEÇALHO */}
-      <div className="flex items-center">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/painel")}>
-          <ArrowLeft className="h-4 w-4" />
-          Voltar
-        </Button>
-      </div>
+    <div className="space-y-7">
+      {/* CABEÇALHO EDITORIAL */}
+      <section className="border-b border-[var(--app-border-subtle)] pb-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent-text)]">
+              <ClipboardList className="h-3.5 w-3.5" />
+              Operação
+            </div>
 
-      {/* FILTROS */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-1 flex-col gap-3 sm:flex-row">
-          {/* BUSCA */}
-          <div className="relative w-full sm:max-w-xs">
-            <Search
-              className="
-                pointer-events-none
-                absolute left-3 top-1/2
-                h-4 w-4
-                -translate-y-1/2
-                text-ink-400
-              "
-            />
+            <h1 className="font-display text-3xl font-bold tracking-tight text-[var(--app-text)] sm:text-4xl">
+              Ordens de serviço
+            </h1>
 
-            <Input
-              placeholder="Buscar OS..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="
-                pl-9
-                bg-ink-800
-                border-ink-700
-                text-white
-                placeholder:text-ink-500
-                focus:border-flame-500
-                focus:ring-flame-500/20
-              "
-            />
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--app-text-muted)]">
+              Controle os atendimentos, acompanhe o status das OS e mantenha o
+              histórico da oficina organizado.
+            </p>
           </div>
 
-          {/* FILTRO */}
-          <div className="w-full sm:w-52">
-            <Select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="
-                w-full
-                bg-ink-800
-                border-ink-700
-                text-white
-                focus:border-flame-500
-                focus:ring-flame-500/20
-              "
-            >
-              <option value="">Todos os status</option>
+          <Button onClick={() => setModalOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Nova OS
+          </Button>
+        </div>
+      </section>
 
-              {ALL_STATUSES.map((s) => (
-                <option key={s} value={STATUS_TEXT_TO_NUMBER[s]}>
-                  {STATUS_LABEL[s]}
-                </option>
-              ))}
-            </Select>
+      {/* CONTROLES */}
+      <section className="border-b border-[var(--app-border-subtle)] pb-5">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-1 flex-col gap-3 sm:flex-row">
+            <div className="relative w-full sm:max-w-sm">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--app-text-muted)]" />
+
+              <Input
+                placeholder="Buscar cliente, veículo ou OS..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
+            <div className="w-full sm:w-56">
+              <Select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full"
+              >
+                <option value="">Todos os status</option>
+
+                {ALL_STATUSES.map((s) => (
+                  <option key={s} value={STATUS_TEXT_TO_NUMBER[s]}>
+                    {STATUS_LABEL[s]}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-[var(--app-text-muted)]">
+            <span className="font-mono text-sm font-semibold text-[var(--app-text)]">
+              {filtered.length}
+            </span>
+            <span>
+              {filtered.length === 1
+                ? "ordem encontrada"
+                : "ordens encontradas"}
+            </span>
           </div>
         </div>
-
-        <Button onClick={() => setModalOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Nova OS
-        </Button>
-      </div>
+      </section>
 
       {/* CONTEÚDO */}
       {loading ? (
         <PageLoader label="Carregando ordens de serviço..." />
       ) : filtered.length === 0 ? (
-        <Card>
+        <Card className="overflow-hidden">
           <EmptyState
             icon={<ClipboardList className="h-7 w-7" />}
             title={
-              search || statusFilter
-                ? "Nenhuma OS encontrada"
-                : "Nenhuma ordem de serviço"
+              hasFilters ? "Nenhuma OS encontrada" : "Nenhuma ordem de serviço"
             }
             description={
-              search || statusFilter
-                ? "Tente outra busca."
-                : "Crie a primeira ordem de serviço."
+              hasFilters
+                ? "Ajuste os filtros ou tente outra busca."
+                : "Crie a primeira ordem de serviço da oficina."
             }
             action={
-              !search &&
-              !statusFilter && (
+              !hasFilters ? (
                 <Button onClick={() => setModalOpen(true)}>
                   <Plus className="h-4 w-4" />
                   Criar OS
                 </Button>
-              )
+              ) : undefined
             }
           />
         </Card>
       ) : (
         <>
-          {/* DESKTOP — MESMO PADRÃO DO DASHBOARD */}
+          {/* DESKTOP */}
           <div className="hidden lg:block">
-            <Card>
+            <Card className="overflow-hidden">
               {/* CABEÇALHO DA LISTA */}
-              <div className="border-b border-ink-700/60 px-5 py-4">
-                <h3 className="font-display text-base font-bold text-white">
-                  Ordens de Serviço
-                </h3>
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-6 border-b border-[var(--app-border-subtle)] px-5 py-4">
+                <div>
+                  <h2 className="font-display text-base font-bold text-[var(--app-text)]">
+                    Atendimentos registrados
+                  </h2>
 
-                <p className="mt-0.5 text-sm text-ink-400">
-                  Acompanhe todas as ordens de serviço cadastradas
-                </p>
+                  <p className="mt-0.5 text-sm text-[var(--app-text-muted)]">
+                    Histórico operacional da oficina
+                  </p>
+                </div>
+
+                <span className="font-mono text-xs text-[var(--app-text-faint)]">
+                  {filtered.length.toString().padStart(2, "0")} REGISTROS
+                </span>
               </div>
 
               {/* LISTA */}
-              <div className="divide-y divide-ink-700/40">
+              <div className="divide-y divide-[var(--app-border-subtle)]">
                 {filtered.map((os) => (
                   <div
                     key={os.id}
                     onClick={() => navigate(`/ordens-servico/${os.id}`)}
-                    className="
-                      flex
-                      items-center
-                      justify-between
-                      gap-4
-                      px-5
-                      py-3.5
-                      cursor-pointer
-                      transition
-                      hover:bg-ink-800/40
-                    "
+                    className="group grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-6 px-5 py-4 transition-colors hover:bg-[var(--hover-bg)]"
                   >
-                    {/* OS + CLIENTE + VEÍCULO */}
-                    <div className="min-w-0 flex-1">
+                    {/* IDENTIDADE */}
+                    <div className="min-w-0">
                       <div className="flex items-center gap-3">
                         <Link
                           to={`/ordens-servico/${os.id}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="
-                            shrink-0
-                            font-mono
-                            text-xs
-                            font-semibold
-                            text-flame-400
-                            hover:text-flame-300
-                          "
+                          className="shrink-0 font-mono text-xs font-semibold text-[var(--accent-text)] transition-colors hover:text-[var(--accent-text-hover)]"
                         >
                           #{os.id.slice(0, 8).toUpperCase()}
                         </Link>
 
-                        <span className="text-ink-700">·</span>
+                        <span className="text-[var(--app-text-faint)]">/</span>
 
-                        <p className="truncate text-sm font-semibold text-white">
+                        <p className="truncate text-sm font-semibold text-[var(--app-text)]">
                           {os.cliente?.nome ?? "Cliente não informado"}
                         </p>
                       </div>
 
-                      <p className="mt-0.5 truncate text-xs text-ink-400">
-                        {os.veiculo
-                          ? `${os.veiculo.marca} ${os.veiculo.modelo}`
-                          : "Veículo não informado"}
+                      <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-[var(--app-text-muted)]">
+                        <span className="truncate">
+                          {os.veiculo
+                            ? `${os.veiculo.marca} ${os.veiculo.modelo}`
+                            : "Veículo não informado"}
+                        </span>
 
                         {os.veiculo?.placa && (
                           <>
-                            {" · "}
-                            {os.veiculo.placa}
+                            <span className="text-[var(--app-text-faint)]">
+                              ·
+                            </span>
+
+                            <span className="font-mono">
+                              {os.veiculo.placa}
+                            </span>
                           </>
                         )}
-                      </p>
+                      </div>
                     </div>
 
-                    {/* INFORMAÇÕES + AÇÕES */}
-                    <div className="flex shrink-0 items-center gap-4">
-                      <span className="hidden text-xs text-ink-400 xl:block">
-                        {formatDate(os.dataCriacao)}
-                      </span>
+                    {/* META */}
+                    <div className="flex shrink-0 items-center gap-5">
+                      <div className="hidden text-right xl:block">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--app-text-faint)]">
+                          Abertura
+                        </p>
 
-                      <span className="hidden text-sm font-semibold text-white xl:block">
-                        {formatCurrency(os.valorTotal)}
-                      </span>
+                        <p className="mt-0.5 text-xs text-[var(--app-text-muted)]">
+                          {formatDate(os.dataCriacao)}
+                        </p>
+                      </div>
+
+                      <div className="hidden min-w-24 text-right xl:block">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--app-text-faint)]">
+                          Valor
+                        </p>
+
+                        <p className="mt-0.5 text-sm font-bold text-[var(--app-text)]">
+                          {formatCurrency(os.valorTotal)}
+                        </p>
+                      </div>
 
                       <StatusBadge status={os.status} />
 
                       <div
-                        className="flex items-center gap-1"
+                        className="flex items-center gap-0.5"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        {/* VISUALIZAR */}
                         <Link
                           to={`/ordens-servico/${os.id}`}
-                          className="
-                            rounded-lg
-                            p-2
-                            text-ink-400
-                            transition
-                            hover:bg-ink-700
-                            hover:text-sky-400
-                          "
+                          className="rounded-lg p-2 text-[var(--app-text-muted)] transition hover:bg-[var(--app-surface-raised)] hover:text-sky-400"
                           title="Visualizar"
                         >
                           <Eye className="h-4 w-4" />
                         </Link>
 
-                        {/* EDITAR */}
-                        {os.status === 0 && (
+                        {os.status === 1 && (
                           <Link
                             to={`/ordens-servico/${os.id}/editar`}
-                            className="
-                              rounded-lg
-                              p-2
-                              text-ink-400
-                              transition
-                              hover:bg-ink-700
-                              hover:text-flame-400
-                            "
+                            className="rounded-lg p-2 text-[var(--app-text-muted)] transition hover:bg-[var(--app-surface-raised)] hover:text-[var(--accent-text)]"
                             title="Editar"
                           >
                             <Pencil className="h-4 w-4" />
                           </Link>
                         )}
 
-                        {/* ENVIAR PARA APROVAÇÃO */}
                         {os.status === 0 && (
                           <button
                             onClick={() => handleEnviarAprovacao(os)}
-                            className="
-                              rounded-lg
-                              p-2
-                              text-ink-400
-                              transition
-                              hover:bg-ink-700
-                              hover:text-emerald-400
-                            "
+                            className="rounded-lg p-2 text-[var(--app-text-muted)] transition hover:bg-[var(--app-surface-raised)] hover:text-emerald-400"
                             title="Enviar para aprovação"
                           >
                             <FileText className="h-4 w-4" />
                           </button>
                         )}
 
-                        {/* EXCLUIR */}
                         <button
                           onClick={() => setToDelete(os)}
-                          className="
-                            rounded-lg
-                            p-2
-                            text-ink-400
-                            transition
-                            hover:bg-ink-700
-                            hover:text-red-400
-                          "
+                          className="rounded-lg p-2 text-[var(--app-text-muted)] transition hover:bg-[var(--app-surface-raised)] hover:text-red-400"
                           title="Excluir"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
+
+                        <Link
+                          to={`/ordens-servico/${os.id}`}
+                          className="ml-1 hidden rounded-lg p-2 text-[var(--app-text-faint)] transition group-hover:text-[var(--app-text-muted)] 2xl:block"
+                          title="Abrir OS"
+                        >
+                          <ArrowUpRight className="h-4 w-4" />
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -474,139 +479,116 @@ export function OrdensServico() {
               <Card
                 key={os.id}
                 hover
-                className="cursor-pointer p-4"
+                className="cursor-pointer overflow-hidden"
                 onClick={() => navigate(`/ordens-servico/${os.id}`)}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <Link
-                    to={`/ordens-servico/${os.id}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="min-w-0"
-                  >
-                    <p className="font-mono text-xs font-bold text-flame-400">
-                      #{os.id.slice(0, 8).toUpperCase()}
-                    </p>
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <Link
+                      to={`/ordens-servico/${os.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="min-w-0"
+                    >
+                      <p className="font-mono text-xs font-bold text-[var(--accent-text)]">
+                        #{os.id.slice(0, 8).toUpperCase()}
+                      </p>
 
-                    <p className="mt-1 truncate text-sm font-semibold text-white">
-                      {os.cliente?.nome ?? "Cliente não informado"}
-                    </p>
-                  </Link>
+                      <p className="mt-1 truncate text-sm font-semibold text-[var(--app-text)]">
+                        {os.cliente?.nome ?? "Cliente não informado"}
+                      </p>
+                    </Link>
 
-                  <StatusBadge status={os.status} />
-                </div>
+                    <StatusBadge status={os.status} />
+                  </div>
 
-                <div className="mt-4 space-y-2 border-t border-ink-700/40 pt-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs text-ink-400">Veículo</span>
+                  <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-[var(--app-border-subtle)] bg-[var(--app-border-subtle)]">
+                    <div className="bg-[var(--app-surface-raised)] px-3 py-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--app-text-faint)]">
+                        Veículo
+                      </p>
 
-                    <div className="min-w-0 text-right">
-                      <p className="truncate text-sm text-ink-200">
+                      <p className="mt-1 truncate text-sm text-[var(--app-text-secondary)]">
                         {os.veiculo
                           ? `${os.veiculo.marca} ${os.veiculo.modelo}`
                           : "—"}
                       </p>
 
                       {os.veiculo?.placa && (
-                        <p className="text-xs text-ink-400">
+                        <p className="mt-0.5 font-mono text-[10px] text-[var(--app-text-muted)]">
                           {os.veiculo.placa}
                         </p>
                       )}
                     </div>
-                  </div>
 
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs text-ink-400">Data</span>
+                    <div className="bg-[var(--app-surface-raised)] px-3 py-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--app-text-faint)]">
+                        Valor
+                      </p>
 
-                    <span className="text-sm text-ink-300">
-                      {formatDate(os.dataCriacao)}
-                    </span>
-                  </div>
+                      <p className="mt-1 text-sm font-bold text-[var(--app-text)]">
+                        {formatCurrency(os.valorTotal)}
+                      </p>
 
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs text-ink-400">Valor</span>
-
-                    <span className="text-sm font-bold text-white">
-                      {formatCurrency(os.valorTotal)}
-                    </span>
+                      <p className="mt-0.5 text-[10px] text-[var(--app-text-muted)]">
+                        {formatDate(os.dataCriacao)}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-end gap-1 border-t border-ink-700/40 pt-3">
-                  {/* VISUALIZAR */}
+                <div className="flex items-center justify-end gap-0.5 border-t border-[var(--app-border-subtle)] px-3 py-2">
                   <Link
                     to={`/ordens-servico/${os.id}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="
-                      rounded-lg
-                      p-2
-                      text-ink-400
-                      transition
-                      hover:bg-ink-800
-                      hover:text-sky-400
-                    "
+                    className="rounded-lg p-2 text-[var(--app-text-muted)] transition hover:bg-[var(--hover-bg)] hover:text-sky-400"
                     title="Visualizar"
                   >
                     <Eye className="h-4 w-4" />
                   </Link>
 
-                  {/* EDITAR */}
                   {os.status === 0 && (
                     <Link
                       to={`/ordens-servico/${os.id}/editar`}
                       onClick={(e) => e.stopPropagation()}
-                      className="
-                        rounded-lg
-                        p-2
-                        text-ink-400
-                        transition
-                        hover:bg-ink-800
-                        hover:text-flame-400
-                      "
+                      className="rounded-lg p-2 text-[var(--app-text-muted)] transition hover:bg-[var(--hover-bg)] hover:text-[var(--accent-text)]"
                       title="Editar"
                     >
                       <Pencil className="h-4 w-4" />
                     </Link>
                   )}
 
-                  {/* ENVIAR PARA APROVAÇÃO */}
                   {os.status === 0 && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEnviarAprovacao(os);
                       }}
-                      className="
-                        rounded-lg
-                        p-2
-                        text-ink-400
-                        transition
-                        hover:bg-ink-800
-                        hover:text-emerald-400
-                      "
+                      className="rounded-lg p-2 text-[var(--app-text-muted)] transition hover:bg-[var(--hover-bg)] hover:text-emerald-400"
                       title="Enviar para aprovação"
                     >
                       <FileText className="h-4 w-4" />
                     </button>
                   )}
 
-                  {/* EXCLUIR */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setToDelete(os);
                     }}
-                    className="
-                      rounded-lg
-                      p-2
-                      text-ink-400
-                      transition
-                      hover:bg-ink-800
-                      hover:text-red-400
-                    "
+                    className="rounded-lg p-2 text-[var(--app-text-muted)] transition hover:bg-[var(--hover-bg)] hover:text-red-400"
                     title="Excluir"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
+
+                  <Link
+                    to={`/ordens-servico/${os.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="ml-1 rounded-lg p-2 text-[var(--app-text-faint)] transition hover:bg-[var(--hover-bg)] hover:text-[var(--app-text)]"
+                    title="Abrir OS"
+                  >
+                    <ArrowUpRight className="h-4 w-4" />
+                  </Link>
                 </div>
               </Card>
             ))}

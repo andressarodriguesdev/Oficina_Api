@@ -1,4 +1,8 @@
-import { type SelectHTMLAttributes, forwardRef } from 'react';
+
+import {
+  type SelectHTMLAttributes,
+  forwardRef,
+} from 'react';
 
 interface SelectProps
   extends SelectHTMLAttributes<HTMLSelectElement> {
@@ -7,7 +11,17 @@ interface SelectProps
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, className, id, children, ...props }, ref) => {
+  (
+    {
+      label,
+      error,
+      className,
+      id,
+      children,
+      ...props
+    },
+    ref,
+  ) => {
     const selectId = id ?? props.name;
 
     return (
@@ -26,11 +40,23 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           id={selectId}
           className={[
             'input-base',
-            'w-full',
             'appearance-auto',
-            error ? 'border-red-500' : '',
+            'transition-all',
+            'duration-300',
+
+            error
+              ? [
+                  'border-red-500',
+                  'focus:border-red-500',
+                  'focus:ring-2',
+                  'focus:ring-red-500/20',
+                ].join(' ')
+              : '',
+
             className ?? '',
-          ].join(' ')}
+          ]
+            .filter(Boolean)
+            .join(' ')}
           {...props}
         >
           {children}

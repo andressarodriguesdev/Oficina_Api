@@ -104,7 +104,12 @@ public class OrdemServico
   }
 
 
-    public void AtualizarItem(Guid itemId, string descricao, int quantidade, decimal valorUnitario)
+    public void AtualizarItem(
+      Guid itemId,
+      string descricao,
+      int quantidade,
+      decimal valorUnitario,
+      Guid? pecaId = null)
     {
         if (Status != StatusOrdemServico.Aberta)
             throw new Exception("Somente ordens abertas podem ter itens editados.");
@@ -112,7 +117,12 @@ public class OrdemServico
         var item = Itens.FirstOrDefault(i => i.Id == itemId)
             ?? throw new Exception("Item não encontrado.");
 
-        item.Atualizar(descricao, quantidade, valorUnitario);
+        item.Atualizar(
+            descricao,
+            quantidade,
+            valorUnitario,
+            pecaId
+        );
     }
 
     public void RemoverItem(Guid itemId)

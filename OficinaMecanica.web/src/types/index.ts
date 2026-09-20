@@ -1,5 +1,3 @@
-
-
 export type OSStatus =
   | 'Aberta'
   | 'AguardandoAprovacao'
@@ -36,9 +34,11 @@ export interface Veiculo {
   dataConclusao?: string | null;
 }[];
 }
+
 export interface OrdemServicoItem {
   id: string;
   ordemServicoId: string;
+  pecaId?: string | null;
   descricao: string;
   quantidade: number;
   valorUnitario: number;
@@ -160,4 +160,33 @@ export interface UsuarioCadastro {
   nome: string;
   email: string;
   senha: string;
+}
+
+
+
+export interface Peca {
+  id: string;
+  oficinaId: string;
+  nome: string;
+  codigo?: string | null;
+  valorCusto: number;
+  valorVenda: number;
+  quantidadeEstoque: number;
+  estoqueMinimo: number;
+  ativa: boolean;
+}
+
+export interface PecaDisponivelOrdemServico {
+  id: string;
+  nome: string;
+  codigo?: string | null;
+  valorVenda: number;
+  // Estoque físico total da peça.
+  quantidadeEstoque: number;
+  // Quantidade reservada pelas outras Ordens de Serviço ativas.
+  quantidadeReservadaOutrasOrdens: number;
+  // Quantidade já reservada pela própria OS em edição.
+  quantidadeReservadaNestaOrdem: number;
+  // Quantidade máxima que a OS atual pode possuir.
+  quantidadeDisponivelParaOrdem: number;
 }

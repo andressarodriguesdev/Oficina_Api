@@ -1,26 +1,40 @@
+
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+  BarChart3,
+  CheckCircle2,
+  CircleDollarSign,
+  Clock3,
+  Users,
+  Wrench,
+  XCircle,
+} from "lucide-react";
+
 import { Card } from "../components/ui/Card";
 import { PageLoader } from "../components/ui/Spinner";
 import { Select } from "../components/ui/Select";
-import { Button } from '../components/ui/Button';
+import { Button } from "../components/ui/Button";
+import { StatusBadge } from "../components/ui/StatusBadge";
 
 import {
   obterFinanceiro,
   type FinanceiroResponse,
 } from "../services/financeiro";
 
-import { StatusBadge } from "../components/ui/StatusBadge";
-
 import { formatCurrency } from "../utils/format";
 
 export function Financeiro() {
   const navigate = useNavigate();
 
-  const [dados, setDados] = useState<FinanceiroResponse | null>(null);
+  const [dados, setDados] =
+    useState<FinanceiroResponse | null>(null);
 
-  const [ordenacao, setOrdenacao] = useState("recentes");
+  const [ordenacao, setOrdenacao] =
+    useState("recentes");
 
   useEffect(() => {
     async function carregar() {
@@ -39,312 +53,1349 @@ export function Financeiro() {
 
     switch (ordenacao) {
       case "maiorValor":
-        return ordens.sort((a, b) => b.total - a.total);
+        return ordens.sort(
+          (a, b) => b.total - a.total,
+        );
 
       case "menorValor":
-        return ordens.sort((a, b) => a.total - b.total);
+        return ordens.sort(
+          (a, b) => a.total - b.total,
+        );
 
       case "recentes":
       default:
         return ordens.sort(
-          (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime(),
+          (a, b) =>
+            new Date(b.data).getTime() -
+            new Date(a.data).getTime(),
         );
     }
   }, [dados, ordenacao]);
 
   if (!dados) {
-    return <PageLoader label="Carregando financeiro..." />;
+    return (
+      <PageLoader label="Carregando financeiro..." />
+    );
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/painel")}>
-          <ArrowLeft className="h-4 w-4" />
-          Voltar
-        </Button>
-      </div>
-      {/* INDICADORES */}
+    <div className="space-y-8">
+      {/* CABEÇALHO */}
 
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
-        <Card className="p-5">
-          <p className="text-sm text-ink-400">Faturado</p>
+      <section
+        className="
+          relative
+          overflow-hidden
+          border-b
+          border-[var(--app-border-subtle)]
+          pb-7
+        "
+      >
+        <div
+          className="
+            pointer-events-none
+            absolute
+            -right-10
+            -top-20
+            h-48
+            w-48
+            rounded-full
+            border
+            border-[var(--app-border-subtle)]
+          "
+        />
 
-          <strong className="text-2xl text-white">
-            {formatCurrency(dados.totalFaturado)}
-          </strong>
+        <div
+          className="
+            pointer-events-none
+            absolute
+            right-12
+            -top-8
+            h-24
+            w-24
+            rounded-full
+            border
+            border-[var(--app-border-subtle)]
+          "
+        />
 
-          <p className="mt-2 text-xs text-ink-400">
-            {dados.quantidadeConcluidas} OS concluídas
-          </p>
-        </Card>
-
-        <Card className="p-5">
-          <p className="text-sm text-ink-400">Previsto</p>
-
-          <strong className="text-2xl text-white">
-            {formatCurrency(dados.totalPrevisto)}
-          </strong>
-
-          <p className="mt-2 text-xs text-ink-400">
-            {dados.quantidadePendentes} OS pendentes
-          </p>
-        </Card>
-
-        <Card className="p-5">
-          <p className="text-sm text-ink-400">Canceladas</p>
-
-          <strong className="text-2xl text-white">
-            {dados.quantidadeCanceladas}
-          </strong>
-
-          <p className="mt-2 text-xs text-ink-400">Ordens canceladas</p>
-        </Card>
-
-        <Card className="p-5">
-          <p className="text-sm text-ink-400">Mão de obra</p>
-
-          <strong className="text-2xl text-white">
-            {formatCurrency(dados.totalMaoObra)}
-          </strong>
-        </Card>
-
-        <Card className="p-5">
-          <p className="text-sm text-ink-400">Peças</p>
-
-          <strong className="text-2xl text-white">
-            {formatCurrency(dados.totalPecas)}
-          </strong>
-        </Card>
-      </div>
-
-      {/* RESUMO DAS ORDENS DE SERVIÇO */}
-
-      <Card className="overflow-hidden">
-        <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="font-display text-lg font-bold text-white">
-              Resumo das Ordens de Serviço
-            </h2>
-
-            <p className="mt-1 text-sm text-ink-400">
-              Acompanhe valores, status e responsáveis pelos serviços.
-            </p>
+        <div className="relative">
+          <div className="mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/painel")}
+              className="px-0"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar ao dashboard
+            </Button>
           </div>
 
-          {dados.ordens.length > 0 && (
-            <div className="w-full sm:w-52">
-              <Select
-                value={ordenacao}
-                onChange={(e) => setOrdenacao(e.target.value)}
-              >
-                <option value="recentes">Mais recentes</option>
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="mb-3 flex items-center gap-2">
+                <span
+                  className="
+                    h-1.5
+                    w-1.5
+                    rounded-full
+                    bg-[var(--accent)]
+                  "
+                />
 
-                <option value="maiorValor">Maior valor</option>
+                <span
+                  className="
+                    text-[10px]
+                    font-bold
+                    uppercase
+                    tracking-[0.2em]
+                    text-[var(--app-text-muted)]
+                  "
+                >
+                  Gestão financeira
+                </span>
+              </div>
 
-                <option value="menorValor">Menor valor</option>
-              </Select>
-            </div>
-          )}
-        </div>
-
-        {ordensOrdenadas.length === 0 ? (
-          <div className="p-5">
-            <p className="text-sm text-ink-400">
-              Nenhuma ordem de serviço encontrada.
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
-            {ordensOrdenadas.map((ordem) => (
-              <Card
-                key={ordem.id}
+              <h1
                 className="
-                  cursor-pointer
-                  p-5
-                  transition
-                  hover:border-flame-500/40
-                  hover:bg-ink-800/40
+                  font-display
+                  text-3xl
+                  font-extrabold
+                  tracking-[-0.04em]
+                  text-[var(--app-text)]
+                  sm:text-4xl
                 "
-                onClick={() => navigate(`/ordens-servico/${ordem.id}`)}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">
-                      Ordem de Serviço
-                    </p>
+                Financeiro
+              </h1>
 
-                    <p className="mt-1 font-mono text-sm font-bold text-white">
-                      #{ordem.id.slice(0, 8).toUpperCase()}
-                    </p>
-                  </div>
+              <p
+                className="
+                  mt-2
+                  max-w-xl
+                  text-sm
+                  leading-6
+                  text-[var(--app-text-muted)]
+                "
+              >
+                Acompanhe o faturamento realizado,
+                os valores previstos e a composição
+                financeira dos serviços.
+              </p>
+            </div>
 
-                  <StatusBadge status={ordem.status} />
+            <div
+              className="
+                flex
+                items-center
+                gap-2
+                self-start
+                border
+                border-[var(--app-border-subtle)]
+                bg-[var(--app-surface-raised)]
+                px-3
+                py-2
+              "
+            >
+              <CircleDollarSign
+                className="
+                  h-3.5
+                  w-3.5
+                  text-[var(--accent-text)]
+                "
+              />
+
+              <span
+                className="
+                  text-xs
+                  font-semibold
+                  text-[var(--app-text-secondary)]
+                "
+              >
+                Visão financeira
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* INDICADOR PRINCIPAL */}
+
+      <section>
+        <div
+          className="
+            grid
+            overflow-hidden
+            border
+            border-[var(--app-border)]
+            bg-[var(--app-surface)]
+            lg:grid-cols-[1.35fr_0.65fr]
+          "
+        >
+          {/* FATURADO */}
+
+          <div
+            className="
+              relative
+              min-h-[250px]
+              overflow-hidden
+              border-b
+              border-[var(--app-border-subtle)]
+              p-6
+              sm:p-8
+              lg:border-b-0
+              lg:border-r
+            "
+          >
+            <div
+              className="
+                pointer-events-none
+                absolute
+                -bottom-24
+                -right-16
+                h-72
+                w-72
+                rounded-full
+                border
+                border-[var(--app-border-subtle)]
+              "
+            />
+
+            <div
+              className="
+                pointer-events-none
+                absolute
+                bottom-[-60px]
+                right-[-4px]
+                h-40
+                w-40
+                rounded-full
+                border
+                border-[var(--app-border-subtle)]
+              "
+            />
+
+            <div className="relative flex h-full flex-col justify-between">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p
+                    className="
+                      text-[10px]
+                      font-bold
+                      uppercase
+                      tracking-[0.18em]
+                      text-[var(--app-text-muted)]
+                    "
+                  >
+                    Faturamento realizado
+                  </p>
+
+                  <p
+                    className="
+                      mt-1
+                      text-xs
+                      text-[var(--app-text-faint)]
+                    "
+                  >
+                    Serviços concluídos
+                  </p>
                 </div>
 
-                <div className="mt-5 space-y-3">
-                  <div>
-                    <p className="text-xs uppercase text-ink-400">Cliente</p>
+                <div
+                  className="
+                    flex
+                    h-10
+                    w-10
+                    items-center
+                    justify-center
+                    rounded-xl
+                    bg-[var(--hover-bg-soft)]
+                    text-[var(--accent-text)]
+                  "
+                >
+                  <BarChart3 className="h-5 w-5" />
+                </div>
+              </div>
 
-                    <p className="text-sm font-semibold text-white">
-                      {ordem.cliente}
-                    </p>
-                  </div>
+              <div className="mt-10">
+                <p
+                  className="
+                    font-display
+                    text-4xl
+                    font-extrabold
+                    tracking-[-0.05em]
+                    text-[var(--app-text)]
+                    sm:text-5xl
+                  "
+                >
+                  {formatCurrency(
+                    dados.totalFaturado,
+                  )}
+                </p>
 
-                  <div>
-                    <p className="text-xs uppercase text-ink-400">Veículo</p>
+                <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+                  <span
+                    className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      text-xs
+                      font-semibold
+                      text-emerald-500
+                    "
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
 
-                    <p className="text-sm text-ink-200">{ordem.veiculo}</p>
-                  </div>
+                    {dados.quantidadeConcluidas}{" "}
+                    OS concluída
+                    {dados.quantidadeConcluidas !== 1
+                      ? "s"
+                      : ""}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-                  <div className="grid grid-cols-2 gap-3 border-t border-ink-700/50 pt-3">
+          {/* PREVISTO */}
+
+          <div
+            className="
+              group
+              p-6
+              transition-colors
+              hover:bg-[var(--hover-bg)]
+              sm:p-8
+            "
+          >
+            <div className="flex h-full flex-col justify-between">
+              <div className="flex items-start justify-between">
+                <div
+                  className="
+                    flex
+                    h-10
+                    w-10
+                    items-center
+                    justify-center
+                    rounded-xl
+                    bg-amber-500/10
+                    text-amber-500
+                  "
+                >
+                  <Clock3 className="h-5 w-5" />
+                </div>
+
+                <ArrowUpRight
+                  className="
+                    h-4
+                    w-4
+                    text-[var(--app-text-faint)]
+                    transition-colors
+                    group-hover:text-amber-500
+                  "
+                />
+              </div>
+
+              <div className="mt-10">
+                <p
+                  className="
+                    text-[10px]
+                    font-bold
+                    uppercase
+                    tracking-[0.18em]
+                    text-[var(--app-text-muted)]
+                  "
+                >
+                  Faturamento previsto
+                </p>
+
+                <p
+                  className="
+                    mt-2
+                    font-display
+                    text-3xl
+                    font-extrabold
+                    tracking-[-0.04em]
+                    text-[var(--app-text)]
+                  "
+                >
+                  {formatCurrency(
+                    dados.totalPrevisto,
+                  )}
+                </p>
+
+                <p
+                  className="
+                    mt-2
+                    text-xs
+                    text-[var(--app-text-muted)]
+                  "
+                >
+                  {dados.quantidadePendentes} OS
+                  pendente
+                  {dados.quantidadePendentes !== 1
+                    ? "s"
+                    : ""}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* COMPOSIÇÃO FINANCEIRA */}
+
+      <section>
+        <div className="mb-4">
+          <p
+            className="
+              text-[10px]
+              font-bold
+              uppercase
+              tracking-[0.18em]
+              text-[var(--app-text-muted)]
+            "
+          >
+            Composição
+          </p>
+
+          <h2
+            className="
+              mt-1
+              font-display
+              text-lg
+              font-bold
+              text-[var(--app-text)]
+            "
+          >
+            Estrutura do faturamento
+          </h2>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-3">
+          {/* MÃO DE OBRA */}
+
+          <Card
+            className="
+              relative
+              overflow-hidden
+              p-5
+            "
+          >
+            <div className="flex items-start justify-between">
+              <div
+                className="
+                  flex
+                  h-10
+                  w-10
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-[var(--app-surface-raised)]
+                  text-[var(--accent-text)]
+                "
+              >
+                <Wrench className="h-5 w-5" />
+              </div>
+
+              <span
+                className="
+                  text-[10px]
+                  font-bold
+                  uppercase
+                  tracking-[0.14em]
+                  text-[var(--app-text-faint)]
+                "
+              >
+                Receita
+              </span>
+            </div>
+
+            <div className="mt-8">
+              <p
+                className="
+                  text-[10px]
+                  font-bold
+                  uppercase
+                  tracking-[0.14em]
+                  text-[var(--app-text-muted)]
+                "
+              >
+                Mão de obra
+              </p>
+
+              <p
+                className="
+                  mt-2
+                  font-display
+                  text-2xl
+                  font-bold
+                  tracking-[-0.03em]
+                  text-[var(--app-text)]
+                "
+              >
+                {formatCurrency(
+                  dados.totalMaoObra,
+                )}
+              </p>
+            </div>
+          </Card>
+
+          {/* PEÇAS */}
+
+          <Card
+            className="
+              relative
+              overflow-hidden
+              p-5
+            "
+          >
+            <div className="flex items-start justify-between">
+              <div
+                className="
+                  flex
+                  h-10
+                  w-10
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-sky-500/10
+                  text-sky-500
+                "
+              >
+                <BarChart3 className="h-5 w-5" />
+              </div>
+
+              <span
+                className="
+                  text-[10px]
+                  font-bold
+                  uppercase
+                  tracking-[0.14em]
+                  text-[var(--app-text-faint)]
+                "
+              >
+                Receita
+              </span>
+            </div>
+
+            <div className="mt-8">
+              <p
+                className="
+                  text-[10px]
+                  font-bold
+                  uppercase
+                  tracking-[0.14em]
+                  text-[var(--app-text-muted)]
+                "
+              >
+                Peças
+              </p>
+
+              <p
+                className="
+                  mt-2
+                  font-display
+                  text-2xl
+                  font-bold
+                  tracking-[-0.03em]
+                  text-[var(--app-text)]
+                "
+              >
+                {formatCurrency(
+                  dados.totalPecas,
+                )}
+              </p>
+            </div>
+          </Card>
+
+          {/* CANCELADAS */}
+
+          <Card
+            className="
+              relative
+              overflow-hidden
+              p-5
+            "
+          >
+            <div className="flex items-start justify-between">
+              <div
+                className="
+                  flex
+                  h-10
+                  w-10
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-red-500/10
+                  text-red-500
+                "
+              >
+                <XCircle className="h-5 w-5" />
+              </div>
+
+              <span
+                className="
+                  text-[10px]
+                  font-bold
+                  uppercase
+                  tracking-[0.14em]
+                  text-[var(--app-text-faint)]
+                "
+              >
+                Atenção
+              </span>
+            </div>
+
+            <div className="mt-8">
+              <p
+                className="
+                  text-[10px]
+                  font-bold
+                  uppercase
+                  tracking-[0.14em]
+                  text-[var(--app-text-muted)]
+                "
+              >
+                Ordens canceladas
+              </p>
+
+              <p
+                className="
+                  mt-2
+                  font-display
+                  text-2xl
+                  font-bold
+                  tracking-[-0.03em]
+                  text-[var(--app-text)]
+                "
+              >
+                {dados.quantidadeCanceladas}
+              </p>
+
+              <p
+                className="
+                  mt-1
+                  text-xs
+                  text-[var(--app-text-muted)]
+                "
+              >
+                Serviços cancelados
+              </p>
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      {/* ORDENS DE SERVIÇO */}
+
+      <section>
+        <Card className="overflow-hidden">
+          <div
+            className="
+              flex
+              flex-col
+              gap-5
+              border-b
+              border-[var(--app-border-subtle)]
+              px-5
+              py-5
+              sm:flex-row
+              sm:items-end
+              sm:justify-between
+            "
+          >
+            <div>
+              <div className="flex items-center gap-2">
+                <span
+                  className="
+                    h-1.5
+                    w-1.5
+                    rounded-full
+                    bg-[var(--accent)]
+                  "
+                />
+
+                <p
+                  className="
+                    text-[10px]
+                    font-bold
+                    uppercase
+                    tracking-[0.18em]
+                    text-[var(--app-text-muted)]
+                  "
+                >
+                  Operação financeira
+                </p>
+              </div>
+
+              <h2
+                className="
+                  mt-2
+                  font-display
+                  text-lg
+                  font-bold
+                  text-[var(--app-text)]
+                "
+              >
+                Ordens de Serviço
+              </h2>
+
+              <p
+                className="
+                  mt-1
+                  text-sm
+                  text-[var(--app-text-muted)]
+                "
+              >
+                Acompanhe valores, status e
+                responsáveis pelos serviços.
+              </p>
+            </div>
+
+            {dados.ordens.length > 0 && (
+              <div className="w-full sm:w-52">
+                <Select
+                  value={ordenacao}
+                  onChange={(e) =>
+                    setOrdenacao(e.target.value)
+                  }
+                >
+                  <option value="recentes">
+                    Mais recentes
+                  </option>
+
+                  <option value="maiorValor">
+                    Maior valor
+                  </option>
+
+                  <option value="menorValor">
+                    Menor valor
+                  </option>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          {ordensOrdenadas.length === 0 ? (
+            <div
+              className="
+                flex
+                flex-col
+                items-center
+                justify-center
+                px-6
+                py-16
+                text-center
+              "
+            >
+              <div
+                className="
+                  flex
+                  h-14
+                  w-14
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  bg-[var(--app-surface-raised)]
+                  text-[var(--app-text-muted)]
+                "
+              >
+                <BarChart3 className="h-6 w-6" />
+              </div>
+
+              <p
+                className="
+                  mt-4
+                  text-sm
+                  font-semibold
+                  text-[var(--app-text)]
+                "
+              >
+                Nenhuma ordem de serviço encontrada
+              </p>
+
+              <p
+                className="
+                  mt-1
+                  text-xs
+                  text-[var(--app-text-muted)]
+                "
+              >
+                Os dados financeiros das OS aparecerão
+                aqui.
+              </p>
+            </div>
+          ) : (
+            <div
+              className="
+                grid
+                gap-px
+                bg-[var(--app-border-subtle)]
+                md:grid-cols-2
+                xl:grid-cols-3
+              "
+            >
+              {ordensOrdenadas.map((ordem) => (
+                <div
+                  key={ordem.id}
+                  className="
+                    group
+                    cursor-pointer
+                    bg-[var(--app-surface)]
+                    p-5
+                    transition-colors
+                    hover:bg-[var(--hover-bg)]
+                  "
+                  onClick={() =>
+                    navigate(
+                      `/ordens-servico/${ordem.id}`,
+                    )
+                  }
+                >
+                  <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs uppercase text-ink-400">
-                        Mão de obra
+                      <p
+                        className="
+                          text-[10px]
+                          font-bold
+                          uppercase
+                          tracking-[0.14em]
+                          text-[var(--app-text-muted)]
+                        "
+                      >
+                        Ordem de Serviço
                       </p>
 
-                      <p className="text-sm font-semibold text-white">
-                        {formatCurrency(ordem.maoObra)}
+                      <p
+                        className="
+                          mt-1
+                          font-mono
+                          text-sm
+                          font-bold
+                          text-[var(--app-text)]
+                        "
+                      >
+                        #
+                        {ordem.id
+                          .slice(0, 8)
+                          .toUpperCase()}
                       </p>
                     </div>
 
-                    <div>
-                      <p className="text-xs uppercase text-ink-400">Peças</p>
+                    <StatusBadge
+                      status={ordem.status}
+                    />
+                  </div>
 
-                      <p className="text-sm font-semibold text-white">
-                        {formatCurrency(ordem.pecas)}
+                  <div className="mt-6">
+                    <div>
+                      <p
+                        className="
+                          text-[10px]
+                          font-bold
+                          uppercase
+                          tracking-[0.12em]
+                          text-[var(--app-text-muted)]
+                        "
+                      >
+                        Cliente
+                      </p>
+
+                      <p
+                        className="
+                          mt-1
+                          truncate
+                          text-sm
+                          font-semibold
+                          text-[var(--app-text)]
+                        "
+                      >
+                        {ordem.cliente}
+                      </p>
+                    </div>
+
+                    <div className="mt-4">
+                      <p
+                        className="
+                          text-[10px]
+                          font-bold
+                          uppercase
+                          tracking-[0.12em]
+                          text-[var(--app-text-muted)]
+                        "
+                      >
+                        Veículo
+                      </p>
+
+                      <p
+                        className="
+                          mt-1
+                          truncate
+                          text-sm
+                          text-[var(--app-text-secondary)]
+                        "
+                      >
+                        {ordem.veiculo}
                       </p>
                     </div>
                   </div>
 
                   <div
                     className="
-                      flex
-                      items-center
-                      justify-between
-                      rounded-xl
-                      bg-ink-800/60
-                      px-4
-                      py-3
+                      mt-5
+                      grid
+                      grid-cols-2
+                      gap-4
+                      border-t
+                      border-[var(--app-border-subtle)]
+                      pt-4
                     "
                   >
-                    <span className="text-sm text-ink-300">Total</span>
+                    <div>
+                      <p
+                        className="
+                          text-[10px]
+                          font-bold
+                          uppercase
+                          tracking-[0.12em]
+                          text-[var(--app-text-muted)]
+                        "
+                      >
+                        Mão de obra
+                      </p>
 
-                    <span className="font-display text-lg font-bold text-flame-400">
-                      {formatCurrency(ordem.total)}
-                    </span>
+                      <p
+                        className="
+                          mt-1
+                          text-sm
+                          font-semibold
+                          tabular-nums
+                          text-[var(--app-text)]
+                        "
+                      >
+                        {formatCurrency(
+                          ordem.maoObra,
+                        )}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p
+                        className="
+                          text-[10px]
+                          font-bold
+                          uppercase
+                          tracking-[0.12em]
+                          text-[var(--app-text-muted)]
+                        "
+                      >
+                        Peças
+                      </p>
+
+                      <p
+                        className="
+                          mt-1
+                          text-sm
+                          font-semibold
+                          tabular-nums
+                          text-[var(--app-text)]
+                        "
+                      >
+                        {formatCurrency(
+                          ordem.pecas,
+                        )}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-xs text-ink-400">
-                      {new Date(ordem.data).toLocaleDateString()}
+                  <div
+                    className="
+                      mt-5
+                      flex
+                      items-end
+                      justify-between
+                      border-t
+                      border-[var(--app-border-subtle)]
+                      pt-4
+                    "
+                  >
+                    <div>
+                      <p
+                        className="
+                          text-[10px]
+                          font-bold
+                          uppercase
+                          tracking-[0.12em]
+                          text-[var(--app-text-muted)]
+                        "
+                      >
+                        Total
+                      </p>
+
+                      <p
+                        className="
+                          mt-1
+                          font-display
+                          text-xl
+                          font-bold
+                          tracking-[-0.03em]
+                          text-[var(--app-text)]
+                        "
+                      >
+                        {formatCurrency(
+                          ordem.total,
+                        )}
+                      </p>
+                    </div>
+
+                    <ArrowUpRight
+                      className="
+                        h-4
+                        w-4
+                        text-[var(--app-text-faint)]
+                        transition-colors
+                        group-hover:text-[var(--accent-text)]
+                      "
+                    />
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between">
+                    <span
+                      className="
+                        text-xs
+                        tabular-nums
+                        text-[var(--app-text-muted)]
+                      "
+                    >
+                      {new Date(
+                        ordem.data,
+                      ).toLocaleDateString()}
                     </span>
 
                     <span
                       className="
-                        text-sm
+                        text-xs
                         font-semibold
-                        text-flame-400
-                        hover:text-flame-300
+                        text-[var(--accent-text)]
+                        transition-colors
+                        group-hover:text-[var(--accent-text-hover)]
                       "
                     >
-                      Ver OS →
+                      Ver OS
                     </span>
                   </div>
                 </div>
-              </Card>
-            ))}
+              ))}
+            </div>
+          )}
+        </Card>
+      </section>
+
+      {/* PRODUTIVIDADE */}
+
+      <section>
+        <div className="mb-4">
+          <div className="flex items-center gap-2">
+            <span
+              className="
+                h-1.5
+                w-1.5
+                rounded-full
+                bg-[var(--accent)]
+              "
+            />
+
+            <p
+              className="
+                text-[10px]
+                font-bold
+                uppercase
+                tracking-[0.18em]
+                text-[var(--app-text-muted)]
+              "
+            >
+              Performance
+            </p>
           </div>
-        )}
-      </Card>
 
-      {/* PRODUTIVIDADE DOS MECÂNICOS */}
-
-      <Card className="overflow-hidden">
-        <div className="p-5">
-          <h2 className="font-display text-lg font-bold text-white">
+          <h2
+            className="
+              mt-2
+              font-display
+              text-lg
+              font-bold
+              text-[var(--app-text)]
+            "
+          >
             Produtividade por Mecânico
           </h2>
 
-          <p className="mt-1 text-sm text-ink-400">
-            Acompanhe desempenho e valores gerados por profissional.
+          <p
+            className="
+              mt-1
+              text-sm
+              text-[var(--app-text-muted)]
+            "
+          >
+            Acompanhe desempenho e valores gerados
+            por profissional.
           </p>
         </div>
 
-        {dados.produtividadeMecanicos.length === 0 ? (
-          <div className="p-5">
-            <p className="text-sm text-ink-400">
-              Nenhum dado de produtividade encontrado.
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
-            {dados.produtividadeMecanicos.map((mecanico) => (
-              <Card
-                key={mecanico.mecanicoId}
+        <Card className="overflow-hidden">
+          {dados.produtividadeMecanicos.length === 0 ? (
+            <div
+              className="
+                flex
+                flex-col
+                items-center
+                justify-center
+                px-6
+                py-16
+                text-center
+              "
+            >
+              <div
                 className="
-                  cursor-pointer
-                  p-5
-                  transition
-                  hover:border-flame-500/40
-                  hover:bg-ink-800/40
+                  flex
+                  h-14
+                  w-14
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  bg-[var(--app-surface-raised)]
+                  text-[var(--app-text-muted)]
                 "
-                onClick={() => navigate(`/mecanicos/${mecanico.mecanicoId}`)}
               >
-                <div>
-                  <p className="text-xs uppercase text-ink-400">Mecânico</p>
+                <Users className="h-6 w-6" />
+              </div>
 
-                  <h3 className="mt-1 font-display text-lg font-bold text-white">
-                    {mecanico.nome}
-                  </h3>
-                </div>
+              <p
+                className="
+                  mt-4
+                  text-sm
+                  font-semibold
+                  text-[var(--app-text)]
+                "
+              >
+                Nenhum dado de produtividade
+              </p>
 
-                <div className="mt-5 grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs uppercase text-ink-400">Ordens</p>
+              <p
+                className="
+                  mt-1
+                  text-xs
+                  text-[var(--app-text-muted)]
+                "
+              >
+                Os indicadores aparecerão quando
+                houver serviços atribuídos.
+              </p>
+            </div>
+          ) : (
+            <div
+              className="
+                grid
+                gap-px
+                bg-[var(--app-border-subtle)]
+                md:grid-cols-2
+                xl:grid-cols-3
+              "
+            >
+              {dados.produtividadeMecanicos.map(
+                (mecanico) => (
+                  <div
+                    key={mecanico.mecanicoId}
+                    className="
+                      group
+                      cursor-pointer
+                      bg-[var(--app-surface)]
+                      p-5
+                      transition-colors
+                      hover:bg-[var(--hover-bg)]
+                    "
+                    onClick={() =>
+                      navigate(
+                        `/mecanicos/${mecanico.mecanicoId}`,
+                      )
+                    }
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p
+                          className="
+                            text-[10px]
+                            font-bold
+                            uppercase
+                            tracking-[0.14em]
+                            text-[var(--app-text-muted)]
+                          "
+                        >
+                          Mecânico
+                        </p>
 
-                    <p className="text-xl font-bold text-white">
-                      {mecanico.quantidadeOrdens}
-                    </p>
+                        <h3
+                          className="
+                            mt-1
+                            font-display
+                            text-lg
+                            font-bold
+                            tracking-[-0.02em]
+                            text-[var(--app-text)]
+                          "
+                        >
+                          {mecanico.nome}
+                        </h3>
+                      </div>
+
+                      <ArrowUpRight
+                        className="
+                          h-4
+                          w-4
+                          text-[var(--app-text-faint)]
+                          transition-colors
+                          group-hover:text-[var(--accent-text)]
+                        "
+                      />
+                    </div>
+
+                    <div
+                      className="
+                        mt-6
+                        grid
+                        grid-cols-2
+                        gap-4
+                      "
+                    >
+                      <div>
+                        <p
+                          className="
+                            text-[10px]
+                            font-bold
+                            uppercase
+                            tracking-[0.12em]
+                            text-[var(--app-text-muted)]
+                          "
+                        >
+                          Ordens
+                        </p>
+
+                        <p
+                          className="
+                            mt-1
+                            font-display
+                            text-2xl
+                            font-bold
+                            tabular-nums
+                            text-[var(--app-text)]
+                          "
+                        >
+                          {mecanico.quantidadeOrdens}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p
+                          className="
+                            text-[10px]
+                            font-bold
+                            uppercase
+                            tracking-[0.12em]
+                            text-[var(--app-text-muted)]
+                          "
+                        >
+                          Concluídas
+                        </p>
+
+                        <p
+                          className="
+                            mt-1
+                            font-display
+                            text-2xl
+                            font-bold
+                            tabular-nums
+                            text-[var(--app-text)]
+                          "
+                        >
+                          {mecanico.quantidadeConcluidas}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div
+                      className="
+                        mt-5
+                        border-t
+                        border-[var(--app-border-subtle)]
+                        pt-4
+                      "
+                    >
+                      <p
+                        className="
+                          text-[10px]
+                          font-bold
+                          uppercase
+                          tracking-[0.12em]
+                          text-[var(--app-text-muted)]
+                        "
+                      >
+                        Mão de obra gerada
+                      </p>
+
+                      <p
+                        className="
+                          mt-1
+                          font-display
+                          text-xl
+                          font-bold
+                          tracking-[-0.03em]
+                          text-[var(--app-text)]
+                        "
+                      >
+                        {formatCurrency(
+                          mecanico.totalMaoObra,
+                        )}
+                      </p>
+                    </div>
+
+                    <div
+                      className="
+                        mt-4
+                        flex
+                        items-center
+                        justify-between
+                      "
+                    >
+                      <span
+                        className="
+                          text-xs
+                          text-[var(--app-text-muted)]
+                        "
+                      >
+                        Ver detalhes
+                      </span>
+
+                      <ArrowRight
+                        className="
+                          h-4
+                          w-4
+                          text-[var(--app-text-faint)]
+                          transition-all
+                          group-hover:translate-x-0.5
+                          group-hover:text-[var(--accent-text)]
+                        "
+                      />
+                    </div>
                   </div>
-
-                  <div>
-                    <p className="text-xs uppercase text-ink-400">Concluídas</p>
-
-                    <p className="text-xl font-bold text-white">
-                      {mecanico.quantidadeConcluidas}
-                    </p>
-                  </div>
-                </div>
-
-                <div
-                  className="
-                    mt-4
-                    rounded-xl
-                    bg-ink-800/60
-                    px-4
-                    py-3
-                  "
-                >
-                  <p className="text-xs uppercase text-ink-400">
-                    Mão de obra gerada
-                  </p>
-
-                  <p className="mt-1 font-display text-lg font-bold text-flame-400">
-                    {formatCurrency(mecanico.totalMaoObra)}
-                  </p>
-                </div>
-
-                <div className="mt-4 text-right">
-                  <span className="text-sm font-semibold text-flame-400">
-                    Ver mecânico →
-                  </span>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </Card>
+                ),
+              )}
+            </div>
+          )}
+        </Card>
+      </section>
     </div>
   );
 }
+

@@ -1,6 +1,8 @@
+
 using Microsoft.EntityFrameworkCore;
 
 using OficinaMecanica.Domain.Entities;
+using OficinaMecanica.Domain.Enums;
 
 using OficinaMecanica.Infrastructure.Data;
 
@@ -108,4 +110,76 @@ public class OrdemServicoRepository
             .Include(o => o.Itens)
             .ToListAsync();
     }
+
+
+    public async Task<int> ObterQuantidadeReservadaAsync(
+        Guid pecaId,
+        Guid? excluirOrdemId = null)
+    {
+        var statusAtivos = new[]
+        {
+            StatusOrdemServico.Aberta,
+            StatusOrdemServico.AguardandoAprovacao,
+            StatusOrdemServico.Aprovada,
+            StatusOrdemServico.Reaberta
+        };
+
+        var query = _context.OrdensServico
+            .AsNoTracking()
+            .Where(o => statusAtivos.Contains(o.Status));
+
+        if (excluirOrdemId.HasValue)
+        {
+            query = query.Where(o => o.Id != excluirOrdemId.Value);
+        }
+
+        return await query
+            .SelectMany(o => o.Itens)
+            .Where(i => i.PecaId == pecaId)
+            .SumAsync(i => i.Quantidade);
+    }
+
+    public async Task<List<(Guid OrdemId, int Quantidade)>>
+        ObterReservasPorOrdemAsync(
+            Guid pecaId,
+            Guid? excluirOrdemId = null)
+    {
+        var statusAtivos = new[]
+        {
+        StatusOrdemServico.Aberta,
+        StatusOrdemServico.AguardandoAprovacao,
+        StatusOrdemServico.Aprovada,
+        StatusOrdemServico.Reaberta
+    };
+
+        var query = _context.OrdensServico
+            .AsNoTracking()
+            .Where(o => statusAtivos.Contains(o.Status));
+
+        if (excluirOrdemId.HasValue)
+        {
+            query = query.Where(o => o.Id != excluirOrdemId.Value);
+        }
+
+        var reservas = await query
+            .SelectMany(o => o.Itens
+                .Where(i => i.PecaId == pecaId)
+                .Select(i => new
+                {
+                    OrdemId = o.Id,
+                    Quantidade = i.Quantidade
+                }))
+            .GroupBy(x => x.OrdemId)
+            .Select(g => new
+            {
+                OrdemId = g.Key,
+                Quantidade = g.Sum(x => x.Quantidade)
+            })
+            .ToListAsync();
+
+        return reservas
+            .Select(x => (x.OrdemId, x.Quantidade))
+            .ToList();
+    }
 }
+

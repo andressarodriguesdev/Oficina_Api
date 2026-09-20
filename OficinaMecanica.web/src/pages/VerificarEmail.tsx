@@ -17,6 +17,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
+
 import { useToast } from "../components/ui/Toast";
 import { Button } from "../components/ui/Button";
 import { verificarEmail } from "../services/usuarioService";
@@ -208,56 +209,71 @@ export function VerificarEmail() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-ink-950 px-6 py-10">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--app-bg)] px-6 py-10">
       <div className="w-full max-w-md animate-scale-in">
 
-        {/* =================================================
-            VOLTAR
-            ================================================= */}
+        {/* VOLTAR */}
 
         <div className="mb-6">
           <Link
             to="/cadastro"
-            className="inline-flex items-center gap-2 text-sm text-ink-400 transition hover:text-white"
+            className="
+              inline-flex
+              items-center
+              gap-2
+              text-sm
+              text-[var(--app-text-muted)]
+              transition-colors
+              hover:text-[var(--accent-text)]
+            "
           >
             <ArrowLeft className="h-4 w-4" />
             Voltar para o cadastro
           </Link>
         </div>
 
-        {/* =================================================
-            CARD
-            ================================================= */}
+        {/* CARD */}
 
-        <div className="card p-8">
+        <div className="card p-7 sm:p-8">
 
-          {/* =================================================
-              CABEÇALHO
-              ================================================= */}
+          {/* CABEÇALHO */}
 
           <div className="flex flex-col items-center text-center">
 
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-flame-500/10 text-flame-400">
+            <div
+              className="
+                flex
+                h-14
+                w-14
+                items-center
+                justify-center
+                rounded-2xl
+                bg-[var(--app-surface-raised)]
+                text-[var(--accent-text)]
+              "
+            >
               <MailCheck className="h-7 w-7" />
             </div>
 
-            <h1 className="mt-5 font-display text-2xl font-extrabold text-white">
+            <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--app-text-faint)]">
+              Segurança
+            </p>
+
+            <h1 className="mt-2 font-display text-2xl font-extrabold tracking-tight text-[var(--app-text)]">
               Confirme seu e-mail
             </h1>
 
-            <p className="mt-2 max-w-sm text-sm leading-6 text-ink-400">
+            <p className="mt-2 max-w-sm text-sm leading-6 text-[var(--app-text-muted)]">
               Enviamos um código de 6 dígitos para
               confirmar seu endereço de e-mail.
             </p>
 
-            <p className="mt-3 break-all text-sm font-semibold text-ink-200">
+            <p className="mt-3 max-w-full break-all text-sm font-semibold text-[var(--app-text-secondary)]">
               {email}
             </p>
           </div>
 
-          {/* =================================================
-              FORMULÁRIO
-              ================================================= */}
+          {/* FORMULÁRIO */}
 
           <form
             onSubmit={handleSubmit}
@@ -265,12 +281,12 @@ export function VerificarEmail() {
           >
             <label
               htmlFor="verification-code-0"
-              className="label-base text-center"
+              className="label-base text-center text-[var(--app-text-secondary)]"
             >
               Código de verificação
             </label>
 
-            <div className="mt-3 flex justify-center gap-2">
+            <div className="mt-3 flex justify-center gap-1.5 sm:gap-2">
               {code.map((digit, index) => (
                 <input
                   key={index}
@@ -302,12 +318,33 @@ export function VerificarEmail() {
                   aria-label={`Dígito ${
                     index + 1
                   } do código`}
-                  className="h-14 w-12 rounded-xl border border-ink-700 bg-ink-900 text-center text-xl font-bold text-white outline-none transition focus:border-flame-500 focus:ring-2 focus:ring-flame-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="
+                    h-14
+                    w-11
+                    rounded-xl
+                    border
+                    border-[var(--input-border)]
+                    bg-[var(--input-bg)]
+                    text-center
+                    text-xl
+                    font-bold
+                    text-[var(--input-text)]
+                    outline-none
+                    transition-all
+                    duration-200
+                    placeholder:text-[var(--input-placeholder)]
+                    focus:border-[var(--input-focus)]
+                    focus:ring-2
+                    focus:ring-[var(--input-focus)]/20
+                    disabled:cursor-not-allowed
+                    disabled:opacity-60
+                    sm:w-12
+                  "
                 />
               ))}
             </div>
 
-            <p className="mt-4 text-center text-xs text-ink-500">
+            <p className="mt-4 text-center text-xs text-[var(--app-text-faint)]">
               O código é válido por 5 minutos.
             </p>
 
@@ -325,20 +362,35 @@ export function VerificarEmail() {
             </Button>
           </form>
 
-          {/* =================================================
-              AJUDA
-              ================================================= */}
+          {/* AJUDA */}
 
-          <div className="mt-6 border-t border-white/[0.06] pt-5 text-center">
-            <p className="text-xs leading-5 text-ink-500">
+          <div
+            className="
+              mt-6
+              border-t
+              border-[var(--app-border-subtle)]
+              pt-5
+              text-center
+            "
+          >
+            <p className="text-xs leading-5 text-[var(--app-text-faint)]">
               Não recebeu o código? Verifique a caixa
               de spam ou volte ao cadastro para iniciar
               uma nova verificação.
             </p>
           </div>
         </div>
+
+        {/* IDENTIDADE */}
+
+        <div className="mt-5 text-center">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--app-text-faint)]">
+            Oficina Prime
+          </span>
+        </div>
       </div>
     </div>
   );
 }
+
 

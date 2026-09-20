@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Select } from "../components/ui/Select";
 import { Link, useNavigate } from "react-router-dom";
@@ -12,7 +13,6 @@ import {
   MapPin,
   UserX,
   UserCheck,
-  ArrowLeft,
 } from "lucide-react";
 
 import { Card } from "../components/ui/Card";
@@ -92,16 +92,24 @@ export function Clientes() {
     });
   }, [clientes, search, filtroStatus]);
 
-  const handleSubmit = async (values: ClienteFormValues) => {
+  const handleSubmit = async (
+    values: ClienteFormValues,
+  ) => {
     setSubmitting(true);
 
     try {
       if (editing) {
         await updateCliente(editing.id, values);
-        toast.success("Cliente atualizado com sucesso");
+
+        toast.success(
+          "Cliente atualizado com sucesso",
+        );
       } else {
         await createCliente(values);
-        toast.success("Cliente cadastrado com sucesso");
+
+        toast.success(
+          "Cliente cadastrado com sucesso",
+        );
       }
 
       setModalOpen(false);
@@ -129,7 +137,9 @@ export function Clientes() {
     try {
       await deleteCliente(toDelete.id);
 
-      toast.success("Cliente excluído com sucesso");
+      toast.success(
+        "Cliente excluído com sucesso",
+      );
 
       setToDelete(null);
 
@@ -142,11 +152,15 @@ export function Clientes() {
     }
   };
 
-  const handleInativar = async (cliente: Cliente) => {
+  const handleInativar = async (
+    cliente: Cliente,
+  ) => {
     try {
       await inativarCliente(cliente.id);
 
-      toast.success("Cliente inativado com sucesso");
+      toast.success(
+        "Cliente inativado com sucesso",
+      );
 
       await load();
     } catch (err) {
@@ -155,11 +169,15 @@ export function Clientes() {
     }
   };
 
-  const handleReativar = async (cliente: Cliente) => {
+  const handleReativar = async (
+    cliente: Cliente,
+  ) => {
     try {
       await reativarCliente(cliente.id);
 
-      toast.success("Cliente reativado com sucesso");
+      toast.success(
+        "Cliente reativado com sucesso",
+      );
 
       await load();
     } catch (err) {
@@ -168,83 +186,189 @@ export function Clientes() {
     }
   };
 
+  const openCreateModal = () => {
+    setEditing(null);
+    setModalOpen(true);
+  };
+
+  const openEditModal = (cliente: Cliente) => {
+    setEditing(cliente);
+    setModalOpen(true);
+  };
+
   return (
-    <div className="space-y-5">
-      {/* VOLTAR */}
-      <div className="flex items-center">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate("/painel")}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar
-        </Button>
-      </div>
+    <div className="space-y-7">
+      {/* =================================================
+          HEADER
+          ================================================= */}
 
-      {/* FILTROS / AÇÕES */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-        {/* BUSCA */}
-        <div className="relative w-full lg:w-[420px] lg:shrink-0">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+      <section className="border-b border-[var(--app-border-subtle)] pb-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--accent-text)]">
+              Cadastro
+            </p>
 
-          <Input
-            placeholder="Buscar por nome, email ou telefone..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9"
-          />
+            <div className="flex items-end gap-3">
+              <h1 className="font-display text-2xl font-black tracking-tight text-[var(--app-text)] sm:text-3xl">
+                Clientes
+              </h1>
+
+              <span className="mb-1.5 text-xs font-semibold text-[var(--app-text-faint)]">
+                {clientes.length
+                  .toString()
+                  .padStart(2, "0")}{" "}
+                cadastrados
+              </span>
+            </div>
+
+            <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--app-text-muted)]">
+              Gerencie os clientes e mantenha seus dados
+              sempre atualizados.
+            </p>
+          </div>
+
+          <Button
+            className="w-full sm:w-auto"
+            onClick={openCreateModal}
+          >
+            <Plus className="h-4 w-4" />
+            Novo cliente
+          </Button>
         </div>
+      </section>
 
-        {/* FILTRO DE STATUS */}
-        <Select
-          value={filtroStatus}
-          onChange={(e) => setFiltroStatus(e.target.value)}
-          className="w-full lg:w-56 lg:shrink-0"
-        >
-          <option value="todos">Todos os clientes</option>
-          <option value="ativos">Clientes ativos</option>
-          <option value="inativos">Clientes inativos</option>
-        </Select>
+      {/* =================================================
+          CONTROLS
+          ================================================= */}
 
-        {/* NOVO CLIENTE */}
-        <Button
-          className="w-full whitespace-nowrap lg:ml-auto lg:w-auto"
-          onClick={() => {
-            setEditing(null);
-            setModalOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4" />
-          Novo cliente
-        </Button>
-      </div>
+      <section className="border-y border-[var(--app-border-subtle)] py-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="relative w-full lg:max-w-md">
+            <Search
+              className="
+                pointer-events-none
+                absolute
+                left-3
+                top-1/2
+                h-4
+                w-4
+                -translate-y-1/2
+                text-[var(--app-text-muted)]
+              "
+            />
 
-      {/* CONTEÚDO */}
+            <Input
+              placeholder="Buscar por nome, email ou telefone..."
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+              className="w-full pl-9"
+            />
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-2">
+              <span className="hidden text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--app-text-faint)] sm:block">
+                Status
+              </span>
+
+              <Select
+                value={filtroStatus}
+                onChange={(e) =>
+                  setFiltroStatus(e.target.value)
+                }
+                className="w-full sm:w-56"
+              >
+                <option value="todos">
+                  Todos os clientes
+                </option>
+
+                <option value="ativos">
+                  Clientes ativos
+                </option>
+
+                <option value="inativos">
+                  Clientes inativos
+                </option>
+              </Select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =================================================
+          RESULT INFO
+          ================================================= */}
+
+      {!loading && (
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-[var(--app-text-muted)]">
+            <span className="font-semibold text-[var(--app-text)]">
+              {filtered.length}
+            </span>{" "}
+            {filtered.length === 1
+              ? "cliente encontrado"
+              : "clientes encontrados"}
+          </p>
+
+          {(search || filtroStatus !== "todos") && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch("");
+                setFiltroStatus("todos");
+              }}
+              className="
+                text-xs
+                font-semibold
+                text-[var(--accent-text)]
+                transition-colors
+                hover:text-[var(--accent-text-hover)]
+              "
+            >
+              Limpar filtros
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* =================================================
+          CONTENT
+          ================================================= */}
+
       {loading ? (
         <PageLoader label="Carregando clientes..." />
       ) : filtered.length === 0 ? (
         <Card>
           <EmptyState
-            icon={<Users className="h-7 w-7" />}
+            icon={
+              <Users className="h-7 w-7" />
+            }
             title={
-              search
+              search || filtroStatus !== "todos"
                 ? "Nenhum cliente encontrado"
                 : "Nenhum cliente cadastrado"
             }
             description={
-              search
-                ? "Tente outra busca."
+              search || filtroStatus !== "todos"
+                ? "Tente ajustar os filtros para encontrar outro cliente."
                 : "Cadastre o primeiro cliente da oficina."
             }
             action={
-              !search && (
+              search || filtroStatus !== "todos" ? (
                 <Button
+                  variant="secondary"
                   onClick={() => {
-                    setEditing(null);
-                    setModalOpen(true);
+                    setSearch("");
+                    setFiltroStatus("todos");
                   }}
                 >
+                  Limpar filtros
+                </Button>
+              ) : (
+                <Button onClick={openCreateModal}>
                   <Plus className="h-4 w-4" />
                   Cadastrar cliente
                 </Button>
@@ -253,50 +377,137 @@ export function Clientes() {
           />
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div
+          className="
+            grid
+            grid-cols-1
+            gap-px
+            overflow-hidden
+            border
+            border-[var(--app-border-subtle)]
+            bg-[var(--app-border-subtle)]
+            md:grid-cols-2
+            xl:grid-cols-3
+          "
+        >
           {filtered.map((c) => (
             <Card
               key={c.id}
               hover
-              className="cursor-pointer p-4 sm:p-5"
+              className="
+                group
+                cursor-pointer
+                rounded-none
+                border-0
+                p-5
+                transition-all
+                duration-200
+                hover:bg-[var(--app-surface-hover)]
+              "
               onClick={() => {
                 navigate(`/clientes/${c.id}`);
               }}
             >
-              {/* CABEÇALHO DO CARD */}
+              {/* CLIENT HEADER */}
+
               <div className="flex items-start gap-3">
-                {/* AVATAR */}
                 <Link
                   to={`/clientes/${c.id}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-ink-700 to-ink-800 text-sm font-bold text-flame-400"
+                  onClick={(e) =>
+                    e.stopPropagation()
+                  }
+                  className="
+                    flex
+                    h-11
+                    w-11
+                    shrink-0
+                    items-center
+                    justify-center
+                    rounded-full
+                    bg-[var(--app-surface-raised)]
+                    text-sm
+                    font-bold
+                    text-[var(--accent-text)]
+                    transition-colors
+                    group-hover:bg-[var(--hover-bg)]
+                  "
                 >
                   {initials(c.nome)}
                 </Link>
 
-                {/* NOME / STATUS / TELEFONE */}
                 <div className="min-w-0 flex-1">
                   <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <Link
                       to={`/clientes/${c.id}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="min-w-0 max-w-full truncate font-display text-sm font-bold text-white hover:text-flame-400"
+                      onClick={(e) =>
+                        e.stopPropagation()
+                      }
+                      className="
+                        min-w-0
+                        max-w-full
+                        truncate
+                        font-display
+                        text-sm
+                        font-bold
+                        text-[var(--app-text)]
+                        transition-colors
+                        hover:text-[var(--accent-text)]
+                      "
                     >
                       {c.nome}
                     </Link>
 
                     {c.ativo ? (
-                      <span className="shrink-0 rounded-full bg-green-500/20 px-2 py-0.5 text-[10px] font-semibold text-green-400">
+                      <span
+                        className="
+                          shrink-0
+                          rounded-full
+                          border
+                          border-emerald-500/20
+                          bg-emerald-500/10
+                          px-2
+                          py-0.5
+                          text-[10px]
+                          font-semibold
+                          text-emerald-500
+                          dark:text-emerald-300
+                        "
+                      >
                         Ativo
                       </span>
                     ) : (
-                      <span className="shrink-0 rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-semibold text-red-400">
+                      <span
+                        className="
+                          shrink-0
+                          rounded-full
+                          border
+                          border-red-500/20
+                          bg-red-500/10
+                          px-2
+                          py-0.5
+                          text-[10px]
+                          font-semibold
+                          text-red-500
+                          dark:text-red-300
+                        "
+                      >
                         Inativo
                       </span>
                     )}
                   </div>
 
-                  <p className="mt-0.5 flex min-w-0 items-center gap-1 truncate text-xs text-ink-400">
+                  <p
+                    className="
+                      mt-1
+                      flex
+                      min-w-0
+                      items-center
+                      gap-1.5
+                      truncate
+                      text-xs
+                      text-[var(--app-text-muted)]
+                    "
+                  >
                     <Phone className="h-3 w-3 shrink-0" />
 
                     <span className="truncate">
@@ -306,24 +517,52 @@ export function Clientes() {
                 </div>
               </div>
 
-              {/* AÇÕES */}
-              <div className="mt-3 flex justify-end gap-1 border-t border-ink-700/40 pt-3">
+              {/* ACTIONS */}
+
+              <div
+                className="
+                  mt-5
+                  flex
+                  justify-end
+                  gap-1
+                  border-t
+                  border-[var(--app-border-subtle)]
+                  pt-3
+                "
+              >
                 <Link
                   to={`/clientes/${c.id}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-800 hover:text-sky-400"
+                  onClick={(e) =>
+                    e.stopPropagation()
+                  }
+                  className="
+                    rounded-lg
+                    p-2
+                    text-[var(--app-text-muted)]
+                    transition-colors
+                    hover:bg-[var(--hover-bg)]
+                    hover:text-sky-500
+                    dark:hover:text-sky-400
+                  "
                   title="Visualizar"
                 >
                   <Eye className="h-4 w-4" />
                 </Link>
 
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setEditing(c);
-                    setModalOpen(true);
+                    openEditModal(c);
                   }}
-                  className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-800 hover:text-flame-400"
+                  className="
+                    rounded-lg
+                    p-2
+                    text-[var(--app-text-muted)]
+                    transition-colors
+                    hover:bg-[var(--hover-bg)]
+                    hover:text-[var(--accent-text)]
+                  "
                   title="Editar"
                 >
                   <Pencil className="h-4 w-4" />
@@ -331,22 +570,40 @@ export function Clientes() {
 
                 {c.ativo ? (
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleInativar(c);
                     }}
-                    className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-800 hover:text-red-400"
+                    className="
+                      rounded-lg
+                      p-2
+                      text-[var(--app-text-muted)]
+                      transition-colors
+                      hover:bg-[var(--hover-bg)]
+                      hover:text-red-500
+                      dark:hover:text-red-400
+                    "
                     title="Inativar cliente"
                   >
                     <UserX className="h-4 w-4" />
                   </button>
                 ) : (
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleReativar(c);
                     }}
-                    className="rounded-lg p-2 text-ink-400 transition hover:bg-ink-800 hover:text-green-400"
+                    className="
+                      rounded-lg
+                      p-2
+                      text-[var(--app-text-muted)]
+                      transition-colors
+                      hover:bg-[var(--hover-bg)]
+                      hover:text-emerald-500
+                      dark:hover:text-emerald-400
+                    "
                     title="Reativar cliente"
                   >
                     <UserCheck className="h-4 w-4" />
@@ -354,8 +611,19 @@ export function Clientes() {
                 )}
               </div>
 
-              {/* INFORMAÇÕES */}
-              <div className="mt-3 space-y-1.5 border-t border-ink-700/40 pt-3 text-xs text-ink-400">
+              {/* CONTACT INFORMATION */}
+
+              <div
+                className="
+                  mt-4
+                  space-y-2
+                  border-t
+                  border-[var(--app-border-subtle)]
+                  pt-3
+                  text-xs
+                  text-[var(--app-text-muted)]
+                "
+              >
                 <p className="flex min-w-0 items-center gap-1.5">
                   <Mail className="h-3 w-3 shrink-0" />
 
@@ -377,14 +645,21 @@ export function Clientes() {
         </div>
       )}
 
-      {/* MODAL */}
+      {/* =================================================
+          MODAL
+          ================================================= */}
+
       <Modal
         open={modalOpen}
         onClose={() => {
           setModalOpen(false);
           setEditing(null);
         }}
-        title={editing ? "Editar cliente" : "Cadastrar cliente"}
+        title={
+          editing
+            ? "Editar cliente"
+            : "Cadastrar cliente"
+        }
         description={
           editing
             ? "Atualize os dados do cliente."
@@ -403,7 +678,10 @@ export function Clientes() {
         />
       </Modal>
 
-      {/* CONFIRMAÇÃO DE EXCLUSÃO */}
+      {/* =================================================
+          DELETE CONFIRMATION
+          ================================================= */}
+
       <ConfirmDialog
         open={!!toDelete}
         onClose={() => setToDelete(null)}

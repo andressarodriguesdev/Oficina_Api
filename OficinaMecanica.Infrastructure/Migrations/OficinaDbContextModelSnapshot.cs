@@ -117,18 +117,62 @@ namespace OficinaMecanica.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Bairro")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Cep")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Cidade")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Cnpj")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Complemento")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Endereco")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InscricaoEstadual")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Logotipo")
                         .HasColumnType("text");
 
+                    b.Property<string>("Logradouro")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Numero")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RazaoSocial")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Telefone")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Uf")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -218,6 +262,9 @@ namespace OficinaMecanica.Infrastructure.Migrations
                     b.Property<Guid>("OrdemServicoId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("PecaId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Quantidade")
                         .HasColumnType("integer");
 
@@ -228,7 +275,47 @@ namespace OficinaMecanica.Infrastructure.Migrations
 
                     b.HasIndex("OrdemServicoId");
 
+                    b.HasIndex("PecaId");
+
                     b.ToTable("OrdemServicoItens");
+                });
+
+            modelBuilder.Entity("OficinaMecanica.Domain.Entities.Pecas", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Ativa")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Codigo")
+                        .HasColumnType("text");
+
+                    b.Property<int>("EstoqueMinimo")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("OficinaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("QuantidadeEstoque")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("ValorCusto")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("ValorVenda")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OficinaId");
+
+                    b.ToTable("Pecas");
                 });
 
             modelBuilder.Entity("OficinaMecanica.Domain.Entities.Veiculo", b =>
@@ -428,7 +515,25 @@ namespace OficinaMecanica.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("OficinaMecanica.Domain.Entities.Pecas", "Peca")
+                        .WithMany()
+                        .HasForeignKey("PecaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("OrdemServico");
+
+                    b.Navigation("Peca");
+                });
+
+            modelBuilder.Entity("OficinaMecanica.Domain.Entities.Pecas", b =>
+                {
+                    b.HasOne("OficinaMecanica.Domain.Entities.Oficina", "Oficina")
+                        .WithMany()
+                        .HasForeignKey("OficinaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Oficina");
                 });
 
             modelBuilder.Entity("OficinaMecanica.Domain.Entities.Veiculo", b =>
