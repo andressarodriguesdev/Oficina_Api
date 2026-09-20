@@ -1,4 +1,4 @@
-﻿
+
 using System.Security.Cryptography;
 
 namespace OficinaMecanica.Api.Services
@@ -113,6 +113,48 @@ namespace OficinaMecanica.Api.Services
                 <p>
                     Se você não criou uma conta na Oficina Prime,
                     ignore este e-mail.
+                </p>
+            </body>
+        </html>
+        """;
+
+            await _resendEmailService.EnviarEmailAsync(
+                email,
+                assunto,
+                html
+            );
+        }
+
+        // Atenção: a validade informada no e-mail (10 minutos) deve
+        // acompanhar a constante RecuperacaoSenhaValidadeMinutos do AuthController.
+        public async Task EnviarCodigoRecuperacaoSenhaAsync(
+            string email,
+            string codigo)
+        {
+            var assunto = "Recuperação de senha - Oficina Prime";
+
+            var html = $"""
+        <html>
+            <body>
+                <h2>Recuperação de senha</h2>
+
+                <p>Olá!</p>
+
+                <p>
+                    Recebemos um pedido para redefinir a senha da sua conta na
+                    <strong>Oficina Prime</strong>.
+                    Digite o código abaixo para continuar:
+                </p>
+
+                <h1>{codigo}</h1>
+
+                <p>
+                    Esse código é válido por 10 minutos.
+                </p>
+
+                <p>
+                    Se você não pediu para redefinir a senha,
+                    ignore este e-mail. Sua senha continua a mesma.
                 </p>
             </body>
         </html>

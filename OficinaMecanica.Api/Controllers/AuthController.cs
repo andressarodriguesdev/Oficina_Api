@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using OficinaMecanica.Api.Services;
 using OficinaMecanica.Application.DTOs.TwoFactor;
 using OficinaMecanica.Application.DTOs.Usuario;
@@ -14,20 +15,30 @@ namespace OficinaMecanica.Api.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
+    // Recuperação de senha
+    // (a validade do e-mail em TwoFactorService diz "10 minutos": mantenha os dois iguais)
+    private const int RecuperacaoSenhaValidadeMinutos = 10;
+    private const int RecuperacaoSenhaIntervaloSegundos = 60;
+    private const int RecuperacaoSenhaMaxTentativas = 5;
+    private const int SenhaTamanhoMinimo = 6;
+
     private readonly OficinaDbContext _context;
     private readonly PasswordHasher<Usuario> _passwordHasher;
     private readonly JwtService _jwtService;
     private readonly TwoFactorService _twoFactorService;
+    private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         OficinaDbContext context,
         JwtService jwtService,
-        TwoFactorService twoFactorService)
+        TwoFactorService twoFactorService,
+        ILogger<AuthController> logger)
     {
         _context = context;
         _passwordHasher = new PasswordHasher<Usuario>();
         _jwtService = jwtService;
         _twoFactorService = twoFactorService;
+        _logger = logger;
     }
 
     [HttpPost("register")]
@@ -267,6 +278,172 @@ public class AuthController : ControllerBase
             usuarioId = usuario.Id,
             nome = usuario.Nome,
             email = usuario.Email
+        });
+    }
+
+    // =====================================================
+    // RECUPERAÇÃO DE SENHA
+    // =====================================================
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(EsqueciSenhaDto dto)
+    {
+        var email = dto.Email?.Trim().ToLower() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return BadRequest(new
+            {
+                mensagem = "Informe o e-mail."
+            });
+        }
+
+        // Mesma resposta exista a conta ou não, para não revelar quem está cadastrado
+        var respostaGenerica = new
+        {
+            mensagem = "Se o e-mail estiver cadastrado, enviaremos um código de recuperação."
+        };
+
+        var usuario = await _context.Usuario
+            .FirstOrDefaultAsync(u => u.Email == email);
+
+        if (usuario == null || !usuario.Ativo)
+        {
+            return Ok(respostaGenerica);
+        }
+
+        // Intervalo mínimo entre pedidos (evita disparar vários e-mails seguidos)
+        if (usuario.PasswordResetCodeExpiresAt.HasValue)
+        {
+            var geradoEm = usuario.PasswordResetCodeExpiresAt.Value
+                .AddMinutes(-RecuperacaoSenhaValidadeMinutos);
+
+            if (DateTime.UtcNow < geradoEm.AddSeconds(RecuperacaoSenhaIntervaloSegundos))
+            {
+                return Ok(respostaGenerica);
+            }
+        }
+
+        var codigo = _twoFactorService.GerarCodigo();
+
+        // Um novo código substitui o anterior
+        usuario.PasswordResetCodeHash =
+            _twoFactorService.GerarHash(codigo);
+
+        usuario.PasswordResetCodeExpiresAt =
+            DateTime.UtcNow.AddMinutes(RecuperacaoSenhaValidadeMinutos);
+
+        usuario.PasswordResetAttempts = 0;
+
+        await _context.SaveChangesAsync();
+
+        try
+        {
+            await _twoFactorService.EnviarCodigoRecuperacaoSenhaAsync(
+                usuario.Email,
+                codigo
+            );
+        }
+        catch (Exception ex)
+        {
+            // Não deixa a falha de envio revelar que a conta existe
+            _logger.LogError(ex, "Falha ao enviar o e-mail de recuperação de senha.");
+        }
+
+        return Ok(respostaGenerica);
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword(RedefinirSenhaDto dto)
+    {
+        var email = dto.Email?.Trim().ToLower() ?? string.Empty;
+        var codigo = dto.Code?.Trim() ?? string.Empty;
+        var novaSenha = dto.NovaSenha ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(email) ||
+            string.IsNullOrWhiteSpace(codigo) ||
+            string.IsNullOrEmpty(novaSenha))
+        {
+            return BadRequest(new
+            {
+                mensagem = "Informe o e-mail, o código e a nova senha."
+            });
+        }
+
+        if (novaSenha.Length < SenhaTamanhoMinimo)
+        {
+            return BadRequest(new
+            {
+                mensagem = $"A senha deve ter pelo menos {SenhaTamanhoMinimo} caracteres."
+            });
+        }
+
+        // Mesma mensagem para conta inexistente, código errado ou expirado
+        var codigoInvalido = new
+        {
+            mensagem = "Código inválido ou expirado."
+        };
+
+        var usuario = await _context.Usuario
+            .FirstOrDefaultAsync(u => u.Email == email);
+
+        if (usuario == null ||
+            string.IsNullOrEmpty(usuario.PasswordResetCodeHash) ||
+            !usuario.PasswordResetCodeExpiresAt.HasValue ||
+            usuario.PasswordResetCodeExpiresAt.Value < DateTime.UtcNow)
+        {
+            return BadRequest(codigoInvalido);
+        }
+
+        if (usuario.PasswordResetAttempts >= RecuperacaoSenhaMaxTentativas)
+        {
+            return BadRequest(new
+            {
+                mensagem = "Número máximo de tentativas excedido. Solicite um novo código."
+            });
+        }
+
+        usuario.PasswordResetAttempts++;
+
+        var codigoValido = _twoFactorService.ValidarCodigo(
+            codigo,
+            usuario.PasswordResetCodeHash
+        );
+
+        if (!codigoValido)
+        {
+            await _context.SaveChangesAsync();
+
+            return BadRequest(codigoInvalido);
+        }
+
+        // Código correto: troca a senha e inutiliza o código (uso único)
+        usuario.SenhaHash = _passwordHasher.HashPassword(
+            usuario,
+            novaSenha
+        );
+
+        usuario.PasswordResetCodeHash = null;
+        usuario.PasswordResetCodeExpiresAt = null;
+        usuario.PasswordResetAttempts = 0;
+
+        // Receber o código no e-mail comprova que a pessoa controla a caixa de entrada.
+        // Sem isso, quem se cadastrou e não verificou o e-mail ficaria sem conseguir entrar.
+        if (!usuario.EmailVerificado)
+        {
+            usuario.EmailVerificado = true;
+            usuario.EmailVerificationCodeHash = null;
+            usuario.EmailVerificationCodeExpiresAt = null;
+            usuario.EmailVerificationAttempts = 0;
+            usuario.EmailVerificationToken = null;
+            usuario.EmailVerificationTokenExpiresAt = null;
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            mensagem = "Senha redefinida com sucesso."
         });
     }
 

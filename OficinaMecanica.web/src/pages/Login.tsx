@@ -1,4 +1,3 @@
-
 import { type FormEvent, useState } from "react";
 import {
   Link,
@@ -33,6 +32,31 @@ const STATS = [
   { value: "24/7", label: "Disponível" },
 ];
 
+// =========================================================
+// ÚLTIMO E-MAIL USADO NO LOGIN
+// =========================================================
+//
+// Guarda apenas o e-mail (nunca a senha) para que, depois do
+// logout, a tela de login volte com o e-mail de quem acabou de sair.
+
+const LAST_EMAIL_KEY = "oficina:lastLoginEmail";
+
+function lerUltimoEmail(): string {
+  try {
+    return localStorage.getItem(LAST_EMAIL_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function salvarUltimoEmail(valor: string) {
+  try {
+    localStorage.setItem(LAST_EMAIL_KEY, valor);
+  } catch {
+    // Sem acesso ao localStorage: segue sem lembrar o e-mail.
+  }
+}
+
 export function Login() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -53,11 +77,18 @@ export function Login() {
   // });
   //
   // Assim o e-mail aparece automaticamente no login.
+  //
+  // Prioridade do e-mail inicial:
+  // 1) e-mail vindo do cadastro (location.state)
+  // 2) último e-mail que fez login (ex.: depois de um logout)
+  // 3) vazio
 
   const emailFromVerification =
     (location.state as { email?: string } | null)?.email ?? "";
 
-  const [email, setEmail] = useState(emailFromVerification);
+  const [email, setEmail] = useState(
+    () => emailFromVerification || lerUltimoEmail()
+  );
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -74,6 +105,7 @@ export function Login() {
 
   const finalizarLogin = async (token: string, nome: string) => {
     localStorage.setItem("accessToken", token);
+    salvarUltimoEmail(email.trim());
 
     toast.success(`Bem-vindo, ${nome}!`);
 
@@ -844,5 +876,3 @@ export function Login() {
     </main>
   );
 }
-
-

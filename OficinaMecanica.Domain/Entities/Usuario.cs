@@ -1,4 +1,4 @@
-﻿using OficinaMecanica.Domain.Entities;
+using OficinaMecanica.Domain.Entities;
 
 public class Usuario
 {
@@ -45,6 +45,16 @@ public class Usuario
     public string? TwoFactorToken { get; set; }
 
     public DateTime? TwoFactorTokenExpiresAt { get; set; }
+
+    // =====================================================
+    // RECUPERAÇÃO DE SENHA
+    // =====================================================
+
+    public string? PasswordResetCodeHash { get; set; }
+
+    public DateTime? PasswordResetCodeExpiresAt { get; set; }
+
+    public int PasswordResetAttempts { get; set; } = 0;
 
     public ICollection<Oficina> Oficinas { get; set; } = new List<Oficina>();
 }

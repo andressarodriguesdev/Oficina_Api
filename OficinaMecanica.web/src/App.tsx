@@ -42,6 +42,8 @@ import { ThemeProvider } from "./context/ThemeContext";
 
 import { VerificarEmail } from "./pages/VerificarEmail";
 
+import { EsqueciSenha } from "./pages/EsqueciSenha";
+
 import { Pecas } from "./pages/Pecas";
 
 function App() {
@@ -68,6 +70,11 @@ function App() {
             <Route
               path="/verificar-email"
               element={<VerificarEmail />}
+            />
+
+            <Route
+              path="/esqueci-senha"
+              element={<EsqueciSenha />}
             />
 
             <Route
