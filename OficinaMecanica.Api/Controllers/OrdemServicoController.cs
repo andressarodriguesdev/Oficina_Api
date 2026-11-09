@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
+using OficinaMecanica.Api.Security;
 using OficinaMecanica.Application.DTOs;
 using OficinaMecanica.Application.Exceptions;
 using OficinaMecanica.Application.Services;
@@ -8,6 +10,7 @@ using OficinaMecanica.Infrastructure.Services;
 namespace OficinaMecanica.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/ordens-servico")]
 public class OrdemServicoController : ControllerBase
 {
@@ -30,7 +33,7 @@ public class OrdemServicoController : ControllerBase
     {
         try
         {
-            var ordem = await _service.CriarAsync(dto);
+            var ordem = await _service.CriarAsync(User.GetUsuarioId(), dto);
 
             return CreatedAtAction(
                 nameof(ObterPorId),
@@ -50,7 +53,7 @@ public class OrdemServicoController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> ObterPorId(Guid id)
     {
-        var ordem = await _service.ObterPorIdAsync(id);
+        var ordem = await _service.ObterPorIdAsync(User.GetUsuarioId(), id);
 
         if (ordem == null)
             return NotFound();
@@ -61,7 +64,7 @@ public class OrdemServicoController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Listar()
     {
-        var ordens = await _service.ListarAsync();
+        var ordens = await _service.ListarAsync(User.GetUsuarioId());
 
         return Ok(ordens);
     }
@@ -71,7 +74,7 @@ public class OrdemServicoController : ControllerBase
     {
         try
         {
-            await _service.EnviarParaAprovacaoAsync(id);
+            await _service.EnviarParaAprovacaoAsync(User.GetUsuarioId(), id);
 
             return NoContent();
         }
@@ -89,7 +92,7 @@ public class OrdemServicoController : ControllerBase
     {
         try
         {
-            await _service.AprovarAsync(id);
+            await _service.AprovarAsync(User.GetUsuarioId(), id);
 
             return NoContent();
         }
@@ -107,7 +110,7 @@ public class OrdemServicoController : ControllerBase
     {
         try
         {
-            await _service.RecusarAsync(id);
+            await _service.RecusarAsync(User.GetUsuarioId(), id);
 
             return NoContent();
         }
@@ -125,7 +128,7 @@ public class OrdemServicoController : ControllerBase
     {
         try
         {
-            await _service.ConcluirAsync(id);
+            await _service.ConcluirAsync(User.GetUsuarioId(), id);
 
             return NoContent();
         }
@@ -145,7 +148,7 @@ public class OrdemServicoController : ControllerBase
     {
         try
         {
-            await _service.CancelarAsync(id, dto.Motivo);
+            await _service.CancelarAsync(User.GetUsuarioId(), id, dto.Motivo);
 
             return NoContent();
         }
@@ -165,7 +168,7 @@ public class OrdemServicoController : ControllerBase
     {
         try
         {
-            await _service.ReabrirAsync(id, dto.Motivo);
+            await _service.ReabrirAsync(User.GetUsuarioId(), id, dto.Motivo);
 
             return NoContent();
         }
@@ -181,7 +184,7 @@ public class OrdemServicoController : ControllerBase
     [HttpGet("{id}/historico")]
     public async Task<IActionResult> Historico(Guid id)
     {
-        var historico = await _service.ObterHistoricoAsync(id);
+        var historico = await _service.ObterHistoricoAsync(User.GetUsuarioId(), id);
 
         return Ok(historico);
     }
@@ -189,7 +192,7 @@ public class OrdemServicoController : ControllerBase
     [HttpGet("{id}/pdf")]
     public async Task<IActionResult> GerarPdf(Guid id)
     {
-        var ordem = await _service.ObterEntidadePorIdAsync(id);
+        var ordem = await _service.ObterEntidadePorIdAsync(User.GetUsuarioId(), id);
 
         if (ordem == null)
             return NotFound();
@@ -210,7 +213,7 @@ public class OrdemServicoController : ControllerBase
     {
         try
         {
-            await _service.AdicionarItemAsync(id, dto);
+            await _service.AdicionarItemAsync(User.GetUsuarioId(), id, dto);
 
             return Ok(new
             {
@@ -229,7 +232,8 @@ public class OrdemServicoController : ControllerBase
     [HttpGet("{id}/whatsapp")]
     public async Task<IActionResult> GerarLinkWhatsApp(Guid id)
     {
-        var ordem = await _service.ObterEntidadePorIdAsync(id);
+        var ordem = await _service.ObterEntidadePorIdAsync(
+            User.GetUsuarioId(), id, exigirResponsavel: true);
 
         if (ordem == null)
             return NotFound();
@@ -249,7 +253,7 @@ public class OrdemServicoController : ControllerBase
     {
         try
         {
-            await _service.AtualizarAsync(id, dto);
+            await _service.AtualizarAsync(User.GetUsuarioId(), id, dto);
 
             return NoContent();
         }
@@ -270,7 +274,7 @@ public class OrdemServicoController : ControllerBase
     {
         try
         {
-            await _service.AtualizarItemAsync(id, itemId, dto);
+            await _service.AtualizarItemAsync(User.GetUsuarioId(), id, itemId, dto);
 
             return NoContent();
         }
@@ -290,7 +294,7 @@ public class OrdemServicoController : ControllerBase
     {
         try
         {
-            await _service.RemoverItemAsync(id, itemId);
+            await _service.RemoverItemAsync(User.GetUsuarioId(), id, itemId);
 
             return NoContent();
         }

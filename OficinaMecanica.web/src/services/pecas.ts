@@ -124,3 +124,48 @@ export async function listarHistoricoEstoque(
     `/pecas/${id}/estoque/historico${query ? `?${query}` : ""}`,
   );
 }
+
+export type SituacaoEstoque = "Normal" | "EstoqueBaixo" | "SemEstoque";
+
+export interface RelatorioEstoqueItem {
+  id: string;
+  nome: string;
+  codigo?: string | null;
+  ativa: boolean;
+  quantidadeEstoque: number;
+  quantidadeReservada: number;
+  quantidadeDisponivel: number;
+  estoqueMinimo: number;
+  quantidadeParaRepor: number;
+  valorCusto: number;
+  valorVenda: number;
+  valorTotalCusto: number;
+  valorTotalVenda: number;
+  situacao: SituacaoEstoque;
+}
+
+export interface RelatorioEstoqueResumo {
+  totalPecas: number;
+  totalUnidadesEmEstoque: number;
+  totalUnidadesReservadas: number;
+  totalUnidadesDisponiveis: number;
+  pecasParaRepor: number;
+  pecasSemEstoque: number;
+  pecasComReserva: number;
+  valorTotalCusto: number;
+  valorTotalVenda: number;
+}
+
+export interface RelatorioEstoqueResponse {
+  geradoEm: string;
+  resumo: RelatorioEstoqueResumo;
+  itens: RelatorioEstoqueItem[];
+}
+
+export async function obterRelatorioEstoque(
+  incluirInativas = false,
+): Promise<RelatorioEstoqueResponse> {
+  return api.get<RelatorioEstoqueResponse>(
+    `/pecas/relatorio-estoque?incluirInativas=${incluirInativas}`,
+  );
+}

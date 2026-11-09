@@ -1,3 +1,4 @@
+import { ehMecanico } from "../utils/session";
 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -318,7 +319,8 @@ export function Dashboard() {
           "
         >
           {/* faturamento */}
-          <div
+          {!ehMecanico() && (
+<div
             className="
               relative
               min-h-[230px]
@@ -418,7 +420,8 @@ export function Dashboard() {
                     {concluidas !== 1 ? "s" : ""}
                   </span>
 
-                  <Link
+                  {!ehMecanico() && (
+<Link
                     to="/financeiro"
                     className="
                       inline-flex
@@ -435,11 +438,12 @@ export function Dashboard() {
 
                     <ArrowUpRight className="h-3.5 w-3.5" />
                   </Link>
+)}
                 </div>
               </div>
             </div>
           </div>
-
+          )}
           {/* resumo operacional */}
           <div className="grid grid-cols-2">
             <Link

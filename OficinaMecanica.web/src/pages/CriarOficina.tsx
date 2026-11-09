@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
@@ -17,7 +17,7 @@ import {
 
 import { useToast } from '../components/ui/Toast';
 import { Button } from '../components/ui/Button';
-import { criarOficina } from '../services/oficinaService';
+import { criarOficina, obterMinhaOficina } from '../services/oficinaService';
 
 export function CriarOficina() {
   const navigate = useNavigate();
@@ -42,6 +42,16 @@ export function CriarOficina() {
   const [logotipo, setLogotipo] = useState('');
 
   const [loading, setLoading] = useState(false);
+
+  // Só existe uma oficina no sistema: se ela já estiver cadastrada,
+  // quem chegar aqui segue direto para o painel.
+  useEffect(() => {
+    obterMinhaOficina()
+      .then(() => navigate('/painel', { replace: true }))
+      .catch(() => {
+        // 404: ainda não há oficina, o formulário continua disponível.
+      });
+  }, [navigate]);
 
   const handleSubmit = async (
     e: FormEvent<HTMLFormElement>,

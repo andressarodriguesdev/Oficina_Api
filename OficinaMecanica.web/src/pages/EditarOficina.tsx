@@ -20,6 +20,8 @@ import { useToast } from '../components/ui/Toast';
 
 import { Button } from '../components/ui/Button';
 
+import { atualizarNomeOficina } from '../services/useNomeOficina';
+
 import {
   atualizarOficina,
   obterMinhaOficina,
@@ -121,6 +123,8 @@ export function EditarOficina() {
         endereco,
         logotipo: logotipo || undefined,
       });
+
+      atualizarNomeOficina(nome);
 
       toast.success(
         'Dados da oficina atualizados com sucesso!',

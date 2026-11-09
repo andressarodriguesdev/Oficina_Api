@@ -1,3 +1,4 @@
+import { ehMecanico, getMecanicoIdLogado } from "../utils/session";
 
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -704,8 +705,8 @@ export function MecanicoDetalhes() {
           </Card>
 
           {/* MÃO DE OBRA */}
-
-          <Card
+          {!ehMecanico() && (
+<Card
             className="
               relative
               overflow-hidden
@@ -771,12 +772,14 @@ export function MecanicoDetalhes() {
               </p>
             </div>
           </Card>
+          )}
         </div>
       </section>
 
       {/* HISTÓRICO */}
 
-      <section>
+      {(!ehMecanico() || mecanico.id === getMecanicoIdLogado()) && (
+<section>
         <Card className="overflow-hidden">
           <CardHeader
             title="Histórico de ordens de serviço"
@@ -956,6 +959,7 @@ export function MecanicoDetalhes() {
           )}
         </Card>
       </section>
+)}
     </div>
   );
 }

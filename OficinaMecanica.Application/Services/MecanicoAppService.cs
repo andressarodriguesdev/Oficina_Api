@@ -1,6 +1,7 @@
 ﻿using OficinaMecanica.Application.DTOs;
 using OficinaMecanica.Application.DTOs.Mecanico;
 using OficinaMecanica.Application.DTOs.Mecanicos;
+using OficinaMecanica.Application.Exceptions;
 using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Domain.Enums;
 using OficinaMecanica.Infrastructure.Repositories;
@@ -14,6 +15,99 @@ public class MecanicoAppService
     public MecanicoAppService(MecanicoRepository repository)
     {
         _repository = repository;
+    }
+
+    /// <summary>
+    /// Cria o login de um mecânico (perfil Mecanico) já vinculado ao cadastro dele.
+    /// A senha chega já com hash. Uso restrito a administradores.
+    /// </summary>
+    public async Task CriarAcessoAsync(
+        Guid mecanicoId,
+        Guid oficinaId,
+        string email,
+        string senhaHash)
+    {
+        var mecanico = await _repository.ObterSimplesAsync(mecanicoId);
+
+        if (mecanico == null || mecanico.OficinaId != oficinaId)
+            throw new NaoEncontradoException("Mecânico não encontrado.");
+
+        if (!mecanico.Ativo)
+            throw new RegraNegocioException(
+                "Não é possível criar acesso para um mecânico inativo.");
+
+        email = (email ?? string.Empty).Trim().ToLower();
+
+        if (!email.Contains('@') || email.Length < 5)
+            throw new RegraNegocioException("Informe um e-mail válido.");
+
+        if (await _repository.MecanicoJaVinculadoAsync(mecanicoId))
+            throw new RegraNegocioException(
+                "Este mecânico já possui um acesso ao sistema.");
+
+        if (await _repository.ObterUsuarioPorEmailParaAtualizacaoAsync(email) != null)
+            throw new RegraNegocioException(
+                "Já existe um usuário cadastrado com este e-mail.");
+
+        var usuario = new Usuario
+        {
+            Nome = mecanico.Nome,
+            Email = email,
+            SenhaHash = senhaHash,
+            DataCadastro = DateTime.UtcNow,
+            Ativo = true,
+            EmailVerificado = true,
+            Perfil = PerfilAcesso.Mecanico,
+            MecanicoId = mecanicoId
+        };
+
+        await _repository.AdicionarUsuarioAsync(usuario);
+        await _repository.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Vincula um usuário já cadastrado (e-mail verificado) a um mecânico,
+    /// concedendo o perfil Mecanico. Uso restrito a administradores.
+    /// </summary>
+    public async Task VincularUsuarioAsync(
+        Guid mecanicoId,
+        Guid oficinaId,
+        string email)
+    {
+        var mecanico = await _repository.ObterSimplesAsync(mecanicoId);
+
+        if (mecanico == null || mecanico.OficinaId != oficinaId)
+            throw new NaoEncontradoException("Mecânico não encontrado.");
+
+        if (!mecanico.Ativo)
+            throw new RegraNegocioException(
+                "Não é possível vincular um usuário a um mecânico inativo.");
+
+        var usuario = await _repository.ObterUsuarioPorEmailParaAtualizacaoAsync(
+            (email ?? string.Empty).Trim().ToLower())
+            ?? throw new NaoEncontradoException("Usuário não encontrado.");
+
+        if (!usuario.Ativo || !usuario.EmailVerificado)
+            throw new RegraNegocioException(
+                "O usuário precisa estar ativo e com o e-mail verificado.");
+
+        if (usuario.Oficinas.Any())
+            throw new RegraNegocioException(
+                "O usuário é dono de uma oficina e não pode virar mecânico.");
+
+        if (usuario.MecanicoId.HasValue && usuario.MecanicoId != mecanicoId)
+            throw new RegraNegocioException(
+                "O usuário já está vinculado a outro mecânico.");
+
+        if (usuario.MecanicoId != mecanicoId &&
+            await _repository.MecanicoJaVinculadoAsync(mecanicoId))
+            throw new RegraNegocioException(
+                "Este mecânico já possui um usuário vinculado.");
+
+        usuario.Perfil = PerfilAcesso.Mecanico;
+        usuario.MecanicoId = mecanicoId;
+
+        await _repository.SaveChangesAsync();
     }
 
     public async Task<List<Mecanico>> GetAllAsync(
@@ -139,7 +233,7 @@ public class MecanicoAppService
         );
 
         if (mecanico == null)
-            throw new Exception("Mecânico não encontrado");
+            throw new NaoEncontradoException("Mecânico não encontrado");
 
         mecanico.Ativo = false;
 
@@ -156,7 +250,7 @@ public class MecanicoAppService
         );
 
         if (mecanico == null)
-            throw new Exception("Mecânico não encontrado");
+            throw new NaoEncontradoException("Mecânico não encontrado");
 
         mecanico.Ativo = true;
 

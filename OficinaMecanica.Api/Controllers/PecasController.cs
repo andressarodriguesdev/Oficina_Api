@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OficinaMecanica.Api.Security;
 using OficinaMecanica.Application.DTOs;
 using OficinaMecanica.Application.DTOs.Pecas;
 using OficinaMecanica.Application.Exceptions;
@@ -15,19 +16,33 @@ public class PecasController : ControllerBase
 {
     private readonly PecasAppService _service;
     private readonly OficinaAppService _oficinaService;
+    private readonly EscopoMecanicoService _escopo;
 
     public PecasController(
         PecasAppService service,
-        OficinaAppService oficinaAppService)
+        OficinaAppService oficinaAppService,
+        EscopoMecanicoService escopo)
     {
         _service = service;
+        _escopo = escopo;
         _oficinaService = oficinaAppService;
     }
+
+    // Mecânico consulta peças e estoque, mas não vê o valor de custo (dado financeiro)
+    private static Dictionary<string, object?> SemCusto(Pecas peca) =>
+        typeof(Pecas).GetProperties()
+            .Where(pr => pr.Name != nameof(Pecas.ValorCusto)
+                && pr.GetIndexParameters().Length == 0
+                && (pr.PropertyType.IsValueType
+                    || pr.PropertyType == typeof(string)))
+            .ToDictionary(
+                pr => char.ToLowerInvariant(pr.Name[0]) + pr.Name[1..],
+                pr => pr.GetValue(peca));
 
     [HttpGet]
     public async Task<IActionResult> Listar()
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
         {
@@ -41,13 +56,18 @@ public class PecasController : ControllerBase
 
         var pecas = await _service.ListarAsync(oficina.Id);
 
+        var restrito = await _escopo.ObterMecanicoRestritoAsync(User.GetUsuarioId());
+
+        if (restrito.HasValue)
+            return Ok(pecas.Select(SemCusto).ToList());
+
         return Ok(pecas);
     }
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> ObterPorId(Guid id)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
         {
@@ -72,14 +92,20 @@ public class PecasController : ControllerBase
                 });
         }
 
+        var restrito = await _escopo.ObterMecanicoRestritoAsync(User.GetUsuarioId());
+
+        if (restrito.HasValue)
+            return Ok(SemCusto(peca));
+
         return Ok(peca);
     }
 
     [HttpPost]
+    [Authorize(Roles = PerfilUsuario.Admin)]
     public async Task<IActionResult> Criar(
         [FromBody] CriarPecaDto dto)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
         {
@@ -100,7 +126,8 @@ public class PecasController : ControllerBase
                 dto.ValorCusto,
                 dto.ValorVenda,
                 dto.QuantidadeEstoque,
-                dto.EstoqueMinimo);
+                dto.EstoqueMinimo,
+                User.GetUsuarioId());
 
             return CreatedAtAction(
                 nameof(ObterPorId),
@@ -118,11 +145,12 @@ public class PecasController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = PerfilUsuario.Admin)]
     public async Task<IActionResult> Atualizar(
         Guid id,
         [FromBody] AtualizarPecaDto dto)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
         {
@@ -158,9 +186,10 @@ public class PecasController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/ativar")]
+    [Authorize(Roles = PerfilUsuario.Admin)]
     public async Task<IActionResult> Ativar(Guid id)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
         {
@@ -191,9 +220,10 @@ public class PecasController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/inativar")]
+    [Authorize(Roles = PerfilUsuario.Admin)]
     public async Task<IActionResult> Inativar(Guid id)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
         {
@@ -224,11 +254,12 @@ public class PecasController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/estoque/ajustar")]
+    [Authorize(Roles = PerfilUsuario.Admin)]
     public async Task<IActionResult> AjustarEstoque(
         Guid id,
         [FromBody] int quantidade)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
         {
@@ -245,7 +276,8 @@ public class PecasController : ControllerBase
             var peca = await _service.AjustarEstoqueAsync(
                 id,
                 oficina.Id,
-                quantidade);
+                quantidade,
+                User.GetUsuarioId());
 
             return Ok(peca);
         }
@@ -266,7 +298,7 @@ public class PecasController : ControllerBase
         [FromQuery] DateTime? ate,
         [FromQuery] TipoMovimentacaoEstoque? tipo)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
         {
@@ -300,12 +332,52 @@ public class PecasController : ControllerBase
         }
     }
 
+    [HttpGet("relatorio-estoque")]
+    public async Task<IActionResult> RelatorioEstoque(
+        [FromQuery] bool incluirInativas = false)
+    {
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
+
+        if (oficina == null)
+        {
+            return BadRequest(
+                new
+                {
+                    message =
+                        "Nenhuma oficina cadastrada no sistema."
+                });
+        }
+
+        var relatorio =
+            await _service.ObterRelatorioEstoqueAsync(
+                oficina.Id,
+                incluirInativas);
+
+        // Mecânico vê o relatório com o valor de venda unitário, sem custo nem totais em R$
+        var restrito = await _escopo.ObterMecanicoRestritoAsync(User.GetUsuarioId());
+
+        if (restrito.HasValue)
+        {
+            relatorio.Resumo.ValorTotalCusto = 0;
+            relatorio.Resumo.ValorTotalVenda = 0;
+
+            foreach (var item in relatorio.Itens)
+            {
+                item.ValorCusto = 0;
+                item.ValorTotalCusto = 0;
+                item.ValorTotalVenda = 0;
+            }
+        }
+
+        return Ok(relatorio);
+    }
+
     [HttpGet("disponiveis-ordem-servico")]
     public async Task<IActionResult>
         ListarDisponiveisParaOrdemServico(
             [FromQuery] Guid? ordemId = null)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
         {
@@ -338,9 +410,10 @@ public class PecasController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = PerfilUsuario.Admin)]
     public async Task<IActionResult> Excluir(Guid id)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
         {

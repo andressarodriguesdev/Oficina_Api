@@ -74,6 +74,12 @@ namespace OficinaMecanica.Infrastructure.Migrations
                     b.Property<int>("StatusAnterior")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UsuarioNome")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OrdemServicoId");
@@ -111,6 +117,45 @@ namespace OficinaMecanica.Infrastructure.Migrations
                     b.ToTable("Mecanicos");
                 });
 
+            modelBuilder.Entity("OficinaMecanica.Domain.Entities.LogAuditoria", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Acao")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Descricao")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Entidade")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("EntidadeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("OficinaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UsuarioNome")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Entidade", "EntidadeId");
+
+                    b.ToTable("LogsAuditoria");
+                });
+
             modelBuilder.Entity("OficinaMecanica.Domain.Entities.MovimentacaoEstoque", b =>
                 {
                     b.Property<Guid>("Id")
@@ -144,6 +189,12 @@ namespace OficinaMecanica.Infrastructure.Migrations
 
                     b.Property<int>("Tipo")
                         .HasColumnType("integer");
+
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UsuarioNome")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -436,6 +487,9 @@ namespace OficinaMecanica.Infrastructure.Migrations
                     b.Property<DateTime?>("EmailVerificationTokenExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("MecanicoId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -449,6 +503,9 @@ namespace OficinaMecanica.Infrastructure.Migrations
 
                     b.Property<string>("PasswordResetCodeHash")
                         .HasColumnType("text");
+
+                    b.Property<int>("Perfil")
+                        .HasColumnType("integer");
 
                     b.Property<string>("SenhaHash")
                         .IsRequired()
@@ -476,6 +533,10 @@ namespace OficinaMecanica.Infrastructure.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("MecanicoId")
+                        .IsUnique()
+                        .HasFilter("\"MecanicoId\" IS NOT NULL");
 
                     b.ToTable("Usuario");
                 });
@@ -642,6 +703,11 @@ namespace OficinaMecanica.Infrastructure.Migrations
 
             modelBuilder.Entity("Usuario", b =>
                 {
+                    b.HasOne("OficinaMecanica.Domain.Entities.Mecanico", null)
+                        .WithMany()
+                        .HasForeignKey("MecanicoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Oficinas");
                 });
 #pragma warning restore 612, 618

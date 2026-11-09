@@ -56,5 +56,15 @@ public class Usuario
 
     public int PasswordResetAttempts { get; set; } = 0;
 
+    // =====================================================
+    // PERFIL DE ACESSO
+    // =====================================================
+
+    // Usuários já existentes assumem Admin, preservando o acesso atual.
+    public PerfilAcesso Perfil { get; set; } = PerfilAcesso.Admin;
+
+    // Cadastro de mecânico vinculado ao login (somente perfil Mecanico).
+    public Guid? MecanicoId { get; set; }
+
     public ICollection<Oficina> Oficinas { get; set; } = new List<Oficina>();
 }

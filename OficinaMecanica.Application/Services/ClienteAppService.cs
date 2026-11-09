@@ -1,3 +1,4 @@
+using OficinaMecanica.Application.Exceptions;
 using OficinaMecanica.Application.DTOs;
 using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Infrastructure.Repositories;
@@ -123,7 +124,7 @@ public class ClienteAppService
             oficinaId);
 
         if (cliente == null)
-            throw new Exception("Cliente não encontrado");
+            throw new NaoEncontradoException("Cliente não encontrado");
 
         cliente.Inativar();
 
@@ -139,7 +140,7 @@ public class ClienteAppService
             oficinaId);
 
         if (cliente == null)
-            throw new Exception("Cliente não encontrado");
+            throw new NaoEncontradoException("Cliente não encontrado");
 
         cliente.Reativar();
 
@@ -155,13 +156,12 @@ public class ClienteAppService
             oficinaId);
 
         if (cliente == null)
-            throw new Exception("Cliente não encontrado");
+            throw new NaoEncontradoException("Cliente não encontrado");
 
         if (cliente.OrdensServico != null &&
             cliente.OrdensServico.Any())
         {
-            throw new Exception(
-                "Este cliente possui ordens de serviço vinculadas e não pode ser excluído. Inative-o em vez disso.");
+            throw new RegraNegocioException("Este cliente possui ordens de serviço vinculadas e não pode ser excluído. Inative-o em vez disso.");
         }
 
         await _repository.RemoverAsync(cliente);
@@ -182,6 +182,7 @@ public class ClienteAppService
             .Select(o => new ClienteHistoricoResponseDto
             {
                 OrdemServicoId = o.Id,
+                MecanicoId = o.MecanicoId,
                 ValorTotal = o.ValorTotal,
                 StatusAtual = o.Status,
                 DataCriacao = o.DataCriacao,

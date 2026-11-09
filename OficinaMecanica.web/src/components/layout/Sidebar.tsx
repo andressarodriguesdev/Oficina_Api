@@ -1,3 +1,6 @@
+import { useEffect } from "react";
+import { ehMecanico, getEmailLogado, limparSessao } from "../../utils/session";
+import { useNomeOficina } from "../../services/useNomeOficina";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -47,7 +50,7 @@ const navItems = [
   },
   {
     to: "/financeiro",
-    label: "Finanças",
+    label: "Faturamento",
     icon: DollarSignIcon,
   },
 ];
@@ -73,8 +76,20 @@ export function Sidebar({
 }) {
   const navigate = useNavigate();
 
+  const { nome: nomeOficina, carregado: oficinaCarregada } = useNomeOficina();
+
+  // "Oficina" como rótulo só quando o nome não começa com a palavra (evita "Oficina / Oficina X")
+  const mostrarRotuloOficina = !/^oficina\b/i.test(nomeOficina ?? "");
+  const nomeExibido = nomeOficina ?? (oficinaCarregada ? "Minha oficina" : "");
+
+  useEffect(() => {
+    if (nomeOficina) {
+      document.title = `${nomeOficina} — Painel`;
+    }
+  }, [nomeOficina]);
+
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
+    limparSessao();
     onClose();
     navigate("/login");
   };
@@ -127,7 +142,7 @@ export function Sidebar({
           "
         >
           <div className="flex items-start justify-between">
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="h-px w-5 bg-[var(--accent)]" />
 
@@ -145,30 +160,29 @@ export function Sidebar({
               </div>
 
               <div className="mt-4">
-                <p
-                  className="
-                    font-display
-                    text-[11px]
-                    font-semibold
-                    uppercase
-                    tracking-[0.3em]
-                    text-[var(--app-text-muted)]
-                  "
-                >
-                  Oficina
-                </p>
+                {mostrarRotuloOficina && (
+                  <p
+                    className="
+                      font-display
+                      text-[11px]
+                      font-semibold
+                      uppercase
+                      tracking-[0.3em]
+                      text-[var(--app-text-muted)]
+                    "
+                  >
+                    Oficina
+                  </p>
+                )}
 
                 <p
-                  className="
-                    font-display
-                    text-[27px]
-                    font-bold
-                    leading-none
-                    tracking-[-0.04em]
-                    text-[var(--app-text)]
-                  "
+                  title={nomeExibido}
+                  className={[
+                    "min-h-[27px] break-words font-display font-bold leading-tight tracking-[-0.04em] text-[var(--app-text)]",
+                    nomeExibido.length > 14 ? "text-[20px]" : "text-[27px]",
+                  ].join(" ")}
                 >
-                  Prime
+                  {nomeExibido}
                 </p>
               </div>
             </div>
@@ -213,7 +227,15 @@ export function Sidebar({
           </div>
 
           <div className="space-y-1">
-            {navItems.map((item) => {
+            {navItems
+              .filter(
+                (item) =>
+                  !(
+                    ehMecanico() &&
+                    ["/financeiro"].includes(item.to)
+                  ),
+              )
+              .map((item) => {
               const Icon = item.icon;
 
               return (
@@ -298,7 +320,8 @@ export function Sidebar({
             </span>
           </div>
 
-          <NavLink
+          {!ehMecanico() && (
+<NavLink
             to={settingsItem.to}
             onClick={onClose}
             className={({ isActive }) =>
@@ -351,8 +374,10 @@ export function Sidebar({
               );
             }}
           </NavLink>
+)}
 
-          <NavLink
+          {!ehMecanico() && (
+<NavLink
             to={oficinaItem.to}
             onClick={onClose}
             className={({ isActive }) =>
@@ -398,6 +423,7 @@ export function Sidebar({
               );
             }}
           </NavLink>
+)}
         </nav>
 
         {/* =====================================================
@@ -435,7 +461,7 @@ export function Sidebar({
                   text-[var(--app-text-secondary)]
                 "
               >
-                AD
+                {ehMecanico() ? "ME" : "AD"}
               </span>
             </div>
 
@@ -450,7 +476,7 @@ export function Sidebar({
                   text-[var(--app-text)]
                 "
               >
-                Administrador
+                {ehMecanico() ? "Mecânico" : "Administrador"}
               </p>
 
               <p
@@ -461,7 +487,7 @@ export function Sidebar({
                   text-[var(--app-text-faint)]
                 "
               >
-                admin@oficina.com
+                {getEmailLogado() ?? ""}
               </p>
             </div>
           </div>

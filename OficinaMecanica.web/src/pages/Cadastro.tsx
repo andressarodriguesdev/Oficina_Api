@@ -319,7 +319,7 @@ export function Cadastro() {
                     id="senha"
                     type={showPassword ? "text" : "password"}
                     required
-                    minLength={6}
+                    minLength={8}
                     autoComplete="new-password"
                     disabled={loading}
                     value={senha}
@@ -372,7 +372,7 @@ export function Cadastro() {
                     id="confirmarSenha"
                     type={showConfirmPassword ? "text" : "password"}
                     required
-                    minLength={6}
+                    minLength={8}
                     autoComplete="new-password"
                     disabled={loading}
                     value={confirmarSenha}

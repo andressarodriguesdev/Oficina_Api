@@ -1,3 +1,4 @@
+import { ehMecanico, salvarSessao } from "../utils/session";
 import { type FormEvent, useState } from "react";
 import {
   Link,
@@ -103,8 +104,13 @@ export function Login() {
   // FINALIZA LOGIN
   // =========================================================
 
-  const finalizarLogin = async (token: string, nome: string) => {
-    localStorage.setItem("accessToken", token);
+  const finalizarLogin = async (
+    token: string,
+    nome: string,
+    perfil?: string | null,
+    mecanicoId?: string | null,
+  ) => {
+    salvarSessao(token, perfil, mecanicoId);
     salvarUltimoEmail(email.trim());
 
     toast.success(`Bem-vindo, ${nome}!`);
@@ -114,8 +120,10 @@ export function Login() {
 
       navigate("/painel");
     } catch (error) {
+      // 404 = ainda não existe nenhuma oficina no sistema (primeiro acesso).
+      // Só o Admin pode cadastrá-la; o mecânico volta para as ordens de serviço.
       if (error instanceof ApiError && error.status === 404) {
-        navigate("/criar-oficina");
+        navigate(ehMecanico() ? "/ordens-servico" : "/criar-oficina");
         return;
       }
 
@@ -166,7 +174,9 @@ export function Login() {
 
       await finalizarLogin(
         response.token,
-        response.nome
+        response.nome,
+        response.perfil,
+        response.mecanicoId
       );
     } catch (error) {
       const message =
@@ -216,7 +226,9 @@ export function Login() {
 
       await finalizarLogin(
         response.token,
-        response.nome
+        response.nome,
+        response.perfil,
+        response.mecanicoId
       );
     } catch (error) {
       const message =

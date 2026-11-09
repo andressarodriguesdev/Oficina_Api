@@ -18,6 +18,11 @@ public class HistoricoOrdemServico
 
     public DateTime DataAlteracao { get; private set; }
 
+    // Quem executou a ação (auditoria)
+    public int? UsuarioId { get; private set; }
+
+    public string? UsuarioNome { get; private set; }
+
     private HistoricoOrdemServico()
     {
     }
@@ -26,7 +31,9 @@ public class HistoricoOrdemServico
         Guid ordemServicoId,
         StatusOrdemServico statusAnterior,
         StatusOrdemServico novoStatus,
-        string? observacao = null)
+        string? observacao = null,
+        int? usuarioId = null,
+        string? usuarioNome = null)
     {
         Id = Guid.NewGuid();
         OrdemServicoId = ordemServicoId;
@@ -34,5 +41,7 @@ public class HistoricoOrdemServico
         NovoStatus = novoStatus;
         Observacao = observacao;
         DataAlteracao = DateTime.UtcNow;
+        UsuarioId = usuarioId;
+        UsuarioNome = usuarioNome;
     }
 }

@@ -51,6 +51,7 @@ export interface HistoricoOrdemServico {
   statusAnterior: number | null;
   novoStatus: number;
   observacao?: string | null;
+  usuarioNome?: string | null;
   dataAlteracao: string;
 }
 
@@ -96,6 +97,8 @@ export interface Mecanico {
   ativo: boolean;
   oficinaId: string;
   oficina?: OficinaResumo;
+  /** E-mail do login do mecânico; ausente/nulo se ele ainda não tem acesso. */
+  emailAcesso?: string | null;
 
   quantidadeOrdensServico: number;
   quantidadeConcluidas: number;

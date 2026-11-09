@@ -14,6 +14,7 @@ public class CriarOrdemServicoDto
 
     public string Descricao { get; set; } = string.Empty;
 
+    [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "1000000000", ErrorMessage = "O valor da mão de obra não pode ser negativo.")]
     public decimal ValorMaoObra { get; set; }
 
     public List<OrdemServicoItemDto> Itens { get; set; } = new();

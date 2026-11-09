@@ -1,3 +1,4 @@
+import { encerrarSessao } from '../utils/session';
 /**
  * HTTP client simples para integração com API .NET.
  *
@@ -33,6 +34,13 @@
  *   GET    /historico
  */
 
+export const MSG_ACESSO_OS =
+  'Você só pode acessar ordens de serviço atribuídas a você.';
+export const MSG_REDE =
+  'Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.';
+export const MSG_SERVIDOR =
+  'Ocorreu um erro no servidor. Tente novamente em instantes.';
+
 const BASE_URL = (import.meta.env.VITE_API_URL as string) || '/api';
 
 export class ApiError extends Error {
@@ -65,10 +73,18 @@ async function request<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+    });
+  } catch (cause) {
+    // Falha de rede / servidor indisponível (status 0)
+    console.error(cause);
+    throw new ApiError(MSG_REDE, 0);
+  }
 
   if (!response.ok) {
     let message = `Erro ${response.status}`;
@@ -87,6 +103,20 @@ async function request<T>(
       }
     } catch {
       // Resposta não-JSON
+    }
+
+    // Sessão inválida ou expirada: volta ao login (exceto nas rotas de autenticação)
+    if (
+      response.status === 401 &&
+      token &&
+      !path.toLowerCase().startsWith('/auth/')
+    ) {
+      encerrarSessao();
+    }
+
+    // Resposta de erro sem corpo útil (ex.: proxy/gateway)
+    if (response.status >= 500 && /^Erro \d+$/.test(message)) {
+      message = MSG_SERVIDOR;
     }
 
     throw new ApiError(message, response.status);

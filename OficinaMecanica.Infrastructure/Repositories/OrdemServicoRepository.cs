@@ -29,9 +29,15 @@ public class OrdemServicoRepository
             ?? throw new Exception("Não foi possível recuperar a ordem de serviço criada.");
     }
 
-    public async Task<List<OrdemServico>> ListarAsync()
+    public async Task<List<OrdemServico>> ListarAsync(Guid? mecanicoId = null)
     {
-        return await _context.OrdensServico
+        var query = _context.OrdensServico.AsQueryable();
+
+        // Mecânico enxerga apenas as OS atribuídas a ele
+        if (mecanicoId.HasValue)
+            query = query.Where(o => o.MecanicoId == mecanicoId.Value);
+
+        return await query
 
             .Include(o => o.Cliente)
                 .ThenInclude(c => c.Oficina)

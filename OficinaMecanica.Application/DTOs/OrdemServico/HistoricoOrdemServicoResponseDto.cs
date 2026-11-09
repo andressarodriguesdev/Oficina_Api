@@ -12,6 +12,10 @@ public class HistoricoOrdemServicoResponseDto
 
     public StatusOrdemServico NovoStatus { get; set; }
 
+    public int? UsuarioId { get; set; }
+
+    public string? UsuarioNome { get; set; }
+
     public string? Observacao { get; set; }
 
     public DateTime DataAlteracao { get; set; }

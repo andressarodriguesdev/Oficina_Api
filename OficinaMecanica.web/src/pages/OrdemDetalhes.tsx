@@ -1,3 +1,4 @@
+import { OrdemErro } from "../components/ui/OrdemErro";
 import { useCallback, useEffect, useState } from "react";
 
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -69,9 +70,10 @@ import type {
 
 import { formatCurrency, formatDate } from "../utils/format";
 
+import { ehMecanico, getMecanicoIdLogado } from "../utils/session";
+
 import { statusFromNumber, statusLabel } from "../utils/status";
 
-import { buildWhatsAppMessage, whatsappUrl } from "../utils/whatsapp";
 
 export function OrdemDetalhes() {
   const { id } = useParams<{ id: string }>();
@@ -91,6 +93,8 @@ export function OrdemDetalhes() {
   const [carregandoPecas, setCarregandoPecas] = useState(true);
 
   const [loading, setLoading] = useState(true);
+
+  const [loadError, setLoadError] = useState<unknown>(null);
 
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -116,6 +120,8 @@ export function OrdemDetalhes() {
   const load = useCallback(async () => {
     if (!id) return;
 
+    setLoadError(null);
+
     try {
       const [o, hist] = await Promise.all([
         getOrdem(id),
@@ -128,13 +134,14 @@ export function OrdemDetalhes() {
 
       setHistoricos(hist);
     } catch (err) {
-      toast.error("Erro ao carregar ordem de serviço");
+      // 403/404/500/rede: a tela de erro explica e oferece voltar/tentar novamente
+      setLoadError(err);
 
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [id, toast]);
+  }, [id]);
 
   useEffect(() => {
     load();
@@ -208,15 +215,10 @@ export function OrdemDetalhes() {
       await load();
 
       if (ordem.cliente?.telefone) {
-        const fresh = await getOrdem(id);
+        // Mensagem montada pela API, com o nome da oficina cadastrada no banco
+        const link = await gerarWhatsApp(id);
 
-        const msg = buildWhatsAppMessage(
-          fresh ?? ordem,
-          ordem.cliente,
-          ordem.veiculo,
-        );
-
-        window.open(whatsappUrl(ordem.cliente.telefone, msg), "_blank");
+        window.open(link, "_blank");
       }
     } catch (err) {
       console.error(err);
@@ -502,6 +504,18 @@ export function OrdemDetalhes() {
     return <PageLoader label="Carregando ordem de serviço..." />;
   }
 
+  if (loadError) {
+    return (
+      <OrdemErro
+        error={loadError}
+        onRetry={() => {
+          setLoading(true);
+          load();
+        }}
+      />
+    );
+  }
+
   if (!ordem) {
     return (
       <Card>
@@ -523,7 +537,13 @@ export function OrdemDetalhes() {
 
   const status = statusFromNumber(ordem.status);
 
-  const podeEditar = ordem.status === 0 || ordem.status === 1;
+  // Mecânico consulta qualquer OS da oficina, mas só age nas atribuídas a ele
+  // (a API também bloqueia; aqui só evitamos botões que resultariam em 403).
+  const somenteConsulta =
+    ehMecanico() && ordem.mecanicoId !== getMecanicoIdLogado();
+
+  const podeEditar =
+    (ordem.status === 0 || ordem.status === 1) && !somenteConsulta;
 
   const totalItens = itens.reduce(
     (total, item) =>
@@ -673,6 +693,7 @@ export function OrdemDetalhes() {
                 Gerar PDF
               </Button>
 
+              {!somenteConsulta && (
               <Button
                 variant="outline"
                 size="sm"
@@ -682,6 +703,7 @@ export function OrdemDetalhes() {
                 <MessageCircle className="h-4 w-4" />
                 WhatsApp
               </Button>
+              )}
             </div>
           </div>
         </div>
@@ -1525,6 +1547,14 @@ export function OrdemDetalhes() {
             <CardHeader title="Ações" subtitle="Fluxo da ordem de serviço" />
 
             <div className="space-y-2 p-4">
+              {somenteConsulta && (
+                <p className="text-xs leading-5 text-[var(--app-text-muted)]">
+                  Somente consulta: esta ordem de serviço está com outro
+                  mecânico. Você pode acompanhar o andamento e gerar o PDF.
+                </p>
+              )}
+
+              {!somenteConsulta && (<>
               {status === "Aberta" && (
                 <Button
                   className="w-full justify-start"
@@ -1660,8 +1690,11 @@ export function OrdemDetalhes() {
                 </Button>
               )}
 
+              </>)}
+
               <div className="my-3 border-t border-[var(--app-border-subtle)]" />
 
+              {!somenteConsulta && (
               <Button
                 variant="outline"
                 className="w-full justify-start"
@@ -1670,6 +1703,7 @@ export function OrdemDetalhes() {
                 <MessageCircle className="h-4 w-4" />
                 Enviar WhatsApp
               </Button>
+              )}
 
               <Button
                 variant="outline"
@@ -1744,6 +1778,7 @@ export function OrdemDetalhes() {
 
                       <p className="mt-1.5 text-[11px] tabular-nums text-[var(--app-text-faint)]">
                         {formatDate(h.dataAlteracao)}
+                        {h.usuarioNome ? ` · ${h.usuarioNome}` : ""}
                       </p>
 
                       {h.observacao && (

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using OficinaMecanica.Api.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OficinaMecanica.Application.DTOs;
 using OficinaMecanica.Application.DTOs.Oficina;
@@ -18,7 +19,7 @@ public class OficinaController : ControllerBase
         _service = service;
     }
 
-    [Authorize]
+    [Authorize(Roles = OficinaMecanica.Domain.Entities.PerfilUsuario.Admin)]
     [HttpPost]
     public async Task<IActionResult> Criar(CriarOficinaDto dto)
     {
@@ -47,10 +48,14 @@ public class OficinaController : ControllerBase
             oficina);
     }
 
+    [Authorize]
     [HttpGet("{id}")]
     public async Task<IActionResult> ObterPorId(Guid id)
     {
-        var oficina = await _service.ObterPorIdAsync(id);
+        var propria = await _service.ObterParaUsuarioAsync(User.GetUsuarioId());
+
+        // Só a oficina do próprio usuário; qualquer outro id é tratado como inexistente
+        var oficina = propria != null && propria.Id == id ? propria : null;
 
         if (oficina == null)
         {
@@ -60,10 +65,15 @@ public class OficinaController : ControllerBase
         return Ok(oficina);
     }
 
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> Listar()
     {
-        var oficinas = await _service.ListarAsync();
+        var propria = await _service.ObterParaUsuarioAsync(User.GetUsuarioId());
+
+        var oficinas = propria == null
+            ? new List<OficinaResponseDto>()
+            : new List<OficinaResponseDto> { propria };
 
         return Ok(oficinas);
     }
@@ -72,7 +82,7 @@ public class OficinaController : ControllerBase
     [HttpGet("minha-oficina")]
     public async Task<IActionResult> MinhaOficina()
     {
-        var oficina = await _service.ObterUnicaAsync();
+        var oficina = await _service.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
         {
@@ -82,12 +92,19 @@ public class OficinaController : ControllerBase
         return Ok(oficina);
     }
 
-    [Authorize]
+    [Authorize(Roles = OficinaMecanica.Domain.Entities.PerfilUsuario.Admin)]
     [HttpPut("{id}")]
     public async Task<IActionResult> Atualizar(
         Guid id,
         AtualizarOficinaDto dto)
     {
+        var propria = await _service.ObterParaUsuarioAsync(User.GetUsuarioId());
+
+        if (propria == null || propria.Id != id)
+        {
+            return NotFound();
+        }
+
         var oficina = await _service.AtualizarAsync(id, dto);
 
         if (oficina == null)

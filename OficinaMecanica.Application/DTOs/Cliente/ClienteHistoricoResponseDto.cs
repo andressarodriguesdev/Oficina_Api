@@ -10,6 +10,9 @@ public class ClienteHistoricoResponseDto
 {
     public Guid OrdemServicoId { get; set; }
 
+    // Usado para restringir o histórico ao mecânico autenticado
+    public Guid MecanicoId { get; set; }
+
     public decimal ValorTotal { get; set; }
 
     public StatusOrdemServico StatusAtual { get; set; }

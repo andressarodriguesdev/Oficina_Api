@@ -108,7 +108,7 @@ public class VeiculoAppService
         );
 
         if (veiculo == null)
-            throw new Exception("Veículo não encontrado");
+            throw new NaoEncontradoException("Veículo não encontrado");
 
         veiculo.Inativar();
 
@@ -125,7 +125,7 @@ public class VeiculoAppService
         );
 
         if (veiculo == null)
-            throw new Exception("Veículo não encontrado");
+            throw new NaoEncontradoException("Veículo não encontrado");
 
         veiculo.Reativar();
 
@@ -142,12 +142,11 @@ public class VeiculoAppService
         );
 
         if (veiculo == null)
-            throw new Exception("Veículo não encontrado");
+            throw new NaoEncontradoException("Veículo não encontrado");
 
         if (veiculo.OrdensServico.Any())
         {
-            throw new Exception(
-                "Este veículo possui ordens de serviço vinculadas e não pode ser excluído. Inative-o em vez disso.");
+            throw new RegraNegocioException("Este veículo possui ordens de serviço vinculadas e não pode ser excluído. Inative-o em vez disso.");
         }
 
         await _repository.RemoverAsync(veiculo);
@@ -171,6 +170,7 @@ public class VeiculoAppService
                 .Select(o => new VeiculoOrdemServicoResumoDto
                 {
                     OrdemServicoId = o.Id,
+                    MecanicoId = o.MecanicoId,
                     ValorTotal = o.ValorTotal,
                     StatusAtual = (int)o.Status,
                     DataCriacao = o.DataCriacao,

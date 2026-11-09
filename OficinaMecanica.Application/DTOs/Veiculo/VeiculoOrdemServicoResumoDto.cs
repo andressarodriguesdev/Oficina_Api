@@ -8,6 +8,9 @@ namespace OficinaMecanica.Application.DTOs
     {
         public Guid OrdemServicoId { get; set; }
 
+        // Usado para restringir o resumo ao mecânico autenticado
+        public Guid MecanicoId { get; set; }
+
         public decimal ValorTotal { get; set; }
 
         public int StatusAtual { get; set; }

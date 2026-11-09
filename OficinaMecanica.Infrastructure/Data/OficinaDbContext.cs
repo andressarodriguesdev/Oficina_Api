@@ -4,9 +4,14 @@ using Microsoft.EntityFrameworkCore;
 namespace OficinaMecanica.Infrastructure.Data; 
 public class OficinaDbContext : DbContext 
 { 
-    public OficinaDbContext(DbContextOptions<OficinaDbContext> options) 
+    private readonly IUsuarioAtualProvider? _usuarioAtual;
+
+    public OficinaDbContext(
+        DbContextOptions<OficinaDbContext> options,
+        IUsuarioAtualProvider? usuarioAtual = null) 
         : base(options) 
     {
+        _usuarioAtual = usuarioAtual;
     }
     public DbSet<Usuario> Usuario { get; set; }
     public DbSet<Oficina> Oficinas { get; set; } 
@@ -19,6 +24,108 @@ public class OficinaDbContext : DbContext
     public DbSet<Mecanico> Mecanicos { get; set; }
     public DbSet<Pecas> Pecas { get; set; }
     public DbSet<MovimentacaoEstoque> MovimentacoesEstoque { get; set; }
+    public DbSet<LogAuditoria> LogsAuditoria { get; set; }
+
+    // =====================================================
+    // AUDITORIA DE CADASTROS (clientes, veículos, peças, mecânicos)
+    // =====================================================
+
+    private static readonly Dictionary<Type, string> _entidadesAuditadas = new()
+    {
+        [typeof(Cliente)] = "Cliente",
+        [typeof(Veiculo)] = "Veículo",
+        [typeof(Pecas)] = "Peça",
+        [typeof(Mecanico)] = "Mecânico"
+    };
+
+    private List<LogAuditoria> MontarAuditoria(int usuarioId, string? usuarioNome)
+    {
+        ChangeTracker.DetectChanges();
+
+        var logs = new List<LogAuditoria>();
+
+        foreach (var entry in ChangeTracker.Entries().ToList())
+        {
+            if (!_entidadesAuditadas.TryGetValue(entry.Entity.GetType(), out var nomeEntidade))
+                continue;
+
+            string acao;
+
+            if (entry.State == EntityState.Added)
+                acao = "Criado";
+            else if (entry.State == EntityState.Deleted)
+                acao = "Excluído";
+            else if (entry.State == EntityState.Modified)
+            {
+                acao = "Alterado";
+
+                var ativo = entry.Metadata.FindProperty("Ativo");
+
+                if (ativo != null && entry.Property("Ativo").IsModified)
+                    acao = entry.Property("Ativo").CurrentValue is true ? "Reativado" : "Inativado";
+            }
+            else
+                continue;
+
+            var tipo = entry.Entity.GetType();
+
+            var descricao =
+                tipo.GetProperty("Nome")?.GetValue(entry.Entity) as string ??
+                tipo.GetProperty("Placa")?.GetValue(entry.Entity) as string;
+
+            logs.Add(new LogAuditoria
+            {
+                OficinaId = tipo.GetProperty("OficinaId")?.GetValue(entry.Entity) as Guid?,
+                UsuarioId = usuarioId,
+                UsuarioNome = usuarioNome,
+                Acao = acao,
+                Entidade = nomeEntidade,
+                EntidadeId = entry.Property("Id").CurrentValue is Guid id ? id : Guid.Empty,
+                Descricao = descricao,
+                CriadoEm = DateTime.UtcNow
+            });
+        }
+
+        return logs;
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        var usuarioId = _usuarioAtual?.ObterUsuarioId();
+
+        if (usuarioId.HasValue)
+        {
+            var nome = Usuario.AsNoTracking()
+                .Where(u => u.Id == usuarioId.Value)
+                .Select(u => u.Nome)
+                .FirstOrDefault();
+
+            LogsAuditoria.AddRange(MontarAuditoria(usuarioId.Value, nome));
+        }
+
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override async Task<int> SaveChangesAsync(
+        bool acceptAllChangesOnSuccess,
+        CancellationToken cancellationToken = default)
+    {
+        var usuarioId = _usuarioAtual?.ObterUsuarioId();
+
+        if (usuarioId.HasValue)
+        {
+            var nome = await Usuario.AsNoTracking()
+                .Where(u => u.Id == usuarioId.Value)
+                .Select(u => u.Nome)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            await LogsAuditoria.AddRangeAsync(
+                MontarAuditoria(usuarioId.Value, nome),
+                cancellationToken);
+        }
+
+        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         base.OnModelCreating(modelBuilder);
@@ -50,9 +157,29 @@ public class OficinaDbContext : DbContext
             .Property(u => u.DataCadastro)
             .IsRequired();
 
+        modelBuilder.Entity<LogAuditoria>()
+            .HasIndex(l => new { l.Entidade, l.EntidadeId });
+
         modelBuilder.Entity<Usuario>()
             .Property(u => u.Ativo)
             .IsRequired();
+
+        modelBuilder.Entity<Usuario>()
+            .Property(u => u.Perfil)
+            .HasConversion<int>()
+            .IsRequired();
+
+        // Usuario -> Mecanico (um login por mecânico)
+        modelBuilder.Entity<Usuario>()
+            .HasOne<Mecanico>()
+            .WithMany()
+            .HasForeignKey(u => u.MecanicoId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Usuario>()
+            .HasIndex(u => u.MecanicoId)
+            .IsUnique()
+            .HasFilter("\"MecanicoId\" IS NOT NULL");
 
 
         // Usuario -> Oficinas

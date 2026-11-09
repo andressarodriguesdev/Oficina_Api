@@ -34,6 +34,19 @@ public class MovimentacaoEstoque
 
     public DateTime CriadoEm { get; private set; }
 
+    // Quem executou a movimentação (auditoria)
+    public int? UsuarioId { get; private set; }
+
+    public string? UsuarioNome { get; private set; }
+
+    public MovimentacaoEstoque RegistrarUsuario(int? usuarioId, string? usuarioNome)
+    {
+        UsuarioId = usuarioId;
+        UsuarioNome = usuarioNome;
+
+        return this;
+    }
+
     private MovimentacaoEstoque()
     {
     }

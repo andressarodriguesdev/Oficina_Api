@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +14,7 @@ using OficinaMecanica.Infrastructure.Data;
 namespace OficinaMecanica.Api.Controllers;
 
 [ApiController]
+[Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("auth")]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
@@ -20,20 +23,28 @@ public class AuthController : ControllerBase
     private const int RecuperacaoSenhaValidadeMinutos = 10;
     private const int RecuperacaoSenhaIntervaloSegundos = 60;
     private const int RecuperacaoSenhaMaxTentativas = 5;
-    private const int SenhaTamanhoMinimo = 6;
+    private const int SenhaTamanhoMinimo = 8;
+    private const int LoginMaxFalhas = 5;
+    private static readonly TimeSpan LoginBloqueio = TimeSpan.FromMinutes(15);
 
     private readonly OficinaDbContext _context;
     private readonly PasswordHasher<Usuario> _passwordHasher;
     private readonly JwtService _jwtService;
     private readonly TwoFactorService _twoFactorService;
     private readonly ILogger<AuthController> _logger;
+    private readonly IMemoryCache _cache;
+    private readonly IHostEnvironment _env;
 
     public AuthController(
         OficinaDbContext context,
         JwtService jwtService,
         TwoFactorService twoFactorService,
-        ILogger<AuthController> logger)
+        ILogger<AuthController> logger,
+        IMemoryCache cache,
+        IHostEnvironment env)
     {
+        _cache = cache;
+        _env = env;
         _context = context;
         _passwordHasher = new PasswordHasher<Usuario>();
         _jwtService = jwtService;
@@ -44,6 +55,15 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register(UsuarioCadastroDto dto)
     {
+        if (string.IsNullOrWhiteSpace(dto.Senha) ||
+            dto.Senha.Length < SenhaTamanhoMinimo)
+        {
+            return BadRequest(new
+            {
+                mensagem = $"A senha deve ter pelo menos {SenhaTamanhoMinimo} caracteres."
+            });
+        }
+
         var email = dto.Email.Trim().ToLower();
 
         var emailExiste = await _context.Usuario
@@ -94,10 +114,40 @@ public class AuthController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        await _twoFactorService.EnviarCodigoVerificacaoEmailAsync(
-            usuario.Email,
-            codigo
-        );
+        try
+        {
+            await _twoFactorService.EnviarCodigoVerificacaoEmailAsync(
+                usuario.Email,
+                codigo
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Falha ao enviar o e-mail de verificação para {Email}",
+                usuario.Email);
+
+            if (_env.IsDevelopment())
+            {
+                // Só em desenvolvimento: permite concluir o cadastro sem o serviço de e-mail
+                _logger.LogWarning(
+                    "[DESENVOLVIMENTO] Código de verificação de {Email}: {Codigo}",
+                    usuario.Email,
+                    codigo);
+            }
+            else
+            {
+                // Não deixa um cadastro preso, sem como confirmar o e-mail
+                _context.Usuario.Remove(usuario);
+                await _context.SaveChangesAsync();
+
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+                {
+                    mensagem = "Não foi possível enviar o e-mail de verificação agora. Tente novamente em instantes."
+                });
+            }
+        }
 
         return Ok(new
         {
@@ -193,16 +243,38 @@ public class AuthController : ControllerBase
         });
     }
 
+    private void RegistrarFalhaLogin(string chave)
+    {
+        var total = _cache.TryGetValue(chave, out int atual) ? atual + 1 : 1;
+
+        _cache.Set(chave, total, LoginBloqueio);
+    }
+
     [HttpPost("login")]
     public async Task<IActionResult> Login(UsuarioLoginDto dto)
     {
+        var emailNormalizado = dto.Email.Trim().ToLower();
+        var chaveFalhas = $"login:falhas:{emailNormalizado}";
+
+        // Bloqueio temporário após várias senhas erradas para o mesmo e-mail
+        if (_cache.TryGetValue(chaveFalhas, out int falhas) &&
+            falhas >= LoginMaxFalhas)
+        {
+            return StatusCode(StatusCodes.Status429TooManyRequests, new
+            {
+                mensagem = "Muitas tentativas de login. Aguarde 15 minutos e tente novamente."
+            });
+        }
+
         var usuario = await _context.Usuario
             .FirstOrDefaultAsync(
-                u => u.Email == dto.Email.Trim().ToLower()
+                u => u.Email == emailNormalizado
             );
 
         if (usuario == null)
         {
+            RegistrarFalhaLogin(chaveFalhas);
+
             return Unauthorized(new
             {
                 mensagem = "E-mail ou senha inválidos."
@@ -217,11 +289,15 @@ public class AuthController : ControllerBase
 
         if (resultado == PasswordVerificationResult.Failed)
         {
+            RegistrarFalhaLogin(chaveFalhas);
+
             return Unauthorized(new
             {
                 mensagem = "E-mail ou senha inválidos."
             });
         }
+
+        _cache.Remove(chaveFalhas);
 
         if (!usuario.EmailVerificado)
         {
@@ -277,7 +353,9 @@ public class AuthController : ControllerBase
             token,
             usuarioId = usuario.Id,
             nome = usuario.Nome,
-            email = usuario.Email
+            email = usuario.Email,
+            perfil = usuario.Perfil.ToString(),
+            mecanicoId = usuario.MecanicoId
         });
     }
 
@@ -578,7 +656,9 @@ public class AuthController : ControllerBase
             token,
             usuarioId = usuario.Id,
             nome = usuario.Nome,
-            email = usuario.Email
+            email = usuario.Email,
+            perfil = usuario.Perfil.ToString(),
+            mecanicoId = usuario.MecanicoId
         });
     }
 }

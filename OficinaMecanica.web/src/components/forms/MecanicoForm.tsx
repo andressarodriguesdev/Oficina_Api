@@ -1,7 +1,7 @@
 import { type FormEvent } from "react";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
-import type { mecanicos } from "../../types";
+import type { Mecanico } from "../../types";
 
 export interface MecanicosFormValues {
   nome: string;
@@ -15,7 +15,7 @@ export function MecanicoForm({
   onCancel,
   submitting,
 }: {
-  initial?: mecanicos | null;
+  initial?: Mecanico | null;
   onSubmit: (v: MecanicosFormValues) => void;
   onCancel: () => void;
   submitting?: boolean;

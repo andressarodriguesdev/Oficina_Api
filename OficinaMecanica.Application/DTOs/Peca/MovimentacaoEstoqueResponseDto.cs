@@ -17,5 +17,9 @@ public class MovimentacaoEstoqueResponseDto
 
     public string? Motivo { get; set; }
 
+    public int? UsuarioId { get; set; }
+
+    public string? UsuarioNome { get; set; }
+
     public DateTime CriadoEm { get; set; }
 }

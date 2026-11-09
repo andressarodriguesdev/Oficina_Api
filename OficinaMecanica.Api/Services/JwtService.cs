@@ -22,7 +22,8 @@ public class JwtService
         {
             new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, usuario.Email),
-            new Claim(ClaimTypes.Name, usuario.Nome)
+            new Claim(ClaimTypes.Name, usuario.Nome),
+            new Claim(ClaimTypes.Role, usuario.Perfil.ToString())
         };
 
         var chave = new SymmetricSecurityKey(

@@ -16,6 +16,7 @@ public class OrdemServicoAppService
     private readonly OficinaRepository _oficinaRepository;
     private readonly PecasRepository _pecasRepository;
     private readonly MovimentacaoEstoqueRepository _movimentacaoRepository;
+    private readonly EscopoMecanicoService _escopo;
 
 
 public OrdemServicoAppService(
@@ -26,7 +27,8 @@ public OrdemServicoAppService(
     MecanicoRepository mecanicoRepository,
     OficinaRepository oficinaRepository,
     PecasRepository pecasRepository,
-    MovimentacaoEstoqueRepository movimentacaoRepository)
+    MovimentacaoEstoqueRepository movimentacaoRepository,
+    EscopoMecanicoService escopo)
     {
         _repository = repository;
         _clienteRepository = clienteRepository;
@@ -36,12 +38,18 @@ public OrdemServicoAppService(
         _oficinaRepository = oficinaRepository;
         _pecasRepository = pecasRepository;
         _movimentacaoRepository = movimentacaoRepository;
+        _escopo = escopo;
     }
 
-    public async Task<OrdemServicoResponseDto> CriarAsync(
+    public async Task<OrdemServicoResponseDto> CriarAsync(int usuarioId,
         CriarOrdemServicoDto dto)
     {
-        var oficinaId = await ObterOficinaIdAsync();
+        var escopo = await _escopo.ObterMecanicoRestritoAsync(usuarioId);
+
+        // Mecânico: a OS é sempre atribuída a ele mesmo
+        dto.MecanicoId = _escopo.ResolverMecanicoResponsavel(escopo, dto.MecanicoId);
+
+        var oficinaId = await ObterOficinaIdAsync(usuarioId);
 
         var cliente = await _clienteRepository.ObterPorIdAsync(
             dto.ClienteId,
@@ -49,7 +57,7 @@ public OrdemServicoAppService(
         );
 
         if (cliente == null)
-            throw new Exception("Cliente não encontrado.");
+            throw new NaoEncontradoException("Cliente não encontrado.");
 
         var veiculo = await _veiculoRepository.ObterPorIdAsync(
             dto.VeiculoId,
@@ -57,17 +65,13 @@ public OrdemServicoAppService(
         );
 
         if (veiculo == null)
-            throw new Exception("Veículo não encontrado.");
+            throw new NaoEncontradoException("Veículo não encontrado.");
 
         if (veiculo.ClienteId != dto.ClienteId)
-            throw new Exception(
-                "O veículo não pertence ao cliente informado."
-            );
+            throw new RegraNegocioException("O veículo não pertence ao cliente informado.");
 
         if (veiculo.OficinaId != cliente.OficinaId)
-            throw new Exception(
-                "O veículo não pertence à oficina do cliente."
-            );
+            throw new RegraNegocioException("O veículo não pertence à oficina do cliente.");
 
         var mecanico = await _mecanicoRepository.GetByIdAsync(
             dto.MecanicoId,
@@ -75,12 +79,10 @@ public OrdemServicoAppService(
         );
 
         if (mecanico == null)
-            throw new Exception("Mecânico não encontrado.");
+            throw new NaoEncontradoException("Mecânico não encontrado.");
 
         if (mecanico.OficinaId != cliente.OficinaId)
-            throw new Exception(
-                "O mecânico não pertence à oficina do cliente."
-            );
+            throw new RegraNegocioException("O mecânico não pertence à oficina do cliente.");
 
         /*
          * A OS criada começa como ativa e, portanto, suas peças
@@ -146,8 +148,12 @@ public OrdemServicoAppService(
         return MapearResponse(ordemCriada);
     }
 
-    public async Task<OrdemServicoResponseDto?> ObterPorIdAsync(Guid id)
+    public async Task<OrdemServicoResponseDto?> ObterPorIdAsync(int usuarioId, Guid id)
     {
+        // Consulta liberada: qualquer usuário válido vê qualquer OS da oficina
+        // (ex.: cliente liga perguntando do andamento). Só as ações são restritas.
+        await _escopo.ObterMecanicoRestritoAsync(usuarioId);
+
         var ordem = await _repository.ObterPorIdAsync(id);
 
         if (ordem == null)
@@ -156,13 +162,30 @@ public OrdemServicoAppService(
         return MapearResponse(ordem);
     }
 
-    public async Task<OrdemServico?> ObterEntidadePorIdAsync(Guid id)
+    /// <param name="exigirResponsavel">
+    /// true para ações (ex.: link de aprovação por WhatsApp): o mecânico só
+    /// pode se for o responsável. false para consulta (ex.: PDF).
+    /// </param>
+    public async Task<OrdemServico?> ObterEntidadePorIdAsync(
+        int usuarioId,
+        Guid id,
+        bool exigirResponsavel = false)
     {
-        return await _repository.ObterPorIdAsync(id);
+        var escopo = await _escopo.ObterMecanicoRestritoAsync(usuarioId);
+
+        var ordem = await _repository.ObterPorIdAsync(id);
+
+        if (ordem != null && exigirResponsavel)
+            _escopo.GarantirAcesso(ordem, escopo);
+
+        return ordem;
     }
 
-    public async Task<List<OrdemServicoResponseDto>> ListarAsync()
+    public async Task<List<OrdemServicoResponseDto>> ListarAsync(int usuarioId)
     {
+        // Valida o usuário, mas lista todas as OS da oficina para qualquer perfil
+        await _escopo.ObterMecanicoRestritoAsync(usuarioId);
+
         var ordens = await _repository.ListarAsync();
 
         return ordens
@@ -170,14 +193,9 @@ public OrdemServicoAppService(
             .ToList();
     }
 
-    public async Task EnviarParaAprovacaoAsync(Guid id)
+    public async Task EnviarParaAprovacaoAsync(int usuarioId, Guid id)
     {
-        var ordem = await _repository.ObterPorIdAsync(id);
-
-        if (ordem == null)
-            throw new Exception(
-                "Ordem de serviço não encontrada."
-            );
+        var ordem = await CarregarAutorizadaAsync(usuarioId, id);
 
         var statusAnterior = ordem.Status;
 
@@ -186,19 +204,15 @@ public OrdemServicoAppService(
         await _repository.AtualizarAsync(ordem);
 
         await RegistrarHistoricoAsync(
+            usuarioId,
             ordem,
             statusAnterior
         );
     }
 
-    public async Task AprovarAsync(Guid id)
+    public async Task AprovarAsync(int usuarioId, Guid id)
     {
-        var ordem = await _repository.ObterPorIdAsync(id);
-
-        if (ordem == null)
-            throw new Exception(
-                "Ordem de serviço não encontrada."
-            );
+        var ordem = await CarregarAutorizadaAsync(usuarioId, id);
 
         var statusAnterior = ordem.Status;
 
@@ -207,19 +221,15 @@ public OrdemServicoAppService(
         await _repository.AtualizarAsync(ordem);
 
         await RegistrarHistoricoAsync(
+            usuarioId,
             ordem,
             statusAnterior
         );
     }
 
-    public async Task RecusarAsync(Guid id)
+    public async Task RecusarAsync(int usuarioId, Guid id)
     {
-        var ordem = await _repository.ObterPorIdAsync(id);
-
-        if (ordem == null)
-            throw new Exception(
-                "Ordem de serviço não encontrada."
-            );
+        var ordem = await CarregarAutorizadaAsync(usuarioId, id);
 
         var statusAnterior = ordem.Status;
 
@@ -233,19 +243,15 @@ public OrdemServicoAppService(
         await _repository.AtualizarAsync(ordem);
 
         await RegistrarHistoricoAsync(
+            usuarioId,
             ordem,
             statusAnterior
         );
     }
 
-    public async Task ConcluirAsync(Guid id)
+    public async Task ConcluirAsync(int usuarioId, Guid id)
     {
-        var ordem = await _repository.ObterPorIdAsync(id);
-
-        if (ordem == null)
-            throw new Exception(
-                "Ordem de serviço não encontrada."
-            );
+        var ordem = await CarregarAutorizadaAsync(usuarioId, id);
 
         /*
          * Antes de concluir, as peças deixam de ser apenas
@@ -301,6 +307,9 @@ public OrdemServicoAppService(
                 $"Baixa da OS #{ordem.Id.ToString()[..8].ToUpper()}"
             );
 
+            movimentacao.RegistrarUsuario(usuarioId, await _escopo.ObterNomeUsuarioAsync(usuarioId));
+
+
             await _movimentacaoRepository.AddAsync(movimentacao);
 
             _pecasRepository.Update(item.Peca);
@@ -313,21 +322,17 @@ public OrdemServicoAppService(
         await _repository.AtualizarAsync(ordem);
 
         await RegistrarHistoricoAsync(
+            usuarioId,
             ordem,
             statusAnterior
         );
     }
 
-    public async Task CancelarAsync(
+    public async Task CancelarAsync(int usuarioId,
         Guid id,
         string motivo)
     {
-        var ordem = await _repository.ObterPorIdAsync(id);
-
-        if (ordem == null)
-            throw new Exception(
-                "Ordem de serviço não encontrada."
-            );
+        var ordem = await CarregarAutorizadaAsync(usuarioId, id);
 
         var statusAnterior = ordem.Status;
 
@@ -341,22 +346,18 @@ public OrdemServicoAppService(
         await _repository.AtualizarAsync(ordem);
 
         await RegistrarHistoricoAsync(
+            usuarioId,
             ordem,
             statusAnterior,
             motivo
         );
     }
 
-    public async Task ReabrirAsync(
+    public async Task ReabrirAsync(int usuarioId,
         Guid id,
         string motivo)
     {
-        var ordem = await _repository.ObterPorIdAsync(id);
-
-        if (ordem == null)
-            throw new Exception(
-                "Ordem de serviço não encontrada."
-            );
+        var ordem = await CarregarAutorizadaAsync(usuarioId, id);
 
         var statusAnterior = ordem.Status;
 
@@ -398,6 +399,9 @@ public OrdemServicoAppService(
                     $"Reabertura da OS #{ordem.Id.ToString()[..8].ToUpper()}"
                 );
 
+                movimentacao.RegistrarUsuario(usuarioId, await _escopo.ObterNomeUsuarioAsync(usuarioId));
+
+
                 await _movimentacaoRepository.AddAsync(movimentacao);
 
                 _pecasRepository.Update(peca);
@@ -409,6 +413,7 @@ public OrdemServicoAppService(
         await _repository.AtualizarAsync(ordem);
 
         await RegistrarHistoricoAsync(
+            usuarioId,
             ordem,
             statusAnterior,
             motivo
@@ -416,8 +421,14 @@ public OrdemServicoAppService(
     }
 
     public async Task<List<HistoricoOrdemServicoResponseDto>>
-        ObterHistoricoAsync(Guid ordemServicoId)
+        ObterHistoricoAsync(int usuarioId, Guid ordemServicoId)
     {
+        // Consulta liberada para qualquer usuário válido
+        await _escopo.ObterMecanicoRestritoAsync(usuarioId);
+
+        _ = await _repository.ObterPorIdAsync(ordemServicoId)
+            ?? throw new NaoEncontradoException("Ordem de serviço não encontrada.");
+
         var historicos = await _historicoRepository
             .ObterPorOrdemServicoIdAsync(ordemServicoId);
 
@@ -429,12 +440,15 @@ public OrdemServicoAppService(
                 StatusAnterior = h.StatusAnterior,
                 NovoStatus = h.NovoStatus,
                 Observacao = h.Observacao,
+                UsuarioId = h.UsuarioId,
+                UsuarioNome = h.UsuarioNome,
                 DataAlteracao = h.DataAlteracao
             })
             .ToList();
     }
 
     private async Task RegistrarHistoricoAsync(
+        int usuarioId,
         OrdemServico ordem,
         StatusOrdemServico statusAnterior,
         string? observacao = null)
@@ -443,7 +457,9 @@ public OrdemServicoAppService(
             ordem.Id,
             statusAnterior,
             ordem.Status,
-            observacao
+            observacao,
+            usuarioId,
+            await _escopo.ObterNomeUsuarioAsync(usuarioId)
         );
 
         await _historicoRepository.AdicionarAsync(
@@ -520,26 +536,21 @@ public OrdemServicoAppService(
                         StatusAnterior = h.StatusAnterior,
                         NovoStatus = h.NovoStatus,
                         Observacao = h.Observacao,
+                        UsuarioId = h.UsuarioId,
+                        UsuarioNome = h.UsuarioNome,
                         DataAlteracao = h.DataAlteracao
                     })
                 .ToList()
         };
     }
 
-    public async Task AdicionarItemAsync(
+    public async Task AdicionarItemAsync(int usuarioId,
         Guid ordemId,
         OrdemServicoItemDto dto)
     {
-        var ordem = await _repository.ObterPorIdAsync(
-            ordemId
-        );
+        var ordem = await CarregarAutorizadaAsync(usuarioId, ordemId);
 
-        if (ordem == null)
-            throw new Exception(
-                "Ordem não encontrada."
-            );
-
-        var oficinaId = await ObterOficinaIdAsync();
+        var oficinaId = await ObterOficinaIdAsync(usuarioId);
 
         var peca = await ValidarPecaAsync(
             dto.PecaId,
@@ -583,21 +594,14 @@ public OrdemServicoAppService(
         );
     }
 
-    public async Task AtualizarItemAsync(
+    public async Task AtualizarItemAsync(int usuarioId,
         Guid ordemId,
         Guid itemId,
         OrdemServicoItemDto dto)
     {
-        var ordem = await _repository.ObterPorIdAsync(
-            ordemId
-        );
+        var ordem = await CarregarAutorizadaAsync(usuarioId, ordemId);
 
-        if (ordem == null)
-            throw new Exception(
-                "Ordem não encontrada."
-            );
-
-        var oficinaId = await ObterOficinaIdAsync();
+        var oficinaId = await ObterOficinaIdAsync(usuarioId);
 
         var peca = await ValidarPecaAsync(
             dto.PecaId,
@@ -643,46 +647,36 @@ public OrdemServicoAppService(
         await _repository.SalvarAsync();
     }
 
-    public async Task RemoverItemAsync(
+    public async Task RemoverItemAsync(int usuarioId,
         Guid ordemId,
         Guid itemId)
     {
-        var ordem = await _repository.ObterPorIdAsync(
-            ordemId
-        );
-
-        if (ordem == null)
-            throw new Exception(
-                "Ordem não encontrada."
-            );
+        var ordem = await CarregarAutorizadaAsync(usuarioId, ordemId);
 
         ordem.RemoverItem(itemId);
 
         await _repository.SalvarAsync();
     }
 
-    public async Task AtualizarAsync(
+    public async Task AtualizarAsync(int usuarioId,
         Guid id,
         AtualizarOrdemServicoDto dto)
     {
-        var ordem = await _repository.ObterPorIdAsync(id);
+        var ordem = await CarregarAutorizadaAsync(usuarioId, id);
 
-        if (ordem == null)
-            throw new Exception(
-                "Ordem de serviço não encontrada."
-            );
+        // Mecânico não pode trocar o responsável pela OS
+        var escopoAtualizacao = await _escopo.ObterMecanicoRestritoAsync(usuarioId);
+        dto.MecanicoId = _escopo.ResolverMecanicoResponsavel(escopoAtualizacao, dto.MecanicoId);
 
         if (
             ordem.Status != StatusOrdemServico.Aberta &&
             ordem.Status != StatusOrdemServico.AguardandoAprovacao
         )
         {
-            throw new Exception(
-                "Somente ordens abertas ou aguardando aprovação podem ser editadas."
-            );
+            throw new RegraNegocioException("Somente ordens abertas ou aguardando aprovação podem ser editadas.");
         }
 
-        var oficinaId = await ObterOficinaIdAsync();
+        var oficinaId = await ObterOficinaIdAsync(usuarioId);
 
         var cliente = await _clienteRepository.ObterPorIdAsync(
             dto.ClienteId,
@@ -690,9 +684,7 @@ public OrdemServicoAppService(
         );
 
         if (cliente == null)
-            throw new Exception(
-                "Cliente não encontrado."
-            );
+            throw new NaoEncontradoException("Cliente não encontrado.");
 
         var veiculo = await _veiculoRepository.ObterPorIdAsync(
             dto.VeiculoId,
@@ -700,19 +692,13 @@ public OrdemServicoAppService(
         );
 
         if (veiculo == null)
-            throw new Exception(
-                "Veículo não encontrado."
-            );
+            throw new NaoEncontradoException("Veículo não encontrado.");
 
         if (veiculo.ClienteId != dto.ClienteId)
-            throw new Exception(
-                "O veículo não pertence ao cliente informado."
-            );
+            throw new RegraNegocioException("O veículo não pertence ao cliente informado.");
 
         if (veiculo.OficinaId != cliente.OficinaId)
-            throw new Exception(
-                "O veículo não pertence à oficina do cliente."
-            );
+            throw new RegraNegocioException("O veículo não pertence à oficina do cliente.");
 
         var mecanico = await _mecanicoRepository.GetByIdAsync(
             dto.MecanicoId,
@@ -720,19 +706,13 @@ public OrdemServicoAppService(
         );
 
         if (mecanico == null)
-            throw new Exception(
-                "Mecânico não encontrado."
-            );
+            throw new NaoEncontradoException("Mecânico não encontrado.");
 
         if (mecanico.OficinaId != cliente.OficinaId)
-            throw new Exception(
-                "O mecânico não pertence à oficina do cliente."
-            );
+            throw new RegraNegocioException("O mecânico não pertence à oficina do cliente.");
 
         if (ordem.OficinaId != cliente.OficinaId)
-            throw new Exception(
-                "A ordem de serviço não pertence à oficina do cliente."
-            );
+            throw new RegraNegocioException("A ordem de serviço não pertence à oficina do cliente.");
 
         ordem.AtualizarDados(
             dto.ClienteId,
@@ -745,14 +725,24 @@ public OrdemServicoAppService(
         await _repository.AtualizarAsync(ordem);
     }
 
-    private async Task<Guid> ObterOficinaIdAsync()
+    private async Task<OrdemServico> CarregarAutorizadaAsync(int usuarioId, Guid ordemId)
     {
-        var oficina = await _oficinaRepository.ObterUnicaAsync();
+        var escopo = await _escopo.ObterMecanicoRestritoAsync(usuarioId);
+
+        var ordem = await _repository.ObterPorIdAsync(ordemId)
+            ?? throw new NaoEncontradoException("Ordem de serviço não encontrada.");
+
+        _escopo.GarantirAcesso(ordem, escopo);
+
+        return ordem;
+    }
+
+    private async Task<Guid> ObterOficinaIdAsync(int usuarioId)
+    {
+        var oficina = await _oficinaRepository.ObterParaUsuarioAsync(usuarioId);
 
         if (oficina == null)
-            throw new Exception(
-                "Nenhuma oficina cadastrada no sistema."
-            );
+            throw new RegraNegocioException("Nenhuma oficina cadastrada no sistema.");
 
         return oficina.Id;
     }

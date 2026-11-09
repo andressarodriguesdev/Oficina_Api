@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OficinaMecanica.Api.Security;
 using OficinaMecanica.Application.DTOs;
 using OficinaMecanica.Application.Services;
 
@@ -12,20 +13,23 @@ public class ClienteController : ControllerBase
 {
     private readonly ClienteAppService _service;
     private readonly OficinaAppService _oficinaService;
+    private readonly EscopoMecanicoService _escopo;
 
     public ClienteController(
         ClienteAppService service,
-        OficinaAppService oficinaService)
+        OficinaAppService oficinaService,
+        EscopoMecanicoService escopo)
     {
         _service = service;
         _oficinaService = oficinaService;
+        _escopo = escopo;
     }
 
     [HttpPost]
     public async Task<IActionResult> Criar(
         CriarClienteDto dto)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
             return BadRequest(
@@ -47,7 +51,7 @@ public class ClienteController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Listar()
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
             return BadRequest(
@@ -65,7 +69,7 @@ public class ClienteController : ControllerBase
     public async Task<IActionResult> ObterPorId(
         Guid id)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
             return BadRequest(
@@ -88,7 +92,7 @@ public class ClienteController : ControllerBase
         Guid id,
         AtualizarClienteDto dto)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
             return BadRequest(
@@ -111,7 +115,7 @@ public class ClienteController : ControllerBase
     public async Task<IActionResult> Inativar(
         Guid id)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
             return BadRequest(
@@ -130,7 +134,7 @@ public class ClienteController : ControllerBase
     public async Task<IActionResult> Reativar(
         Guid id)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
             return BadRequest(
@@ -146,10 +150,11 @@ public class ClienteController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = OficinaMecanica.Domain.Entities.PerfilUsuario.Admin)]
     public async Task<IActionResult> Remover(
         Guid id)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
             return BadRequest(
@@ -168,7 +173,7 @@ public class ClienteController : ControllerBase
     public async Task<IActionResult> Historico(
         Guid id)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
             return BadRequest(
@@ -179,6 +184,16 @@ public class ClienteController : ControllerBase
             id,
             oficina.Id
         );
+
+        // Mecânico só enxerga o histórico das OS atribuídas a ele
+        var escopo = await _escopo.ObterMecanicoRestritoAsync(User.GetUsuarioId());
+
+        if (escopo.HasValue)
+        {
+            historico = historico
+                .Where(h => h.MecanicoId == escopo.Value)
+                .ToList();
+        }
 
         return Ok(historico);
     }

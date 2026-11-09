@@ -1,3 +1,4 @@
+import { ehMecanico, getMecanicoIdLogado } from "../../utils/session";
 import { type FormEvent, useEffect, useState } from "react";
 
 import {
@@ -115,7 +116,10 @@ export function OrdemServicoForm({
     useState(initial?.veiculoId ?? "");
 
   const [mecanicoSelecionado, setMecanicoSelecionado] =
-    useState(initial?.mecanicoId ?? "");
+    useState(
+      initial?.mecanicoId ??
+        (ehMecanico() ? (getMecanicoIdLogado() ?? "") : ""),
+    );
 
   const [itemEditando, setItemEditando] =
     useState<string | null>(null);

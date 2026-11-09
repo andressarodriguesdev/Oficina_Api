@@ -153,7 +153,7 @@ export function Financeiro() {
                     text-[var(--app-text-muted)]
                   "
                 >
-                  Gestão financeira
+                  Faturamento
                 </span>
               </div>
 
@@ -167,7 +167,7 @@ export function Financeiro() {
                   sm:text-4xl
                 "
               >
-                Financeiro
+                Faturamento
               </h1>
 
               <p
@@ -181,7 +181,7 @@ export function Financeiro() {
               >
                 Acompanhe o faturamento realizado,
                 os valores previstos e a composição
-                financeira dos serviços.
+                 dos serviços.
               </p>
             </div>
 
@@ -213,7 +213,7 @@ export function Financeiro() {
                   text-[var(--app-text-secondary)]
                 "
               >
-                Visão financeira
+                Faturamento
               </span>
             </div>
           </div>
@@ -726,7 +726,7 @@ export function Financeiro() {
                     text-[var(--app-text-muted)]
                   "
                 >
-                  Operação financeira
+                 Faturamento
                 </p>
               </div>
 
@@ -823,7 +823,7 @@ export function Financeiro() {
                   text-[var(--app-text-muted)]
                 "
               >
-                Os dados financeiros das OS aparecerão
+                Os dados do faturamento das OS aparecerão
                 aqui.
               </p>
             </div>

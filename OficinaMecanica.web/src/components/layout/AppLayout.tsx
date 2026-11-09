@@ -36,9 +36,15 @@ const titles: Record<string, { title: string; subtitle: string }> = {
     subtitle: 'Gerencie os mecânicos da oficina',
   },
 
+  '/pecas': {
+  title: 'Peças',
+  subtitle: 'Gerencie as peças e o estoque da oficina',
+},
+
+
   '/financeiro': {
-    title: 'Financeiro',
-    subtitle: 'Acompanhe suas finanças',
+    title: 'Faturamento',
+    subtitle: 'Acompanhe seu faturamento',
   },
 
   '/configuracoes': {

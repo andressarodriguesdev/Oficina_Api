@@ -1,3 +1,4 @@
+import { OrdemErro } from "../components/ui/OrdemErro";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -32,6 +33,7 @@ import {
   createOrdem,
   deleteOrdem,
   enviarAprovacao,
+  gerarWhatsApp,
   type OrdemWithRelations,
 } from "../services/ordens";
 
@@ -49,7 +51,6 @@ import {
   STATUS_TEXT_TO_NUMBER,
 } from "../utils/status";
 
-import { buildWhatsAppMessage, whatsappUrl } from "../utils/whatsapp";
 
 export function OrdensServico() {
   const toast = useToast();
@@ -61,6 +62,7 @@ export function OrdensServico() {
   const [mecanicos, setMecanicos] = useState<Mecanico[]>([]);
 
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<unknown>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
@@ -72,6 +74,7 @@ export function OrdensServico() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
 
     try {
       const [o, c, v, m] = await Promise.all([
@@ -93,12 +96,12 @@ export function OrdensServico() {
       setVeiculos(v);
       setMecanicos(m);
     } catch (err) {
-      toast.error("Erro ao carregar ordens de serviço");
+      setLoadError(err);
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     load();
@@ -213,11 +216,10 @@ const handleCreate = async (values: OrdemFormValues) => {
       await load();
 
       if (os.cliente?.telefone) {
-        const fresh = (await listOrdens()).find((o) => o.id === os.id) ?? os;
+        // Mensagem montada pela API, com o nome da oficina cadastrada no banco
+        const link = await gerarWhatsApp(os.id);
 
-        const msg = buildWhatsAppMessage(fresh, os.cliente, os.veiculo);
-
-        window.open(whatsappUrl(os.cliente.telefone, msg), "_blank");
+        window.open(link, "_blank");
       }
     } catch (err) {
       toast.error("Erro ao enviar para aprovação");
@@ -303,6 +305,8 @@ const handleCreate = async (values: OrdemFormValues) => {
       {/* CONTEÚDO */}
       {loading ? (
         <PageLoader label="Carregando ordens de serviço..." />
+      ) : loadError ? (
+        <OrdemErro error={loadError} onRetry={load} />
       ) : filtered.length === 0 ? (
         <Card className="overflow-hidden">
           <EmptyState

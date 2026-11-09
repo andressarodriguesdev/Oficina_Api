@@ -1,3 +1,4 @@
+import { ehMecanico } from "../utils/session";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import {
@@ -13,6 +14,7 @@ import {
   ArrowLeft,
   Users,
   Activity,
+  KeyRound,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -36,7 +38,10 @@ import {
   updateMecanico,
   inativarMecanico,
   reativarMecanico,
+  criarAcessoMecanico,
 } from "../services/mecanico";
+
+import { ApiError } from "../services/api";
 
 import type { Mecanico } from "../types";
 
@@ -56,6 +61,64 @@ export function Mecanicos() {
   const [editing, setEditing] = useState<Mecanico | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
+
+  // Criação de acesso (login) do mecânico
+  const [acessoPara, setAcessoPara] = useState<Mecanico | null>(null);
+  const [acessoEmail, setAcessoEmail] = useState("");
+  const [acessoSenha, setAcessoSenha] = useState("");
+  const [acessoConfirmar, setAcessoConfirmar] = useState("");
+  const [acessoErro, setAcessoErro] = useState("");
+  const [acessoEnviando, setAcessoEnviando] = useState(false);
+
+  const fecharAcesso = () => {
+    setAcessoPara(null);
+    setAcessoEmail("");
+    setAcessoSenha("");
+    setAcessoConfirmar("");
+    setAcessoErro("");
+  };
+
+  const handleCriarAcesso = async () => {
+    if (!acessoPara) return;
+
+    if (!acessoEmail.trim()) {
+      setAcessoErro("Informe o e-mail de acesso.");
+      return;
+    }
+
+    if (acessoSenha.length < 8) {
+      setAcessoErro("A senha deve ter no mínimo 8 caracteres.");
+      return;
+    }
+
+    if (acessoSenha !== acessoConfirmar) {
+      setAcessoErro("As senhas não conferem.");
+      return;
+    }
+
+    setAcessoEnviando(true);
+    setAcessoErro("");
+
+    try {
+      await criarAcessoMecanico(acessoPara.id, {
+        email: acessoEmail.trim(),
+        senha: acessoSenha,
+      });
+
+      toast.success("Acesso criado. O mecânico já pode entrar com esse e-mail e senha.");
+      fecharAcesso();
+      await load();
+    } catch (err) {
+      setAcessoErro(
+        err instanceof ApiError && err.message
+          ? err.message
+          : "Não foi possível criar o acesso. Tente novamente.",
+      );
+      console.error(err);
+    } finally {
+      setAcessoEnviando(false);
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -287,7 +350,8 @@ export function Mecanicos() {
                 </span>
               </div>
 
-              <Button
+              {!ehMecanico() && (
+<Button
                 onClick={() => {
                   setEditing(null);
                   setModalOpen(true);
@@ -296,6 +360,7 @@ export function Mecanicos() {
                 <Plus className="h-4 w-4" />
                 Novo mecânico
               </Button>
+)}
             </div>
           </div>
         </div>
@@ -620,7 +685,7 @@ export function Mecanicos() {
                 : "Cadastre o primeiro mecânico da oficina."
             }
             action={
-              !search && (
+              !search && !ehMecanico() && (
                 <Button
                   onClick={() => {
                     setEditing(null);
@@ -877,7 +942,37 @@ export function Mecanicos() {
                   Ver perfil
                 </Link>
 
-                <div className="flex items-center gap-1">
+                {!ehMecanico() && (
+<div className="flex items-center gap-1">
+                  {m.ativo && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setAcessoPara(m);
+                      }}
+                      className="
+                        rounded-lg
+                        p-2
+                        text-[var(--app-text-muted)]
+                        transition-colors
+                        duration-200
+                        hover:bg-[var(--hover-bg)]
+                        hover:text-[var(--accent-text)]
+                        focus:outline-none
+                        focus-visible:ring-2
+                        focus-visible:ring-[var(--accent)]/40
+                      "
+                      title={
+                        m.emailAcesso
+                          ? "Ver acesso ao sistema"
+                          : "Criar acesso ao sistema"
+                      }
+                    >
+                      <KeyRound className="h-4 w-4" />
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     onClick={(e) => {
@@ -950,6 +1045,7 @@ export function Mecanicos() {
                     </button>
                   )}
                 </div>
+)}
               </div>
             </Card>
           ))}
@@ -985,6 +1081,98 @@ export function Mecanicos() {
           }}
           submitting={submitting}
         />
+      </Modal>
+
+      <Modal
+        open={acessoPara !== null}
+        onClose={fecharAcesso}
+        title={
+          acessoPara?.emailAcesso
+            ? "Acesso ao sistema"
+            : "Criar acesso ao sistema"
+        }
+        description={
+          acessoPara
+            ? acessoPara.emailAcesso
+              ? `${acessoPara.nome} já possui login. Ele só vê as ordens de serviço atribuídas a ele.`
+              : `Login de ${acessoPara.nome}. Ele só verá as ordens de serviço atribuídas a ele.`
+            : ""
+        }
+        size="md"
+      >
+        {acessoPara?.emailAcesso ? (
+          <div className="space-y-4">
+            <Input
+              label="E-mail de acesso"
+              type="email"
+              value={acessoPara.emailAcesso}
+              readOnly
+            />
+
+            <p className="text-xs text-[var(--app-text-muted)]">
+              A senha não é exibida. Se o mecânico a esquecer, ele pode usar
+              "Esqueceu a senha?" na tela de login.
+            </p>
+
+            <div className="flex justify-end">
+              <Button type="button" variant="outline" onClick={fecharAcesso}>
+                Fechar
+              </Button>
+            </div>
+          </div>
+        ) : (
+        <div className="space-y-4">
+          <Input
+            label="E-mail de acesso"
+            type="email"
+            value={acessoEmail}
+            onChange={(e) => setAcessoEmail(e.target.value)}
+            autoComplete="off"
+          />
+
+          <Input
+            label="Senha"
+            type="password"
+            value={acessoSenha}
+            onChange={(e) => setAcessoSenha(e.target.value)}
+            autoComplete="new-password"
+            hint="Mínimo de 8 caracteres."
+          />
+
+          <Input
+            label="Confirmar senha"
+            type="password"
+            value={acessoConfirmar}
+            onChange={(e) => setAcessoConfirmar(e.target.value)}
+            autoComplete="new-password"
+          />
+
+          {acessoErro && (
+            <p role="alert" className="text-sm text-red-500">
+              {acessoErro}
+            </p>
+          )}
+
+          <div className="flex justify-end gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={fecharAcesso}
+              disabled={acessoEnviando}
+            >
+              Cancelar
+            </Button>
+
+            <Button
+              type="button"
+              onClick={handleCriarAcesso}
+              disabled={acessoEnviando}
+            >
+              {acessoEnviando ? "Criando..." : "Criar acesso"}
+            </Button>
+          </div>
+        </div>
+        )}
       </Modal>
     </div>
   );

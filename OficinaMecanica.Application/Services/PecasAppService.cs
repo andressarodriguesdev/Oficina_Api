@@ -11,12 +11,15 @@ public class PecasAppService
     private readonly PecasRepository _repository;
     private readonly OrdemServicoRepository _ordemServicoRepository;
     private readonly MovimentacaoEstoqueRepository _movimentacaoRepository;
+    private readonly EscopoMecanicoService _escopo;
 
     public PecasAppService(
         PecasRepository repository,
         OrdemServicoRepository ordemServicoRepository,
-        MovimentacaoEstoqueRepository movimentacaoRepository)
+        MovimentacaoEstoqueRepository movimentacaoRepository,
+        EscopoMecanicoService escopo)
     {
+        _escopo = escopo;
         _repository = repository;
         _ordemServicoRepository = ordemServicoRepository;
         _movimentacaoRepository = movimentacaoRepository;
@@ -43,7 +46,8 @@ public class PecasAppService
         decimal valorCusto,
         decimal valorVenda,
         int quantidadeEstoque,
-        int estoqueMinimo)
+        int estoqueMinimo,
+        int usuarioId)
     {
         var peca = new Pecas(
             oficinaId,
@@ -65,7 +69,8 @@ public class PecasAppService
                     TipoMovimentacaoEstoque.SaldoInicial,
                     0,
                     quantidadeEstoque,
-                    motivo: "Cadastro da peça"));
+                    motivo: "Cadastro da peça")
+                    .RegistrarUsuario(usuarioId, await _escopo.ObterNomeUsuarioAsync(usuarioId)));
         }
 
         await _repository.SaveChangesAsync();
@@ -151,7 +156,8 @@ public class PecasAppService
     public async Task<Pecas> AjustarEstoqueAsync(
         Guid id,
         Guid oficinaId,
-        int quantidade)
+        int quantidade,
+        int usuarioId)
     {
         var peca = await _repository.GetByIdAsync(
             id,
@@ -197,6 +203,8 @@ public class PecasAppService
 
         if (movimentacao.Quantidade != 0)
         {
+            movimentacao.RegistrarUsuario(usuarioId, await _escopo.ObterNomeUsuarioAsync(usuarioId));
+
             await _movimentacaoRepository.AddAsync(movimentacao);
         }
 
@@ -243,9 +251,87 @@ public class PecasAppService
                 QuantidadePosterior = m.QuantidadePosterior,
                 OrdemServicoId = m.OrdemServicoId,
                 Motivo = m.Motivo,
+                UsuarioId = m.UsuarioId,
+                UsuarioNome = m.UsuarioNome,
                 CriadoEm = m.CriadoEm
             })
             .ToList();
+    }
+
+    public async Task<RelatorioEstoqueDto> ObterRelatorioEstoqueAsync(
+        Guid oficinaId,
+        bool incluirInativas = false)
+    {
+        var pecas = await _repository.GetAllAsync(oficinaId);
+
+        var itens = new List<RelatorioEstoqueItemDto>();
+
+        foreach (var peca in pecas.Where(p => incluirInativas || p.Ativa))
+        {
+            var quantidadeReservada =
+                await _ordemServicoRepository
+                    .ObterQuantidadeReservadaAsync(peca.Id);
+
+            // Mesma regra da tela de Peças: estoque físico <= mínimo.
+            var situacao =
+                peca.QuantidadeEstoque <= 0
+                    ? SituacaoEstoque.SemEstoque
+                    : peca.QuantidadeEstoque <= peca.EstoqueMinimo
+                        ? SituacaoEstoque.EstoqueBaixo
+                        : SituacaoEstoque.Normal;
+
+            itens.Add(new RelatorioEstoqueItemDto
+            {
+                Id = peca.Id,
+                Nome = peca.Nome,
+                Codigo = peca.Codigo,
+                Ativa = peca.Ativa,
+                QuantidadeEstoque = peca.QuantidadeEstoque,
+                QuantidadeReservada = quantidadeReservada,
+                QuantidadeDisponivel =
+                    peca.QuantidadeEstoque - quantidadeReservada,
+                EstoqueMinimo = peca.EstoqueMinimo,
+                QuantidadeParaRepor =
+                    Math.Max(0, peca.EstoqueMinimo - peca.QuantidadeEstoque),
+                ValorCusto = peca.ValorCusto,
+                ValorVenda = peca.ValorVenda,
+                ValorTotalCusto =
+                    peca.QuantidadeEstoque * peca.ValorCusto,
+                ValorTotalVenda =
+                    peca.QuantidadeEstoque * peca.ValorVenda,
+                Situacao = situacao
+            });
+        }
+
+        itens = itens
+            .OrderBy(i => i.Nome)
+            .ToList();
+
+        return new RelatorioEstoqueDto
+        {
+            GeradoEm = DateTime.UtcNow,
+            Itens = itens,
+            Resumo = new RelatorioEstoqueResumoDto
+            {
+                TotalPecas = itens.Count,
+                TotalUnidadesEmEstoque =
+                    itens.Sum(i => i.QuantidadeEstoque),
+                TotalUnidadesReservadas =
+                    itens.Sum(i => i.QuantidadeReservada),
+                TotalUnidadesDisponiveis =
+                    itens.Sum(i => i.QuantidadeDisponivel),
+                PecasParaRepor =
+                    itens.Count(i => i.Situacao != SituacaoEstoque.Normal),
+                PecasSemEstoque =
+                    itens.Count(i => i.Situacao == SituacaoEstoque.SemEstoque),
+                PecasComReserva =
+                    itens.Count(i => i.QuantidadeReservada > 0),
+                ValorTotalCusto =
+                    itens.Sum(i => i.ValorTotalCusto),
+                ValorTotalVenda =
+                    itens.Sum(i => i.ValorTotalVenda)
+            }
+        };
     }
 
     public async Task ExcluirAsync(

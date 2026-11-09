@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OficinaMecanica.Api.Security;
 using OficinaMecanica.Application.DTOs;
 using OficinaMecanica.Application.Services;
 
@@ -12,20 +13,42 @@ public class VeiculoController : ControllerBase
 {
     private readonly VeiculoAppService _service;
     private readonly OficinaAppService _oficinaService;
+    private readonly EscopoMecanicoService _escopo;
 
     public VeiculoController(
         VeiculoAppService service,
-        OficinaAppService oficinaService)
+        OficinaAppService oficinaService,
+        EscopoMecanicoService escopo)
     {
         _service = service;
         _oficinaService = oficinaService;
+        _escopo = escopo;
+    }
+
+    // Mecânico só enxerga, no veículo, as OS atribuídas a ele
+    private async Task RestringirOrdensAsync(params VeiculoResponseDto?[] veiculos)
+    {
+        var escopo = await _escopo.ObterMecanicoRestritoAsync(User.GetUsuarioId());
+
+        if (!escopo.HasValue)
+            return;
+
+        foreach (var veiculo in veiculos)
+        {
+            if (veiculo == null)
+                continue;
+
+            veiculo.OrdensServico = veiculo.OrdensServico
+                .Where(o => o.MecanicoId == escopo.Value)
+                .ToList();
+        }
     }
 
     [HttpPost]
     public async Task<IActionResult> Criar(
         CriarVeiculoDto dto)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
             return BadRequest(
@@ -47,7 +70,7 @@ public class VeiculoController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Listar()
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
             return BadRequest(
@@ -58,6 +81,8 @@ public class VeiculoController : ControllerBase
             oficina.Id
         );
 
+        await RestringirOrdensAsync(veiculos.ToArray());
+
         return Ok(veiculos);
     }
 
@@ -65,7 +90,7 @@ public class VeiculoController : ControllerBase
     public async Task<IActionResult> ObterPorId(
         Guid id)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
             return BadRequest(
@@ -80,6 +105,8 @@ public class VeiculoController : ControllerBase
         if (veiculo == null)
             return NotFound();
 
+        await RestringirOrdensAsync(veiculo);
+
         return Ok(veiculo);
     }
 
@@ -88,7 +115,7 @@ public class VeiculoController : ControllerBase
         Guid id,
         AtualizarVeiculoDto dto)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
             return BadRequest(
@@ -104,6 +131,8 @@ public class VeiculoController : ControllerBase
         if (veiculoAtualizado == null)
             return NotFound();
 
+        await RestringirOrdensAsync(veiculoAtualizado);
+
         return Ok(veiculoAtualizado);
     }
 
@@ -111,7 +140,7 @@ public class VeiculoController : ControllerBase
     public async Task<IActionResult> Inativar(
         Guid id)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
             return BadRequest(
@@ -130,7 +159,7 @@ public class VeiculoController : ControllerBase
     public async Task<IActionResult> Reativar(
         Guid id)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
             return BadRequest(
@@ -146,10 +175,11 @@ public class VeiculoController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = OficinaMecanica.Domain.Entities.PerfilUsuario.Admin)]
     public async Task<IActionResult> Remover(
         Guid id)
     {
-        var oficina = await _oficinaService.ObterUnicaAsync();
+        var oficina = await _oficinaService.ObterParaUsuarioAsync(User.GetUsuarioId());
 
         if (oficina == null)
             return BadRequest(

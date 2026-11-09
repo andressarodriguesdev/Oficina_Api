@@ -33,6 +33,18 @@ export async function updateMecanico(
   );
 }
 
+export interface CriarAcessoRequest {
+  email: string;
+  senha: string;
+}
+
+export async function criarAcessoMecanico(
+  id: string,
+  data: CriarAcessoRequest
+) {
+  await api.post(`/Mecanico/${id}/criar-acesso`, data);
+}
+
 export async function deleteMecanico(id: string) {
   await api.delete(`/Mecanico/${id}`);
 }

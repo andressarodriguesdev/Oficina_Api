@@ -9,11 +9,16 @@ public class WhatsAppService
     {
         var mensagem = new StringBuilder();
 
+        // Oficina cadastrada no banco (mesma fonte usada no PDF)
+        var oficina = ordemServico.Cliente.Oficina ?? ordemServico.Oficina;
+        var nomeOficina = string.IsNullOrWhiteSpace(oficina?.Nome)
+            ? "nossa oficina"
+            : oficina!.Nome;
+
         mensagem.AppendLine($"Olá, {ordemServico.Cliente.Nome}! Tudo bem?");
         mensagem.AppendLine();
 
-        mensagem.AppendLine(
-        $"Mensagem enviada pela {ordemServico.Oficina.Nome}.");
+        mensagem.AppendLine($"Aqui é da *{nomeOficina}*.");
         mensagem.AppendLine();
 
         mensagem.AppendLine(
@@ -95,6 +100,12 @@ public class WhatsAppService
         mensagem.AppendLine(
             "Caso tenha alguma dúvida, estamos à disposição."
         );
+
+        if (!string.IsNullOrWhiteSpace(oficina?.Telefone))
+        {
+            mensagem.AppendLine();
+            mensagem.AppendLine($"{nomeOficina} - {oficina!.Telefone}");
+        }
 
 
         var telefone = ordemServico.Cliente.Telefone

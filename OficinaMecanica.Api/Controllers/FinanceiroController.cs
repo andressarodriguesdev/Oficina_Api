@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using OficinaMecanica.Domain.Entities;
 using OficinaMecanica.Application.Services;
 
 namespace OficinaMecanica.Api.Controllers;
 
 
 [ApiController]
+[Authorize(Roles = PerfilUsuario.Admin)]
 [Route("api/financeiro")]
 public class FinanceiroController : ControllerBase
 {

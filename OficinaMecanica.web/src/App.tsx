@@ -4,6 +4,8 @@ import { ToastProvider } from "./components/ui/Toast";
 
 import { AppLayout } from "./components/layout/AppLayout";
 
+import { RotaAdmin } from "./components/layout/RotaAdmin";
+
 import { Login } from "./pages/Login";
 
 import { Dashboard } from "./pages/Dashboard";
@@ -135,17 +137,17 @@ function App() {
 
               <Route
                 path="/configuracoes"
-                element={<Configuracoes />}
+                element={<RotaAdmin><Configuracoes /></RotaAdmin>}
               />
 
               <Route
                 path="/configuracoes/oficina"
-                element={<EditarOficina />}
+                element={<RotaAdmin><EditarOficina /></RotaAdmin>}
               />
 
               <Route
                 path="/financeiro"
-                element={<Financeiro />}
+                element={<RotaAdmin><Financeiro /></RotaAdmin>}
               />
 
               <Route

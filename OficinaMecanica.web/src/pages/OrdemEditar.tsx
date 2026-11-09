@@ -1,3 +1,4 @@
+import { OrdemErro } from "../components/ui/OrdemErro";
 
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
@@ -50,10 +51,13 @@ export function OrdemEditar() {
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
 
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<unknown>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
+
+    setLoadError(null);
 
     try {
       const [o, c, v, m] = await Promise.all([
@@ -69,12 +73,12 @@ export function OrdemEditar() {
       setVeiculos(v);
       setMecanicos(m);
     } catch (err) {
-      toast.error("Erro ao carregar ordem de serviço");
+      setLoadError(err);
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [id, toast]);
+  }, [id]);
 
   useEffect(() => {
     load();
@@ -142,6 +146,18 @@ export function OrdemEditar() {
   if (loading) {
     return (
       <PageLoader label="Carregando ordem de serviço..." />
+    );
+  }
+
+  if (loadError) {
+    return (
+      <OrdemErro
+        error={loadError}
+        onRetry={() => {
+          setLoading(true);
+          load();
+        }}
+      />
     );
   }
 

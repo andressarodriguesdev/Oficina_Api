@@ -1,3 +1,4 @@
+import { ehMecanico } from "../utils/session";
 import { useEffect, useMemo, useState, useCallback } from "react";
 
 import {
@@ -15,6 +16,7 @@ import {
   PlusCircle,
   MinusCircle,
   History,
+  BarChart3,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
@@ -46,6 +48,7 @@ import {
 import type { Peca } from "../types";
 import { formatCurrency } from "../utils/format";
 import { HistoricoEstoqueModal } from "../components/forms/HistoricoEstoqueModal";
+import { RelatorioEstoque } from "../components/forms/RelatorioEstoque";
 
 export function Pecas() {
   const { error, success } = useToast();
@@ -77,6 +80,8 @@ export function Pecas() {
   const [adicionandoEstoque, setAdicionandoEstoque] = useState(false);
 
   const [historicoPeca, setHistoricoPeca] = useState<Peca | null>(null);
+
+  const [mostrandoRelatorio, setMostrandoRelatorio] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -266,6 +271,8 @@ export function Pecas() {
   // ============================================================
 
   const iniciarEdicaoEstoque = (peca: Peca) => {
+    if (ehMecanico()) return;
+
     setEstoqueEditando(peca.id);
     setQuantidadeEstoque(String(peca.quantidadeEstoque));
     setQuantidadeAdicionar("");
@@ -488,6 +495,14 @@ export function Pecas() {
   const totalEstoqueBaixo =
     pecas.filter(estoqueBaixo).length;
 
+  if (mostrandoRelatorio) {
+    return (
+      <RelatorioEstoque
+        onVoltar={() => setMostrandoRelatorio(false)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* CABEÇALHO */}
@@ -585,7 +600,19 @@ export function Pecas() {
             </div>
 
             <div className="flex items-center gap-2">
-              <Button
+              {!ehMecanico() && (
+<Button
+                variant="ghost"
+                className="border border-[var(--app-border-subtle)]"
+                onClick={() => setMostrandoRelatorio(true)}
+              >
+                <BarChart3 className="h-4 w-4" />
+                Relatório de estoque
+              </Button>
+)}
+
+              {!ehMecanico() && (
+<Button
                 onClick={() => {
                   setEditing(null);
                   setModalOpen(true);
@@ -594,6 +621,7 @@ export function Pecas() {
                 <Plus className="h-4 w-4" />
                 Nova peça
               </Button>
+)}
             </div>
           </div>
         </div>
@@ -1263,7 +1291,8 @@ export function Pecas() {
                           )}
                         </button>
 
-                        <button
+                        {!ehMecanico() && (
+<button
                           type="button"
                           onClick={() =>
                             iniciarEdicaoEstoque(p)
@@ -1280,6 +1309,7 @@ export function Pecas() {
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
+)}
                       </div>
                     )}
                   </div>
@@ -1299,7 +1329,8 @@ export function Pecas() {
                   py-2.5
                 "
               >
-                <span
+                {!ehMecanico() && (
+<span
                   className="
                     text-xs
                     font-semibold
@@ -1308,6 +1339,7 @@ export function Pecas() {
                 >
                   Custo: {formatCurrency(p.valorCusto)}
                 </span>
+)}
 
                 <div className="flex items-center gap-1">
                   {/* HISTÓRICO DE ESTOQUE */}
@@ -1331,7 +1363,9 @@ export function Pecas() {
                     <History className="h-4 w-4" />
                   </button>
 
-                  {/* EDITAR */}
+                  {!ehMecanico() && (
+<>
+{/* EDITAR */}
                   <button
                     type="button"
                     onClick={() => {
@@ -1418,7 +1452,9 @@ export function Pecas() {
                       <PackageCheck className="h-4 w-4" />
                     </button>
                   )}
-                </div>
+                
+</>
+)}</div>
               </div>
             </Card>
           ))}

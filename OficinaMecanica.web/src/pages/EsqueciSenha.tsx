@@ -20,8 +20,8 @@ import { useToast } from "../components/ui/Toast";
 import { Button } from "../components/ui/Button";
 import { useTheme } from "../context/ThemeContext";
 
-// Mesma regra do login (minLength=6) e da API.
-const SENHA_MINIMA = 6;
+// Mesma regra da API para senhas novas (o login aceita senhas antigas de 6+).
+const SENHA_MINIMA = 8;
 
 // Tempo de espera para pedir um novo código (a API também aplica o intervalo).
 const INTERVALO_REENVIO_SEGUNDOS = 60;

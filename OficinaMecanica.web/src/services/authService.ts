@@ -12,6 +12,9 @@ export interface LoginResponse {
   nome?: string;
   email?: string;
 
+  perfil?: string;
+  mecanicoId?: string | null;
+
   requiresTwoFactor?: boolean;
   twoFactorToken?: string;
 }
@@ -22,6 +25,8 @@ export interface VerifyTwoFactorResponse {
   usuarioId: number;
   nome: string;
   email: string;
+  perfil?: string;
+  mecanicoId?: string | null;
 }
 
 export interface MensagemResponse {

@@ -61,6 +61,16 @@ public class OficinaAppService
         return MapearResponse(oficina);
     }
 
+    public async Task<OficinaResponseDto?> ObterParaUsuarioAsync(int usuarioId)
+    {
+        var oficina = await _repository.ObterParaUsuarioAsync(usuarioId);
+
+        if (oficina == null)
+            return null;
+
+        return MapearResponse(oficina);
+    }
+
     public async Task<OficinaResponseDto?> ObterUnicaAsync()
     {
         var oficina = await _repository.ObterUnicaAsync();
